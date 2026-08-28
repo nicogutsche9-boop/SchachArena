@@ -49,7 +49,6 @@ async function loadLeaderboard(){
  }
 }
 function fresh(){board=["rnbqkbnr","pppppppp","........","........","........","........","PPPPPPPP","RNBQKBNR"].map(x=>[...x]);turn="w";selected=null;lastMove=null;gameOver=false;localResultDone=false;draw()}
-
 function draw(){
  const e=document.getElementById("board");e.innerHTML="";
  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
