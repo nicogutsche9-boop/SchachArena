@@ -523,110 +523,80 @@ function updateRewardsDisplays() {
 
 
 /* =========================================================
-   BELOHNUNGEN POPUP
+   TÄGLICHE HERAUSFORDERUNGEN – AKTUELLEN STAND ANZEIGEN
 ========================================================= */
 
 function openRewards() {
 
-  const oldPopup =
-    document.getElementById(
-      "rewardsPopup"
-    );
+  // Immer zuerst den aktuell gespeicherten Tagesstand laden
+  dailyTasks = JSON.parse(
+    localStorage.getItem("sa_daily_tasks") || "null"
+  );
 
+  // Prüfen, ob die Aufgaben für heute existieren
+  createDailyTasks();
+
+  // Aktuelle Werte holen
+  const winsDone =
+    Math.min(dailyTasks.wins || 0, 3);
+
+  const gamesDone =
+    Math.min(dailyTasks.games || 0, 5);
+
+  // Fortschritt berechnen
+  const winsPercent =
+    Math.min(100, (winsDone / 3) * 100);
+
+  const gamesPercent =
+    Math.min(100, (gamesDone / 5) * 100);
+
+  // Bereits geöffnetes Popup schließen
+  const oldPopup =
+    document.getElementById("rewardsPopup");
 
   if (oldPopup) {
-
     oldPopup.remove();
-
     return;
   }
 
-
-  loadDailyTasks();
-  loadCoins();
-
-
-  const wins =
-    Math.min(
-      Number(dailyTasks.wins) || 0,
-      3
-    );
-
-
-  const games =
-    Math.min(
-      Number(dailyTasks.games) || 0,
-      5
-    );
-
-
-  const winsPercent =
-    Math.min(
-      100,
-      Math.round(
-        wins / 3 * 100
-      )
-    );
-
-
-  const gamesPercent =
-    Math.min(
-      100,
-      Math.round(
-        games / 5 * 100
-      )
-    );
-
-
+  // Popup erstellen
   const popup =
-    document.createElement(
-      "div"
-    );
-
+    document.createElement("div");
 
   popup.id =
     "rewardsPopup";
 
-
   popup.className =
     "rewards-popup-overlay";
 
-
   popup.innerHTML = `
-
     <div class="rewards-popup">
 
       <button
-        type="button"
         class="rewards-popup-close"
         id="closeRewardsPopup"
-        aria-label="Schließen"
-      >
+        aria-label="Schließen">
         ×
       </button>
-
 
       <div class="rewards-popup-icon">
         🏆
       </div>
 
-
-      <h2>
-        Deine täglichen Aufgaben
-      </h2>
-
+      <h2>Deine täglichen Aufgaben</h2>
 
       <p class="rewards-subtitle">
         Erfülle Aufgaben und verdiene Münzen.
       </p>
 
 
+      <!-- AUFGABE 1 -->
+
       <div class="reward-task">
 
         <div class="task-icon">
           ♟
         </div>
-
 
         <div class="task-content">
 
@@ -635,20 +605,16 @@ function openRewards() {
           </strong>
 
           <span>
-            ${wins} / 3 geschafft
+            ${winsDone} / 3 geschafft
           </span>
 
-
           <div class="task-progress">
-
             <div
-              style="width:${winsPercent}%"
-            ></div>
-
+              style="width: ${winsPercent}%">
+            </div>
           </div>
 
         </div>
-
 
         <div class="task-reward">
           🪙 100
@@ -657,12 +623,13 @@ function openRewards() {
       </div>
 
 
+      <!-- AUFGABE 2 -->
+
       <div class="reward-task">
 
         <div class="task-icon">
           ⚔️
         </div>
-
 
         <div class="task-content">
 
@@ -671,20 +638,16 @@ function openRewards() {
           </strong>
 
           <span>
-            ${games} / 5 geschafft
+            ${gamesDone} / 5 geschafft
           </span>
 
-
           <div class="task-progress">
-
             <div
-              style="width:${gamesPercent}%"
-            ></div>
-
+              style="width: ${gamesPercent}%">
+            </div>
           </div>
 
         </div>
-
 
         <div class="task-reward">
           🪙 75
@@ -693,6 +656,8 @@ function openRewards() {
       </div>
 
 
+      <!-- MÜNZEN -->
+
       <div class="rewards-total">
 
         <span>
@@ -700,7 +665,7 @@ function openRewards() {
         </span>
 
         <strong>
-          🪙 ${coins}
+          🪙 ${coins || 0}
         </strong>
 
       </div>
@@ -708,30 +673,28 @@ function openRewards() {
     </div>
   `;
 
+  document.body.appendChild(popup);
 
-  document.body.appendChild(
-    popup
-  );
 
+  /* Schließen */
 
   const closeButton =
     document.getElementById(
       "closeRewardsPopup"
     );
 
-
   if (closeButton) {
 
     closeButton.addEventListener(
       "click",
       () => {
-
         popup.remove();
-
       }
     );
   }
 
+
+  /* Klick auf Hintergrund */
 
   popup.addEventListener(
     "click",
@@ -740,12 +703,303 @@ function openRewards() {
       if (
         event.target === popup
       ) {
-
         popup.remove();
       }
 
     }
   );
+}
+
+
+/* =========================================================
+   TÄGLICHE AUFGABEN – DASHBOARD AKTUALISIEREN
+========================================================= */
+
+function updateRewardsDisplay() {
+
+  createDailyTasks();
+
+  const winsDone =
+    Math.min(
+      dailyTasks.wins || 0,
+      3
+    );
+
+  const gamesDone =
+    Math.min(
+      dailyTasks.games || 0,
+      5
+    );
+
+
+  /* Mögliche Elemente auf der Startseite */
+
+  const winElements =
+    document.querySelectorAll(
+      "[data-daily-wins]"
+    );
+
+  winElements.forEach(
+    element => {
+
+      element.textContent =
+        winsDone + " / 3";
+
+    }
+  );
+
+
+  const gameElements =
+    document.querySelectorAll(
+      "[data-daily-games]"
+    );
+
+  gameElements.forEach(
+    element => {
+
+      element.textContent =
+        gamesDone + " / 5";
+
+    }
+  );
+
+
+  /* Fortschrittsbalken */
+
+  const winProgress =
+    document.querySelectorAll(
+      "[data-daily-wins-progress]"
+    );
+
+  winProgress.forEach(
+    element => {
+
+      element.style.width =
+        (
+          winsDone / 3 * 100
+        ) + "%";
+
+    }
+  );
+
+
+  const gameProgress =
+    document.querySelectorAll(
+      "[data-daily-games-progress]"
+    );
+
+  gameProgress.forEach(
+    element => {
+
+      element.style.width =
+        (
+          gamesDone / 5 * 100
+        ) + "%";
+
+    }
+  );
+
+
+  /* Münzanzeige */
+
+  const coinElements =
+    document.querySelectorAll(
+      "[data-coins]"
+    );
+
+  coinElements.forEach(
+    element => {
+
+      element.textContent =
+        coins;
+
+    }
+  );
+}
+
+
+/* =========================================================
+   TÄGLICHE AUFGABEN – SPIELERFOLG
+========================================================= */
+
+function updateDailyTasks(result) {
+
+  createDailyTasks();
+
+
+  /* Jede gespielte Partie zählt */
+
+  dailyTasks.games =
+    Number(dailyTasks.games || 0) + 1;
+
+
+  /* Sieg zählt zusätzlich */
+
+  if (
+    result === "win"
+  ) {
+
+    dailyTasks.wins =
+      Number(dailyTasks.wins || 0) + 1;
+
+  }
+
+
+  /* -----------------------------------------
+     AUFGABE 1 – 3 SIEGE
+  ----------------------------------------- */
+
+  if (
+    dailyTasks.wins >= 3 &&
+    !dailyTasks.winsRewarded
+  ) {
+
+    dailyTasks.winsRewarded =
+      true;
+
+    addCoins(100);
+
+    showMessage(
+      "🏆 Aufgabe geschafft! +100 Münzen"
+    );
+  }
+
+
+  /* -----------------------------------------
+     AUFGABE 2 – 5 PARTIEN
+  ----------------------------------------- */
+
+  if (
+    dailyTasks.games >= 5 &&
+    !dailyTasks.gamesRewarded
+  ) {
+
+    dailyTasks.gamesRewarded =
+      true;
+
+    addCoins(75);
+
+    showMessage(
+      "⚔️ Aufgabe geschafft! +75 Münzen"
+    );
+  }
+
+
+  /* Speichern */
+
+  saveDailyTasks();
+
+
+  /* Startseite sofort aktualisieren */
+
+  updateRewardsDisplay();
+
+
+  /* Falls das Belohnungs-Popup gerade offen ist,
+     ebenfalls sofort aktualisieren */
+
+  const popup =
+    document.getElementById(
+      "rewardsPopup"
+    );
+
+  if (popup) {
+
+    popup.remove();
+
+    openRewards();
+  }
+}
+
+
+/* =========================================================
+   TÄGLICHE AUFGABEN – START
+========================================================= */
+
+function createDailyTasks() {
+
+  const today =
+    getToday();
+
+
+  if (
+    !dailyTasks ||
+    dailyTasks.date !== today
+  ) {
+
+    dailyTasks = {
+
+      date: today,
+
+      wins: 0,
+
+      games: 0,
+
+      winsRewarded: false,
+
+      gamesRewarded: false
+
+    };
+
+    saveDailyTasks();
+  }
+}
+
+
+/* =========================================================
+   TÄGLICHE AUFGABEN – SPEICHERN
+========================================================= */
+
+function saveDailyTasks() {
+
+  localStorage.setItem(
+    "sa_daily_tasks",
+    JSON.stringify(dailyTasks)
+  );
+}
+
+
+/* =========================================================
+   MÜNZEN
+========================================================= */
+
+function saveCoins() {
+
+  localStorage.setItem(
+    "sa_coins",
+    String(coins)
+  );
+
+  updateRewardsDisplay();
+}
+
+
+function addCoins(amount) {
+
+  coins += Number(amount) || 0;
+
+  saveCoins();
+
+}
+
+
+function spendCoins(amount) {
+
+  amount =
+    Number(amount) || 0;
+
+  if (
+    coins < amount
+  ) {
+
+    return false;
+  }
+
+  coins -= amount;
+
+  saveCoins();
+
+  return true;
 }
 
 
