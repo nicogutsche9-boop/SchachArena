@@ -525,7 +525,366 @@ function updateRewardsDisplays() {
 /* =========================================================
    TÄGLICHE HERAUSFORDERUNGEN – AKTUELLEN STAND ANZEIGEN
 ========================================================= */
+/* =========================================================
+   MÜNZ-SHOP
+========================================================= */
 
+const SHOP_ITEMS = [
+  {
+    id: "board_ocean",
+    name: "🌊 Ozean-Brett",
+    description: "Ein blaues Schachbrett im Wasser-Stil.",
+    price: 150
+  },
+  {
+    id: "board_forest",
+    name: "🌲 Wald-Brett",
+    description: "Ein dunkles, grünes Brett für dein Spiel.",
+    price: 200
+  },
+  {
+    id: "pieces_gold",
+    name: "👑 Goldene Figuren",
+    description: "Goldene Schachfiguren für deine Partien.",
+    price: 300
+  },
+  {
+    id: "effect_fire",
+    name: "🔥 Feuer-Effekt",
+    description: "Ein besonderer Effekt für dein Schachspiel.",
+    price: 400
+  },
+  {
+    id: "profile_frame",
+    name: "💎 Diamant-Rahmen",
+    description: "Ein besonderer Rahmen für dein Profil.",
+    price: 500
+  }
+];
+
+
+/* Gekaufte Gegenstände laden */
+
+function getPurchasedItems() {
+
+  try {
+
+    return JSON.parse(
+      localStorage.getItem(
+        "sa_shop_items"
+      ) || "[]"
+    );
+
+  } catch (error) {
+
+    console.warn(
+      "Shop-Daten konnten nicht geladen werden:",
+      error
+    );
+
+    return [];
+  }
+}
+
+
+/* Gekaufte Gegenstände speichern */
+
+function savePurchasedItems(items) {
+
+  localStorage.setItem(
+    "sa_shop_items",
+    JSON.stringify(items)
+  );
+}
+
+
+/* Prüfen, ob Gegenstand gekauft wurde */
+
+function ownsShopItem(id) {
+
+  return getPurchasedItems().includes(id);
+}
+
+
+/* Münz-Shop öffnen */
+
+function openShop() {
+
+  const oldShop =
+    document.getElementById(
+      "shopPopup"
+    );
+
+  if (oldShop) {
+
+    oldShop.remove();
+
+    return;
+  }
+
+
+  const purchased =
+    getPurchasedItems();
+
+
+  const popup =
+    document.createElement("div");
+
+
+  popup.id =
+    "shopPopup";
+
+  popup.className =
+    "shop-popup-overlay";
+
+
+  popup.innerHTML = `
+
+    <div class="shop-popup">
+
+      <button
+        class="shop-popup-close"
+        id="closeShopPopup"
+        aria-label="Shop schließen"
+      >
+        ×
+      </button>
+
+
+      <div class="shop-popup-icon">
+        🛒
+      </div>
+
+
+      <h2>Münz-Shop</h2>
+
+
+      <p class="shop-subtitle">
+        Tausche deine Münzen gegen besondere Extras.
+      </p>
+
+
+      <div class="shop-balance">
+        🪙
+        <strong id="shopCoinBalance">
+          ${coins}
+        </strong>
+        Münzen
+      </div>
+
+
+      <div class="shop-items">
+
+        ${
+          SHOP_ITEMS.map(item => {
+
+            const owned =
+              purchased.includes(item.id);
+
+            return `
+
+              <div class="shop-item">
+
+                <div class="shop-item-icon">
+                  ${item.name.split(" ")[0]}
+                </div>
+
+
+                <div class="shop-item-content">
+
+                  <strong>
+                    ${escapeHtml(item.name)}
+                  </strong>
+
+                  <small>
+                    ${escapeHtml(item.description)}
+                  </small>
+
+                </div>
+
+
+                <div class="shop-item-action">
+
+                  ${
+                    owned
+
+                      ? `
+                        <button
+                          class="shop-owned"
+                          disabled
+                        >
+                          ✓ Gekauft
+                        </button>
+                      `
+
+                      : `
+                        <button
+                          class="shop-buy"
+                          onclick="buyShopItem('${item.id}')"
+                        >
+                          🪙 ${item.price}
+                        </button>
+                      `
+                  }
+
+                </div>
+
+              </div>
+
+            `;
+
+          }).join("")
+        }
+
+      </div>
+
+
+      <div class="shop-footer">
+        Deine Münzen erhältst du durch tägliche Aufgaben.
+      </div>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    popup
+  );
+
+
+  document
+    .getElementById(
+      "closeShopPopup"
+    )
+    ?.addEventListener(
+      "click",
+      () => popup.remove()
+    );
+
+
+  popup.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target === popup
+      ) {
+
+        popup.remove();
+      }
+
+    }
+  );
+}
+
+
+/* Gegenstand kaufen */
+
+function buyShopItem(id) {
+
+  const item =
+    SHOP_ITEMS.find(
+      shopItem =>
+        shopItem.id === id
+    );
+
+
+  if (!item) {
+
+    showMessage(
+      "Dieser Gegenstand wurde nicht gefunden."
+    );
+
+    return;
+  }
+
+
+  if (
+    ownsShopItem(id)
+  ) {
+
+    showMessage(
+      "Du besitzt diesen Gegenstand bereits."
+    );
+
+    return;
+  }
+
+
+  if (
+    coins < item.price
+  ) {
+
+    showMessage(
+      "❌ Du hast nicht genug Münzen."
+    );
+
+    return;
+  }
+
+
+  const success =
+    spendCoins(
+      item.price
+    );
+
+
+  if (!success) {
+
+    showMessage(
+      "❌ Kauf konnte nicht durchgeführt werden."
+    );
+
+    return;
+  }
+
+
+  const purchased =
+    getPurchasedItems();
+
+
+  purchased.push(
+    item.id
+  );
+
+
+  savePurchasedItems(
+    purchased
+  );
+
+
+  showMessage(
+    "🎉 " +
+    item.name +
+    " gekauft!"
+  );
+
+
+  /* Shop neu zeichnen */
+
+  const popup =
+    document.getElementById(
+      "shopPopup"
+    );
+
+
+  if (popup) {
+
+    popup.remove();
+
+    openShop();
+  }
+}
+
+
+/* Shop global verfügbar machen */
+
+window.openShop =
+  openShop;
+
+window.buyShopItem =
+  buyShopItem;
 function openRewards() {
 
   // Immer zuerst den aktuell gespeicherten Tagesstand laden
@@ -5075,7 +5434,179 @@ function addAppStyles() {
       font-size: 18px;
     }
 
+/* =========================================================
+   MÜNZ-SHOP
+========================================================= */
 
+.shop-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 15000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(8px);
+}
+
+.shop-popup {
+  position: relative;
+  width: min(100%, 680px);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: 24px;
+  background: #151923;
+  color: white;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 30px 100px rgba(0,0,0,.6);
+}
+
+.shop-popup-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+  color: white;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+.shop-popup-icon {
+  text-align: center;
+  font-size: 46px;
+  margin-bottom: 8px;
+}
+
+.shop-popup h2 {
+  margin: 0;
+  text-align: center;
+}
+
+.shop-subtitle {
+  text-align: center;
+  opacity: .65;
+  margin: 8px 0 20px;
+}
+
+.shop-balance {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 13px;
+  margin-bottom: 18px;
+  border-radius: 14px;
+  background: rgba(255,215,70,.08);
+}
+
+.shop-balance strong {
+  font-size: 20px;
+}
+
+.shop-items {
+  display: grid;
+  gap: 10px;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px;
+  border-radius: 15px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.07);
+}
+
+.shop-item-icon {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(255,255,255,.08);
+  font-size: 25px;
+}
+
+.shop-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-item-content strong,
+.shop-item-content small {
+  display: block;
+}
+
+.shop-item-content small {
+  margin-top: 4px;
+  opacity: .58;
+  line-height: 1.35;
+}
+
+.shop-item-action button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.shop-buy {
+  background: #267cff;
+  color: white;
+}
+
+.shop-buy:hover {
+  filter: brightness(1.12);
+}
+
+.shop-owned {
+  background: rgba(70,200,120,.15);
+  color: #72e09b;
+  cursor: default !important;
+}
+
+.shop-footer {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 13px;
+  opacity: .5;
+}
+
+@media(max-width:600px) {
+
+  .shop-popup {
+    padding: 20px 15px;
+  }
+
+  .shop-item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .shop-item-content {
+    width: calc(100% - 60px);
+  }
+
+  .shop-item-action {
+    width: 100%;
+    margin-left: 59px;
+  }
+
+  .shop-item-action button {
+    width: 100%;
+  }
+
+}
     @media(max-width:600px) {
 
       .sa-modal {
