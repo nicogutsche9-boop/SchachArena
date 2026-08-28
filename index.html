@@ -692,13 +692,12 @@
 <script>
 
 function startQuickGame() {
-
-  if (typeof window.findOpponent === "function") {
-    window.findOpponent();
+  if (typeof window.quickJoin === "function") {
+    window.quickJoin();
     return;
   }
 
-  showMessage("Gegnersuche wird gestartet …");
+  showMessage("Gegnersuche wird gerade vorbereitet …");
 }
 
 
