@@ -2346,3 +2346,322 @@ footer strong {
   }
 
 }
+/* =========================================
+   BELOHNUNGS-FENSTER
+========================================= */
+
+.reward-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+}
+
+
+/* Fenster */
+
+.reward-window {
+  position: relative;
+
+  width: min(440px, 100%);
+
+  padding: 36px 30px 30px;
+
+  text-align: center;
+
+  background: #ffffff;
+  border-radius: 24px;
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.25);
+
+  animation: rewardAppear 0.25s ease-out;
+}
+
+
+/* Animation */
+
+@keyframes rewardAppear {
+
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+}
+
+
+/* Schließen */
+
+.reward-close {
+  position: absolute;
+
+  top: 14px;
+  right: 16px;
+
+  width: 36px;
+  height: 36px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: #f1f5f9;
+
+  color: #64748b;
+
+  font-size: 24px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+
+.reward-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  transform: rotate(5deg);
+}
+
+
+/* Pokal */
+
+.reward-icon {
+  width: 76px;
+  height: 76px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 22px;
+
+  background: #fef3c7;
+
+  font-size: 40px;
+
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+
+/* Überschrift */
+
+.reward-window h2 {
+  margin: 0 0 10px;
+
+  color: #172033;
+
+  font-size: 26px;
+  font-weight: 800;
+}
+
+
+.reward-window p {
+  margin: 0 auto 24px;
+
+  max-width: 340px;
+
+  color: #64748b;
+
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+
+/* Fortschritt */
+
+.reward-progress {
+  margin-bottom: 22px;
+}
+
+
+.reward-progress strong {
+  display: block;
+
+  margin-bottom: 9px;
+
+  color: #334155;
+
+  font-size: 15px;
+}
+
+
+.reward-bar {
+  width: 100%;
+  height: 12px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #e2e8f0;
+}
+
+
+.reward-bar span {
+  display: block;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #6366f1;
+
+  transition: width 0.3s ease;
+}
+
+
+/* Belohnung */
+
+.reward-prize {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  margin: 0 auto 24px;
+
+  padding: 14px 18px;
+
+  border-radius: 14px;
+
+  background: #f8fafc;
+
+  color: #334155;
+
+  font-size: 18px;
+}
+
+
+.reward-prize strong {
+  color: #d97706;
+}
+
+
+/* Button */
+
+.reward-window .reward-button {
+  width: 100%;
+
+  min-height: 48px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #6366f1;
+
+  color: white;
+
+  font-weight: 800;
+  font-size: 14px;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+
+.reward-window .reward-button:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 8px 20px rgba(99, 102, 241, 0.25);
+}
+
+
+.reward-window .reward-button:active {
+  transform: translateY(0);
+}
+
+
+/* =========================================
+   FREUNDE - LEERER ZUSTAND
+========================================= */
+
+.empty-friends {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px 12px;
+
+  text-align: center;
+
+  color: #64748b;
+}
+
+
+.empty-friends > div {
+  margin-bottom: 8px;
+
+  font-size: 28px;
+}
+
+
+.empty-friends strong {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #334155;
+
+  font-size: 14px;
+}
+
+
+.empty-friends span {
+  max-width: 220px;
+
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+
+  .reward-window {
+    padding: 30px 20px 22px;
+
+    border-radius: 20px;
+  }
+
+
+  .reward-window h2 {
+    font-size: 23px;
+  }
+
+
+  .reward-icon {
+    width: 68px;
+    height: 68px;
+
+    font-size: 34px;
+  }
+
+}
