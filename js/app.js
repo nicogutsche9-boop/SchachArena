@@ -1,6 +1,20 @@
 /* =========================================================
    SCHACHARENA – APP.JS
    BEREINIGTE VERSION
+
+   Enthalten:
+   - Schachspiel
+   - Räume
+   - PeerJS
+   - Supabase
+   - Ranking
+   - Freunde
+   - Nachrichten
+   - Einstellungen
+   - Profil
+   - tägliche Herausforderungen
+   - Belohnungen
+   - Münzen
 ========================================================= */
 
 
@@ -12,7 +26,7 @@ const SUPABASE_URL =
   "https://ocqdfvfshbudnsssxdxi.supabase.co";
 
 const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ1c2VyIiwicmVmIjoib2NxZGZ2ZnNoYnVkbnhzc3hkaSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzg3OTEwNTA5LCJleHAiOjIxMDM0ODY1MDl9.TktaxxzGeChjr8B9xrl9wWbcq6A-mEBJlqKBT5EJufE";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzYXFkZnZmc2hidWRuc3NzeGR4aSIsInJvbGUiOiJzdXBhYmFzZSIsInJlZiI6Im9jcWRmdmZzaGJ1ZG5zc3N4ZHhpIiwiaWF0IjoxNzg3OTEwNTA5LCJleHAiOjIxMDM0ODY1MDl9.TktaxxzGeChjr8B9xrl9wWbcq6A-mEBJlqKBT5EJufE";
 
 const sb =
   window.supabase
@@ -45,7 +59,7 @@ const PIECES = {
 
 
 /* =========================================================
-   SCHACHSTATUS
+   SPIELSTATUS
 ========================================================= */
 
 let board = [];
@@ -93,7 +107,10 @@ let coins =
    TÄGLICHE AUFGABEN
 ========================================================= */
 
-let dailyTasks = null;
+let dailyTasks =
+  JSON.parse(
+    localStorage.getItem("sa_daily_tasks") || "null"
+  );
 
 
 function getToday() {
@@ -126,26 +143,10 @@ function createDailyTasks() {
   const today =
     getToday();
 
-  let stored = null;
-
-  try {
-
-    stored =
-      JSON.parse(
-        localStorage.getItem(
-          "sa_daily_tasks"
-        ) || "null"
-      );
-
-  } catch (error) {
-
-    stored = null;
-  }
-
 
   if (
-    !stored ||
-    stored.date !== today
+    !dailyTasks ||
+    dailyTasks.date !== today
   ) {
 
     dailyTasks = {
@@ -162,38 +163,16 @@ function createDailyTasks() {
 
     };
 
+
     saveDailyTasks();
-
-  } else {
-
-    dailyTasks = {
-
-      date: today,
-
-      wins:
-        Number(stored.wins) || 0,
-
-      games:
-        Number(stored.games) || 0,
-
-      winsRewarded:
-        Boolean(stored.winsRewarded),
-
-      gamesRewarded:
-        Boolean(stored.gamesRewarded)
-
-    };
   }
+
 
   return dailyTasks;
 }
 
 
 function saveDailyTasks() {
-
-  if (!dailyTasks) {
-    return;
-  }
 
   localStorage.setItem(
     "sa_daily_tasks",
@@ -203,6 +182,10 @@ function saveDailyTasks() {
   );
 }
 
+
+/* =========================================================
+   MÜNZEN SPEICHERN
+========================================================= */
 
 function saveCoins() {
 
@@ -221,6 +204,8 @@ function addCoins(amount) {
   coins += amount;
 
   saveCoins();
+
+  updateCoinDisplays();
 }
 
 
@@ -229,15 +214,55 @@ function spendCoins(amount) {
   amount =
     Number(amount) || 0;
 
-  if (coins < amount) {
+
+  if (
+    coins < amount
+  ) {
+
     return false;
   }
+
 
   coins -= amount;
 
   saveCoins();
 
+  updateCoinDisplays();
+
   return true;
+}
+
+
+function updateCoinDisplays() {
+
+  const elements =
+    document.querySelectorAll(
+      "[data-coins]"
+    );
+
+
+  elements.forEach(
+    element => {
+
+      element.textContent =
+        coins;
+    }
+  );
+
+
+  const coinElements =
+    document.querySelectorAll(
+      ".coin-count"
+    );
+
+
+  coinElements.forEach(
+    element => {
+
+      element.textContent =
+        coins;
+    }
+  );
 }
 
 
@@ -250,22 +275,26 @@ function updateDailyTasks(result) {
   createDailyTasks();
 
 
-  /* Jede gespielte Partie zählt */
+  /* Jede Partie zählt */
 
   dailyTasks.games++;
 
 
-  /* Nur ein Sieg zählt als Sieg */
+  /* Nur Siege zählen als Sieg */
 
-  if (result === "win") {
+  if (
+    result === "win"
+  ) {
 
     dailyTasks.wins++;
   }
 
 
+  let rewardMessage = "";
+
+
   /* -----------------------------------------
-     AUFGABE 1
-     Gewinne 3 Partien
+     3 SIEGE
   ----------------------------------------- */
 
   if (
@@ -273,19 +302,22 @@ function updateDailyTasks(result) {
     !dailyTasks.winsRewarded
   ) {
 
-    dailyTasks.winsRewarded = true;
+    dailyTasks.winsRewarded =
+      true;
 
-    addCoins(100);
+    coins += 100;
 
-    showMessage(
-      "🏆 Aufgabe geschafft! +100 Münzen"
-    );
+    saveCoins();
+
+    rewardMessage +=
+      "🏆 Aufgabe geschafft!\n\n" +
+      "Gewinne 3 Partien\n\n" +
+      "🪙 +100 Münzen\n\n";
   }
 
 
   /* -----------------------------------------
-     AUFGABE 2
-     Spiele 5 Partien
+     5 PARTIEN
   ----------------------------------------- */
 
   if (
@@ -293,22 +325,186 @@ function updateDailyTasks(result) {
     !dailyTasks.gamesRewarded
   ) {
 
-    dailyTasks.gamesRewarded = true;
+    dailyTasks.gamesRewarded =
+      true;
 
-    addCoins(75);
+    coins += 75;
 
-    showMessage(
-      "⚔️ Aufgabe geschafft! +75 Münzen"
-    );
+    saveCoins();
+
+    rewardMessage +=
+      "⚔️ Aufgabe geschafft!\n\n" +
+      "Spiele 5 Partien\n\n" +
+      "🪙 +75 Münzen";
   }
 
 
   saveDailyTasks();
+
+  updateRewardsDisplays();
+
+
+  if (
+    rewardMessage
+  ) {
+
+    alert(
+      rewardMessage
+    );
+  }
 }
 
 
 /* =========================================================
-   NAME
+   BELOHNUNGEN AKTUELL HALTEN
+========================================================= */
+
+function updateRewardsDisplays() {
+
+  createDailyTasks();
+
+
+  const winsCount =
+    Math.min(
+      dailyTasks.wins,
+      3
+    );
+
+
+  const gamesCount =
+    Math.min(
+      dailyTasks.games,
+      5
+    );
+
+
+  const winsPercent =
+    Math.min(
+      100,
+      Math.round(
+        (
+          dailyTasks.wins /
+          3
+        ) *
+        100
+      )
+    );
+
+
+  const gamesPercent =
+    Math.min(
+      100,
+      Math.round(
+        (
+          dailyTasks.games /
+          5
+        ) *
+        100
+      )
+    );
+
+
+  /* Aufgabe Siege */
+
+  document
+    .querySelectorAll(
+      "[data-reward-wins]"
+    )
+    .forEach(
+      element => {
+
+        element.textContent =
+          winsCount +
+          " / 3";
+      }
+    );
+
+
+  /* Aufgabe Partien */
+
+  document
+    .querySelectorAll(
+      "[data-reward-games]"
+    )
+    .forEach(
+      element => {
+
+        element.textContent =
+          gamesCount +
+          " / 5";
+      }
+    );
+
+
+  /* Fortschrittsbalken Siege */
+
+  document
+    .querySelectorAll(
+      "[data-reward-wins-progress]"
+    )
+    .forEach(
+      element => {
+
+        element.style.width =
+          winsPercent +
+          "%";
+      }
+    );
+
+
+  /* Fortschrittsbalken Partien */
+
+  document
+    .querySelectorAll(
+      "[data-reward-games-progress]"
+    )
+    .forEach(
+      element => {
+
+        element.style.width =
+          gamesPercent +
+          "%";
+      }
+    );
+
+
+  /* Dashboard-Texte */
+
+  const dashboardRewards =
+    document.getElementById(
+      "dailyRewards"
+    );
+
+
+  if (
+    dashboardRewards
+  ) {
+
+    dashboardRewards.innerHTML =
+      `
+        <div>
+          🏆 Gewinne 3 Partien:
+          <strong>
+            ${winsCount}/3
+          </strong>
+        </div>
+
+        <div>
+          ⚔️ Spiele 5 Partien:
+          <strong>
+            ${gamesCount}/5
+          </strong>
+        </div>
+      `;
+  }
+
+
+  updateCoinDisplays();
+}
+
+
+/* =========================================================
+   HILFSFUNKTIONEN
 ========================================================= */
 
 function getName() {
@@ -318,12 +514,15 @@ function getName() {
       "sa_username"
     );
 
+
   if (stored) {
 
     return stored
       .trim()
-      .slice(0, 18) || "Gast";
+      .slice(0, 18) ||
+      "Gast";
   }
+
 
   return "Gast";
 }
@@ -336,44 +535,41 @@ function setName(name) {
       .trim()
       .slice(0, 18);
 
+
   if (!name) {
-    name = "Gast";
+
+    name =
+      "Gast";
   }
+
 
   localStorage.setItem(
     "sa_username",
     name
   );
 
+
   return name;
 }
 
 
-/* =========================================================
-   RANG
-========================================================= */
+function rank(v = rating) {
 
-function rank(value = rating) {
-
-  if (value >= 1400) {
+  if (v >= 1400) {
     return "Gold";
   }
 
-  if (value >= 1200) {
+  if (v >= 1200) {
     return "Silber";
   }
 
-  if (value >= 1000) {
+  if (v >= 1000) {
     return "Bronze";
   }
 
   return "Anfänger";
 }
 
-
-/* =========================================================
-   HTML ESCAPEN
-========================================================= */
 
 function escapeHtml(value) {
 
@@ -413,7 +609,7 @@ function escapeJs(value) {
 
 
 /* =========================================================
-   RATING ANZEIGEN
+   RATING
 ========================================================= */
 
 function updateRanking() {
@@ -423,13 +619,16 @@ function updateRanking() {
       "rating"
     );
 
+
   const statsElement =
     document.getElementById(
       "stats"
     );
 
 
-  if (ratingElement) {
+  if (
+    ratingElement
+  ) {
 
     ratingElement.textContent =
       rating +
@@ -438,7 +637,9 @@ function updateRanking() {
   }
 
 
-  if (statsElement) {
+  if (
+    statsElement
+  ) {
 
     statsElement.textContent =
       wins +
@@ -461,25 +662,8 @@ function updateRanking() {
           rating;
       }
     );
-
-
-  document
-    .querySelectorAll(
-      "[data-coins]"
-    )
-    .forEach(
-      element => {
-
-        element.textContent =
-          coins;
-      }
-    );
 }
 
-
-/* =========================================================
-   RATING SPEICHERN
-========================================================= */
 
 function saveRanking() {
 
@@ -513,28 +697,39 @@ function saveRanking() {
 
 async function score(result) {
 
-  if (localResultDone) {
+  if (
+    localResultDone
+  ) {
+
     return;
   }
 
-  localResultDone = true;
+
+  localResultDone =
+    true;
 
 
-  if (result === "win") {
+  if (
+    result === "win"
+  ) {
 
     rating += 25;
 
     wins++;
 
-    updateDailyTasks(
-      "win"
-    );
 
     showMessage(
       "🎉 Gewonnen! +25 Punkte"
     );
 
-  } else if (result === "loss") {
+
+    updateDailyTasks(
+      "win"
+    );
+
+  } else if (
+    result === "loss"
+  ) {
 
     rating =
       Math.max(
@@ -544,24 +739,30 @@ async function score(result) {
 
     losses++;
 
-    updateDailyTasks(
-      "loss"
-    );
 
     showMessage(
       "😕 Verloren. -15 Punkte"
     );
 
-  } else if (result === "draw") {
+
+    updateDailyTasks(
+      "loss"
+    );
+
+  } else if (
+    result === "draw"
+  ) {
 
     draws++;
 
-    updateDailyTasks(
-      "draw"
-    );
 
     showMessage(
       "🤝 Remis"
+    );
+
+
+    updateDailyTasks(
+      "draw"
     );
   }
 
@@ -573,12 +774,13 @@ async function score(result) {
 
 
 /* =========================================================
-   SUPABASE SPIELER
+   SUPABASE – SPIELER
 ========================================================= */
 
 async function syncPlayer() {
 
   if (!sb) {
+
     return;
   }
 
@@ -591,6 +793,7 @@ async function syncPlayer() {
     username.toLowerCase() ===
     "gast"
   ) {
+
     return;
   }
 
@@ -604,26 +807,17 @@ async function syncPlayer() {
         .from("players")
         .upsert(
           {
-
             username,
-
             rating,
-
             games_played:
               wins +
               losses +
               draws,
-
             wins,
-
             losses,
-
             draws,
-
             updated_at:
-              new Date()
-                .toISOString()
-
+              new Date().toISOString()
           },
           {
             onConflict:
@@ -633,6 +827,7 @@ async function syncPlayer() {
 
 
     if (error) {
+
       throw error;
     }
 
@@ -650,7 +845,7 @@ async function syncPlayer() {
 
 
 /* =========================================================
-   LEADERBOARD
+   RANGLISTE
 ========================================================= */
 
 async function loadLeaderboard() {
@@ -661,7 +856,11 @@ async function loadLeaderboard() {
     );
 
 
-  if (!box || !sb) {
+  if (
+    !box ||
+    !sb
+  ) {
+
     return;
   }
 
@@ -691,6 +890,7 @@ async function loadLeaderboard() {
 
 
     if (error) {
+
       throw error;
     }
 
@@ -699,7 +899,9 @@ async function loadLeaderboard() {
       data || [];
 
 
-    if (!players.length) {
+    if (
+      !players.length
+    ) {
 
       box.innerHTML =
         '<div class="empty">Noch keine Spieler in der Rangliste.</div>';
@@ -711,7 +913,10 @@ async function loadLeaderboard() {
     box.innerHTML =
       players
         .map(
-          (player, index) => {
+          (
+            player,
+            index
+          ) => {
 
             const medal =
               index === 0
@@ -733,7 +938,6 @@ async function loadLeaderboard() {
 
 
             return `
-
               <div class="leader-item ${me}">
 
                 <span class="rank-num">
@@ -764,7 +968,6 @@ async function loadLeaderboard() {
                 </span>
 
               </div>
-
             `;
           }
         )
@@ -780,16 +983,16 @@ async function loadLeaderboard() {
 
     box.innerHTML =
       `
-      <div class="empty">
-        ⚠️ Die Online-Rangliste konnte nicht geladen werden.
-      </div>
+        <div class="empty">
+          ⚠️ Die Online-Rangliste konnte nicht geladen werden.
+        </div>
       `;
   }
 }
 
 
 /* =========================================================
-   NEUES SCHACHBRETT
+   SCHACH – NEUES SPIEL
 ========================================================= */
 
 function fresh() {
@@ -810,15 +1013,24 @@ function fresh() {
   );
 
 
-  turn = "w";
+  turn =
+    "w";
 
-  selected = null;
 
-  lastMove = null;
+  selected =
+    null;
 
-  gameOver = false;
 
-  localResultDone = false;
+  lastMove =
+    null;
+
+
+  gameOver =
+    false;
+
+
+  localResultDone =
+    false;
 
 
   if (
@@ -854,23 +1066,6 @@ function fresh() {
 
 
 /* =========================================================
-   FIGURENFARBE
-========================================================= */
-
-function colorOf(piece) {
-
-  if (!piece || piece === ".") {
-    return null;
-  }
-
-  return piece ===
-    piece.toUpperCase()
-    ? "w"
-    : "b";
-}
-
-
-/* =========================================================
    BRETT ZEICHNEN
 ========================================================= */
 
@@ -882,7 +1077,10 @@ function draw() {
     );
 
 
-  if (!boardElement) {
+  if (
+    !boardElement
+  ) {
+
     return;
   }
 
@@ -912,7 +1110,9 @@ function draw() {
       square.className =
         "sq " +
         (
-          (r + c) % 2
+          (
+            r + c
+          ) % 2
             ? "dark"
             : "light"
         );
@@ -936,8 +1136,7 @@ function draw() {
           (
             lastMove[0] === r &&
             lastMove[1] === c
-          )
-          ||
+          ) ||
           (
             lastMove[2] === r &&
             lastMove[3] === c
@@ -952,7 +1151,7 @@ function draw() {
 
 
       const piece =
-        board[r]?.[c] || ".";
+        board[r][c];
 
 
       const span =
@@ -983,7 +1182,8 @@ function draw() {
 
       square.addEventListener(
         "click",
-        () => tap(r, c)
+        () =>
+          tap(r, c)
       );
 
 
@@ -1000,7 +1200,9 @@ function draw() {
     );
 
 
-  if (turnElement) {
+  if (
+    turnElement
+  ) {
 
     turnElement.textContent =
       gameOver
@@ -1037,12 +1239,15 @@ function draw() {
 
 
 /* =========================================================
-   BRETT KLICK
+   BRETT – KLICK
 ========================================================= */
 
 function tap(r, c) {
 
-  if (gameOver) {
+  if (
+    gameOver
+  ) {
+
     return;
   }
 
@@ -1061,13 +1266,14 @@ function tap(r, c) {
 
 
   const piece =
-    board[r]?.[c] || ".";
+    board[r][c];
 
 
   if (!selected) {
 
     if (
-      colorOf(piece) === turn
+      colorOf(piece) ===
+      turn
     ) {
 
       selected = [
@@ -1083,7 +1289,8 @@ function tap(r, c) {
 
 
   if (
-    colorOf(piece) === turn
+    colorOf(piece) ===
+    turn
   ) {
 
     selected = [
@@ -1098,7 +1305,8 @@ function tap(r, c) {
 
 
   if (
-    typeof legal === "function" &&
+    typeof legal ===
+      "function" &&
     legal(
       selected[0],
       selected[1],
@@ -1123,7 +1331,9 @@ function tap(r, c) {
     );
 
 
-    selected = null;
+    selected =
+      null;
+
 
     draw();
 
@@ -1131,7 +1341,9 @@ function tap(r, c) {
   }
 
 
-  selected = null;
+  selected =
+    null;
+
 
   draw();
 }
@@ -1150,13 +1362,14 @@ function applyMove(
 ) {
 
   const moving =
-    board[r1]?.[c1];
+    board[r1][c1];
 
 
   if (
     !moving ||
     moving === "."
   ) {
+
     return;
   }
 
@@ -1166,8 +1379,10 @@ function applyMove(
 
 
   const captured =
-    board[r2]?.[c2] || ".";
+    board[r2][c2];
 
+
+  /* EN PASSANT */
 
   const isEnPassant =
     moving.toLowerCase() === "p" &&
@@ -1183,11 +1398,14 @@ function applyMove(
   board[r2][c2] =
     moving;
 
+
   board[r1][c1] =
     ".";
 
 
-  if (isEnPassant) {
+  if (
+    isEnPassant
+  ) {
 
     const capturedPawnRow =
       movingColor === "w"
@@ -1200,17 +1418,22 @@ function applyMove(
   }
 
 
-  /* Rochade */
+  /* ROCHADE */
 
   if (
     moving.toLowerCase() === "k" &&
-    Math.abs(c2 - c1) === 2
+    Math.abs(
+      c2 - c1
+    ) === 2
   ) {
 
-    const row = r1;
+    const row =
+      r1;
 
 
-    if (c2 === 6) {
+    if (
+      c2 === 6
+    ) {
 
       board[row][5] =
         board[row][7];
@@ -1220,7 +1443,9 @@ function applyMove(
     }
 
 
-    if (c2 === 2) {
+    if (
+      c2 === 2
+    ) {
 
       board[row][3] =
         board[row][0];
@@ -1231,19 +1456,26 @@ function applyMove(
   }
 
 
-  /* Rochade-Status */
+  /* ROCHADE-STATUS */
 
   if (
     typeof chessState !==
     "undefined"
   ) {
 
-    if (moving === "K") {
+    if (
+      moving === "K"
+    ) {
+
       chessState.whiteKingMoved =
         true;
     }
 
-    if (moving === "k") {
+
+    if (
+      moving === "k"
+    ) {
+
       chessState.blackKingMoved =
         true;
     }
@@ -1294,7 +1526,7 @@ function applyMove(
   }
 
 
-  /* Bauernumwandlung */
+  /* BAUERNUMWANDLUNG */
 
   if (
     moving === "P" &&
@@ -1316,7 +1548,7 @@ function applyMove(
   }
 
 
-  /* En-Passant-Ziel */
+  /* EN-PASSANT-ZIEL */
 
   if (
     typeof chessState !==
@@ -1329,7 +1561,9 @@ function applyMove(
 
     if (
       moving.toLowerCase() === "p" &&
-      Math.abs(r2 - r1) === 2
+      Math.abs(
+        r2 - r1
+      ) === 2
     ) {
 
       chessState.enPassantTarget = [
@@ -1343,10 +1577,12 @@ function applyMove(
 
 
   lastMove = [
+
     r1,
     c1,
     r2,
     c2
+
   ];
 
 
@@ -1373,10 +1609,12 @@ function applyMove(
       type: "move",
 
       m: [
+
         r1,
         c1,
         r2,
         c2
+
       ]
 
     });
@@ -1405,7 +1643,8 @@ function checkGameEnd() {
     isCheckmate(turn)
   ) {
 
-    gameOver = true;
+    gameOver =
+      true;
 
 
     const winner =
@@ -1414,15 +1653,31 @@ function checkGameEnd() {
         : "w";
 
 
+    const winnerName =
+      winner === myColor
+        ? "Du gewinnst!"
+        : "Du hast verloren.";
+
+
+    showMessage(
+      "♚ Schachmatt! " +
+      winnerName
+    );
+
+
     if (
       winner === myColor
     ) {
 
-      score("win");
+      score(
+        "win"
+      );
 
     } else {
 
-      score("loss");
+      score(
+        "loss"
+      );
     }
 
 
@@ -1433,7 +1688,8 @@ function checkGameEnd() {
 
       conn.send({
 
-        type: "gameover",
+        type:
+          "gameover",
 
         winner
 
@@ -1451,9 +1707,18 @@ function checkGameEnd() {
     isStalemate(turn)
   ) {
 
-    gameOver = true;
+    gameOver =
+      true;
 
-    score("draw");
+
+    showMessage(
+      "🤝 Patt – Remis"
+    );
+
+
+    score(
+      "draw"
+    );
 
 
     if (
@@ -1463,7 +1728,8 @@ function checkGameEnd() {
 
       conn.send({
 
-        type: "draw"
+        type:
+          "draw"
 
       });
     }
@@ -1530,9 +1796,12 @@ function getGameState() {
 }
 
 
-function restoreGameState(state) {
+function restoreGameState(
+  state
+) {
 
   if (!state) {
+
     return;
   }
 
@@ -1551,7 +1820,8 @@ function restoreGameState(state) {
 
 
   turn =
-    state.turn || "w";
+    state.turn ||
+    "w";
 
 
   lastMove =
@@ -1573,11 +1843,16 @@ function restoreGameState(state) {
   }
 
 
-  selected = null;
+  selected =
+    null;
 
-  gameOver = false;
 
-  localResultDone = false;
+  gameOver =
+    false;
+
+
+  localResultDone =
+    false;
 
 
   draw();
@@ -1594,6 +1869,7 @@ async function registerRoom() {
     !sb ||
     !room
   ) {
+
     return;
   }
 
@@ -1608,7 +1884,8 @@ async function registerRoom() {
         .upsert(
           {
 
-            room_code: room,
+            room_code:
+              room,
 
             player_name:
               getName(),
@@ -1625,13 +1902,16 @@ async function registerRoom() {
 
           },
           {
+
             onConflict:
               "room_code"
+
           }
         );
 
 
     if (error) {
+
       throw error;
     }
 
@@ -1665,6 +1945,7 @@ async function unregisterRoom() {
     !sb ||
     !room
   ) {
+
     return;
   }
 
@@ -1690,7 +1971,7 @@ async function unregisterRoom() {
 
 
 /* =========================================================
-   RÄUME AKTUALISIEREN
+   RAUMLISTE
 ========================================================= */
 
 async function refreshRooms() {
@@ -1705,6 +1986,7 @@ async function refreshRooms() {
     !box ||
     !sb
   ) {
+
     return;
   }
 
@@ -1746,13 +2028,15 @@ async function refreshRooms() {
         .order(
           "created_at",
           {
-            ascending: false
+            ascending:
+              false
           }
         )
         .limit(50);
 
 
     if (error) {
+
       throw error;
     }
 
@@ -1775,7 +2059,9 @@ async function refreshRooms() {
         );
 
 
-    if (!rooms.length) {
+    if (
+      !rooms.length
+    ) {
 
       box.innerHTML =
         '<div class="empty">Keine offenen Räume gefunden.</div>';
@@ -1808,7 +2094,10 @@ async function refreshRooms() {
                     r.room_code
                   )}
                   ·
-                  ${r.player_rating || 1000}
+                  ${
+                    r.player_rating ||
+                    1000
+                  }
                   Punkte
                 </small>
 
@@ -1846,19 +2135,21 @@ async function refreshRooms() {
 
     box.innerHTML =
       `
-      <div class="empty">
-        ⚠️ Räume konnten nicht geladen werden.
-      </div>
+        <div class="empty">
+          ⚠️ Räume konnten nicht geladen werden.
+        </div>
       `;
   }
 }
 
 
 /* =========================================================
-   GELISTETEN RAUM BETRETEN
+   RAUM AUS LISTE BEITRETEN
 ========================================================= */
 
-function joinListedRoom(code) {
+function joinListedRoom(
+  code
+) {
 
   const input =
     document.getElementById(
@@ -1869,7 +2160,10 @@ function joinListedRoom(code) {
     );
 
 
-  if (input) {
+  if (
+    input
+  ) {
+
     input.value =
       code;
   }
@@ -1916,11 +2210,14 @@ async function quickJoin() {
 
 
     if (error) {
+
       throw error;
     }
 
 
-    if (!data?.length) {
+    if (
+      !data?.length
+    ) {
 
       showMessage(
         "Keine offenen Räume gefunden."
@@ -1968,7 +2265,9 @@ function startQuickGame() {
    RAUMCODE
 ========================================================= */
 
-function joinRoomByCode(code) {
+function joinRoomByCode(
+  code
+) {
 
   const cleanCode =
     String(code || "")
@@ -1976,7 +2275,9 @@ function joinRoomByCode(code) {
       .toUpperCase();
 
 
-  if (!cleanCode) {
+  if (
+    !cleanCode
+  ) {
 
     showMessage(
       "Bitte einen Raumcode eingeben."
@@ -1992,7 +2293,10 @@ function joinRoomByCode(code) {
     );
 
 
-  if (input) {
+  if (
+    input
+  ) {
+
     input.value =
       cleanCode;
   }
@@ -2020,10 +2324,12 @@ async function createRoom() {
       .toUpperCase();
 
 
-  myColor = "w";
+  myColor =
+    "w";
 
 
   showGame();
+
 
   fresh();
 
@@ -2041,12 +2347,16 @@ async function createRoom() {
   ) {
 
     roomInfo(
-      "PeerJS konnte nicht geladen werden."
+      "Raum-Code: " +
+      room +
+      " · PeerJS konnte nicht geladen werden."
     );
+
 
     showMessage(
       "PeerJS ist nicht geladen."
     );
+
 
     return;
   }
@@ -2100,7 +2410,8 @@ async function createRoom() {
 
             conn.send({
 
-              type: "state",
+              type:
+                "state",
 
               state:
                 getGameState()
@@ -2184,11 +2495,14 @@ function joinRoom(
       .toUpperCase();
 
 
-  if (!code) {
+  if (
+    !code
+  ) {
 
-    showMessage(
+    alert(
       "Bitte einen Raum-Code eingeben."
     );
+
 
     input?.focus();
 
@@ -2199,19 +2513,21 @@ function joinRoom(
   room =
     code;
 
+
   myColor =
     "b";
 
 
   showGame();
 
+
   fresh();
 
 
   roomInfo(
-    "Verbindung zu Raum " +
+    "Verbinde mit Raum " +
     room +
-    " wird hergestellt …"
+    " …"
   );
 
 
@@ -2224,9 +2540,11 @@ function joinRoom(
       "PeerJS konnte nicht geladen werden."
     );
 
+
     showMessage(
       "PeerJS ist nicht geladen."
     );
+
 
     return;
   }
@@ -2250,7 +2568,6 @@ function joinRoom(
 
 
         setupConnection();
-
       }
     );
 
@@ -2269,8 +2586,9 @@ function joinRoom(
           "❌ Raum nicht gefunden oder Verbindung fehlgeschlagen."
         );
 
+
         showMessage(
-          "Raum konnte nicht gefunden werden."
+          "Verbindung zum Raum fehlgeschlagen."
         );
       }
     );
@@ -2278,26 +2596,49 @@ function joinRoom(
   } catch (error) {
 
     console.error(
-      "Raum beitreten:",
+      "Raumbeitritt:",
       error
     );
 
 
-    roomInfo(
-      "❌ Verbindung konnte nicht hergestellt werden."
+    showMessage(
+      "Raum konnte nicht betreten werden."
     );
   }
 }
 
 
 /* =========================================================
-   PEERJS
+   PEERJS VERBINDUNG
 ========================================================= */
 
 function setupConnection() {
 
-  if (!conn) {
+  if (
+    !conn
+  ) {
+
     return;
+  }
+
+
+  const colorElement =
+    document.getElementById(
+      "color"
+    );
+
+
+  if (
+    colorElement
+  ) {
+
+    colorElement.textContent =
+      "Du: " +
+      (
+        myColor === "w"
+          ? "Weiß"
+          : "Schwarz"
+      );
   }
 
 
@@ -2317,7 +2658,10 @@ function setupConnection() {
     "data",
     message => {
 
-      if (!message) {
+      if (
+        !message
+      ) {
+
         return;
       }
 
@@ -2327,7 +2671,9 @@ function setupConnection() {
         "state"
       ) {
 
-        if (message.state) {
+        if (
+          message.state
+        ) {
 
           restoreGameState(
             message.state
@@ -2335,15 +2681,12 @@ function setupConnection() {
 
         } else {
 
-          if (
+          board =
             message.b
-          ) {
-
-            board =
-              message.b.map(
-                row => [...row]
-              );
-          }
+              ? message.b.map(
+                  row => [...row]
+                )
+              : board;
 
 
           turn =
@@ -2353,6 +2696,7 @@ function setupConnection() {
 
           draw();
         }
+
 
         return;
       }
@@ -2375,6 +2719,7 @@ function setupConnection() {
           );
         }
 
+
         return;
       }
 
@@ -2393,7 +2738,8 @@ function setupConnection() {
 
 
         if (
-          winner === myColor
+          winner ===
+          myColor
         ) {
 
           score(
@@ -2406,6 +2752,13 @@ function setupConnection() {
             "loss"
           );
         }
+
+
+        showMessage(
+          winner === myColor
+            ? "🎉 Du hast gewonnen!"
+            : "😕 Du hast verloren."
+        );
 
 
         draw();
@@ -2428,6 +2781,11 @@ function setupConnection() {
         );
 
 
+        showMessage(
+          "🤝 Remis"
+        );
+
+
         draw();
 
         return;
@@ -2441,9 +2799,11 @@ function setupConnection() {
 
         fresh();
 
+
         showMessage(
           "Neues Spiel gestartet."
         );
+
 
         return;
       }
@@ -2460,7 +2820,9 @@ function setupConnection() {
       );
 
 
-      if (!gameOver) {
+      if (
+        !gameOver
+      ) {
 
         showMessage(
           "⚠️ Der Gegner hat die Verbindung beendet."
@@ -2500,7 +2862,9 @@ function showGame() {
     );
 
 
-  if (!game) {
+  if (
+    !game
+  ) {
 
     game =
       document.createElement(
@@ -2510,6 +2874,7 @@ function showGame() {
 
     game.id =
       "game";
+
 
     game.className =
       "game-screen";
@@ -2612,7 +2977,10 @@ function showGame() {
     );
 
 
-  if (app) {
+  if (
+    app
+  ) {
+
     app.style.display =
       "none";
   }
@@ -2621,6 +2989,26 @@ function showGame() {
   document.body.classList.add(
     "game-active"
   );
+
+
+  const colorElement =
+    document.getElementById(
+      "color"
+    );
+
+
+  if (
+    colorElement
+  ) {
+
+    colorElement.textContent =
+      "Du: " +
+      (
+        myColor === "w"
+          ? "Weiß"
+          : "Schwarz"
+      );
+  }
 
 
   draw();
@@ -2638,6 +3026,7 @@ function addGameStyles() {
       "schacharena-game-style"
     )
   ) {
+
     return;
   }
 
@@ -2655,12 +3044,10 @@ function addGameStyles() {
   style.textContent = `
 
     .game-screen {
-
       position: fixed;
       inset: 0;
       z-index: 9999;
       overflow: auto;
-
       background:
         radial-gradient(
           circle at top,
@@ -2668,173 +3055,106 @@ function addGameStyles() {
           #090d18 55%,
           #05070c 100%
         );
-
       color: white;
-
       padding: 24px;
     }
 
-
     .game-inner {
-
       width: min(100%, 900px);
       margin: 0 auto;
     }
 
-
     .game-header {
-
       display: flex;
       align-items: center;
       justify-content: space-between;
-
       gap: 20px;
-
       margin-bottom: 20px;
     }
-
 
     .game-header h2 {
       margin: 0;
     }
 
-
     .game-header p {
-
       margin: 5px 0 0;
       opacity: .7;
     }
 
-
     .game-status {
-
       display: flex;
       justify-content: space-between;
-
       gap: 15px;
-
       padding: 15px 18px;
       margin-bottom: 18px;
-
       border-radius: 14px;
-
-      background:
-        rgba(255,255,255,.08);
+      background: rgba(255,255,255,.08);
     }
-
 
     .board {
-
       width: min(90vw, 720px);
-
       aspect-ratio: 1;
-
       margin: 0 auto;
-
       display: grid;
-
-      grid-template-columns:
-        repeat(8, 1fr);
-
-      grid-template-rows:
-        repeat(8, 1fr);
-
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
       overflow: hidden;
-
       border-radius: 14px;
-
-      box-shadow:
-        0 25px 80px
-        rgba(0,0,0,.45);
+      box-shadow: 0 25px 80px rgba(0,0,0,.45);
     }
-
 
     .sq {
-
       display: flex;
-
       align-items: center;
       justify-content: center;
-
       cursor: pointer;
-
       user-select: none;
-
       position: relative;
     }
-
 
     .sq.light {
       background: #e8d7b1;
     }
 
-
     .sq.dark {
       background: #6f5137;
     }
 
-
     .sq.selected {
-
       box-shadow:
-        inset 0 0 0 5px
-        #36a3ff;
+        inset 0 0 0 5px #36a3ff;
     }
-
 
     .sq.last {
-
       box-shadow:
-        inset 0 0 0 4px
-        rgba(255,215,70,.65);
+        inset 0 0 0 4px rgba(255,215,70,.65);
     }
-
 
     .piece {
-
-      font-size:
-        clamp(30px, 7vw, 68px);
-
+      font-size: clamp(30px, 7vw, 68px);
       line-height: 1;
-
-      transform:
-        translateY(-2px);
+      transform: translateY(-2px);
     }
-
 
     .piece.white {
-
       color: #fff;
-
       text-shadow:
-        0 2px 2px
-        rgba(0,0,0,.75);
+        0 2px 2px rgba(0,0,0,.75);
     }
-
 
     .piece.black {
-
       color: #171717;
-
       text-shadow:
-        0 1px 1px
-        rgba(255,255,255,.25);
+        0 1px 1px rgba(255,255,255,.25);
     }
-
 
     .game-controls {
-
       display: flex;
-
       justify-content: center;
-
       gap: 12px;
-
       margin-top: 20px;
-
       flex-wrap: wrap;
     }
-
 
     @media (max-width: 600px) {
 
@@ -2843,11 +3163,8 @@ function addGameStyles() {
       }
 
       .game-header {
-
         flex-direction: column;
-
         align-items: stretch;
-
         text-align: center;
       }
 
@@ -2870,7 +3187,9 @@ function addGameStyles() {
    RAUM INFO
 ========================================================= */
 
-function roomInfo(text) {
+function roomInfo(
+  text
+) {
 
   const element =
     document.getElementById(
@@ -2878,7 +3197,9 @@ function roomInfo(text) {
     );
 
 
-  if (element) {
+  if (
+    element
+  ) {
 
     element.textContent =
       text;
@@ -2892,7 +3213,9 @@ function roomInfo(text) {
 
 async function copyRoom() {
 
-  if (!room) {
+  if (
+    !room
+  ) {
 
     showMessage(
       "Kein Raumcode vorhanden."
@@ -2939,7 +3262,10 @@ function newGame() {
   ) {
 
     conn.send({
-      type: "reset"
+
+      type:
+        "reset"
+
     });
   }
 
@@ -2960,27 +3286,36 @@ async function backLobby() {
   await unregisterRoom();
 
 
-  if (conn) {
+  if (
+    conn
+  ) {
 
     try {
+
       conn.close();
-    } catch (_) {}
 
+    } catch (_) {}
   }
 
 
-  if (peer) {
+  if (
+    peer
+  ) {
 
     try {
-      peer.destroy();
-    } catch (_) {}
 
+      peer.destroy();
+
+    } catch (_) {}
   }
 
 
-  conn = null;
+  conn =
+    null;
 
-  peer = null;
+
+  peer =
+    null;
 
 
   const game =
@@ -2989,7 +3324,9 @@ async function backLobby() {
     );
 
 
-  if (game) {
+  if (
+    game
+  ) {
 
     game.style.display =
       "none";
@@ -3002,7 +3339,9 @@ async function backLobby() {
     );
 
 
-  if (app) {
+  if (
+    app
+  ) {
 
     app.style.display =
       "";
@@ -3014,9 +3353,12 @@ async function backLobby() {
   );
 
 
-  room = "";
+  room =
+    "";
 
-  myColor = null;
+
+  myColor =
+    null;
 
 
   fresh();
@@ -3030,7 +3372,58 @@ async function backLobby() {
 
 
 /* =========================================================
-   FREUNDE
+   FREUNDE – DATEN
+========================================================= */
+
+function getFriends() {
+
+  try {
+
+    const stored =
+      JSON.parse(
+        localStorage.getItem(
+          "sa_friends"
+        ) || "[]"
+      );
+
+
+    if (
+      Array.isArray(
+        stored
+      )
+    ) {
+
+      return stored;
+    }
+
+  } catch (error) {
+
+    console.warn(
+      "Freunde konnten nicht gelesen werden:",
+      error
+    );
+  }
+
+
+  return [];
+}
+
+
+function saveFriends(
+  friends
+) {
+
+  localStorage.setItem(
+    "sa_friends",
+    JSON.stringify(
+      friends
+    )
+  );
+}
+
+
+/* =========================================================
+   FREUNDE ÖFFNEN
 ========================================================= */
 
 function openFriends() {
@@ -3041,8 +3434,111 @@ function openFriends() {
     );
 
 
-  if (existing) {
+  if (
+    existing
+  ) {
+
     existing.remove();
+  }
+
+
+  const friends =
+    getFriends();
+
+
+  let content =
+    "";
+
+
+  if (
+    !friends.length
+  ) {
+
+    content = `
+
+      <div class="friends-empty">
+
+        <div class="friends-empty-icon">
+          👥
+        </div>
+
+        <h3>
+          Noch keine Freunde
+        </h3>
+
+        <p>
+          Deine Freundesliste ist momentan leer.
+          Füge einen Spieler hinzu, um ihn hier zu sehen.
+        </p>
+
+      </div>
+
+    `;
+
+  } else {
+
+    content = `
+
+      <div class="modal-friends">
+
+        ${friends
+          .map(
+            (
+              friend,
+              index
+            ) => `
+
+              <div class="modal-friend">
+
+                <div class="modal-avatar">
+                  ${escapeHtml(
+                    getInitials(
+                      friend.name
+                    )
+                  )}
+                </div>
+
+                <div>
+
+                  <b>
+                    ${escapeHtml(
+                      friend.name
+                    )}
+                  </b>
+
+                  <small>
+                    ${
+                      friend.status ||
+                      "Freund"
+                    }
+                  </small>
+
+                </div>
+
+                <button
+                  onclick="challengeFriend('${escapeJs(
+                    friend.name
+                  )}')"
+                >
+                  Spielen
+                </button>
+
+                <button
+                  class="friend-delete"
+                  onclick="removeFriend(${index})"
+                >
+                  ×
+                </button>
+
+              </div>
+
+            `
+          )
+          .join("")}
+
+      </div>
+
+    `;
   }
 
 
@@ -3051,111 +3547,7 @@ function openFriends() {
       "Freunde",
       `
 
-        <div class="modal-friends">
-
-          <div class="modal-friend">
-
-            <div class="modal-avatar">
-              MM
-            </div>
-
-            <div>
-
-              <b>
-                MaxMustermann
-              </b>
-
-              <small>
-                🏆 1280 · Online
-              </small>
-
-            </div>
-
-            <button
-              onclick="challengeFriend('MaxMustermann')"
-            >
-              Spielen
-            </button>
-
-          </div>
-
-
-          <div class="modal-friend">
-
-            <div class="modal-avatar">
-              CK
-            </div>
-
-            <div>
-
-              <b>
-                ChessKing
-              </b>
-
-              <small>
-                🏆 1412 · Online
-              </small>
-
-            </div>
-
-            <button
-              onclick="challengeFriend('ChessKing')"
-            >
-              Spielen
-            </button>
-
-          </div>
-
-
-          <div class="modal-friend offline">
-
-            <div class="modal-avatar">
-              SP
-            </div>
-
-            <div>
-
-              <b>
-                SchachProfi
-              </b>
-
-              <small>
-                🏆 1190 · Offline
-              </small>
-
-            </div>
-
-          </div>
-
-
-          <div class="modal-friend">
-
-            <div class="modal-avatar">
-              QG
-            </div>
-
-            <div>
-
-              <b>
-                QueenGamer
-              </b>
-
-              <small>
-                🏆 1350 · Online
-              </small>
-
-            </div>
-
-            <button
-              onclick="challengeFriend('QueenGamer')"
-            >
-              Spielen
-            </button>
-
-          </div>
-
-        </div>
-
+        ${content}
 
         <button
           class="modal-primary"
@@ -3179,6 +3571,45 @@ function openFriends() {
 
 
 /* =========================================================
+   INITIALEN
+========================================================= */
+
+function getInitials(
+  name
+) {
+
+  const parts =
+    String(name || "")
+      .trim()
+      .split(/\s+/);
+
+
+  if (
+    !parts.length
+  ) {
+
+    return "?";
+  }
+
+
+  if (
+    parts.length === 1
+  ) {
+
+    return parts[0]
+      .slice(0, 2)
+      .toUpperCase();
+  }
+
+
+  return (
+    parts[0][0] +
+    parts[1][0]
+  ).toUpperCase();
+}
+
+
+/* =========================================================
    FREUND HINZUFÜGEN
 ========================================================= */
 
@@ -3190,15 +3621,138 @@ function addFriend() {
     );
 
 
-  if (!name) {
+  if (
+    !name
+  ) {
+
     return;
   }
 
 
+  const cleanName =
+    name
+      .trim()
+      .slice(0, 18);
+
+
+  if (
+    !cleanName
+  ) {
+
+    return;
+  }
+
+
+  const friends =
+    getFriends();
+
+
+  const exists =
+    friends.some(
+      friend =>
+        String(
+          friend.name
+        )
+          .toLowerCase() ===
+        cleanName.toLowerCase()
+    );
+
+
+  if (
+    exists
+  ) {
+
+    showMessage(
+      "Dieser Spieler ist bereits in deiner Freundesliste."
+    );
+
+    return;
+  }
+
+
+  friends.push({
+
+    name:
+      cleanName,
+
+    status:
+      "Freund"
+
+  });
+
+
+  saveFriends(
+    friends
+  );
+
+
   showMessage(
-    "Freundesanfrage an " +
+    cleanName +
+    " wurde hinzugefügt."
+  );
+
+
+  openFriends();
+}
+
+
+/* =========================================================
+   FREUND ENTFERNEN
+========================================================= */
+
+function removeFriend(
+  index
+) {
+
+  const friends =
+    getFriends();
+
+
+  if (
+    index < 0 ||
+    index >= friends.length
+  ) {
+
+    return;
+  }
+
+
+  const name =
+    friends[index].name;
+
+
+  const confirmed =
+    window.confirm(
+      name +
+      " wirklich entfernen?"
+    );
+
+
+  if (
+    !confirmed
+  ) {
+
+    return;
+  }
+
+
+  friends.splice(
+    index,
+    1
+  );
+
+
+  saveFriends(
+    friends
+  );
+
+
+  openFriends();
+
+
+  showMessage(
     name +
-    " wurde gesendet."
+    " wurde entfernt."
   );
 }
 
@@ -3207,7 +3761,9 @@ function addFriend() {
    FREUND HERAUSFORDERN
 ========================================================= */
 
-function challengeFriend(name) {
+function challengeFriend(
+  name
+) {
 
   showMessage(
     "♟ Spielanfrage an " +
@@ -3218,7 +3774,7 @@ function challengeFriend(name) {
 
 
 /* =========================================================
-   RANKING
+   RANKING ÖFFNEN
 ========================================================= */
 
 function openRanking() {
@@ -3285,7 +3841,6 @@ function openMessages() {
             </div>
 
           </div>
-
 
           <div class="message-empty">
 
@@ -3382,7 +3937,9 @@ function saveSettings() {
     );
 
 
-  if (input) {
+  if (
+    input
+  ) {
 
     setName(
       input.value
@@ -3425,21 +3982,22 @@ function openProfile() {
 
             <img
               src="assets/profile-placeholder.jpg"
-              alt="${escapeHtml(name)}"
+              alt="${escapeHtml(
+                name
+              )}"
             >
 
           </div>
 
-
           <h3>
-            ${escapeHtml(name)}
+            ${escapeHtml(
+              name
+            )}
           </h3>
-
 
           <p>
             🟢 Online
           </p>
-
 
           <div class="profile-stat-grid">
 
@@ -3455,7 +4013,6 @@ function openProfile() {
 
             </div>
 
-
             <div>
 
               <strong>
@@ -3467,7 +4024,6 @@ function openProfile() {
               </small>
 
             </div>
-
 
             <div>
 
@@ -3496,7 +4052,7 @@ function openProfile() {
 
 
 /* =========================================================
-   ⭐ TÄGLICHE BELOHNUNGEN
+   BELOHNUNGEN ÖFFNEN
 ========================================================= */
 
 function openRewards() {
@@ -3510,7 +4066,9 @@ function openRewards() {
     );
 
 
-  if (oldPopup) {
+  if (
+    oldPopup
+  ) {
 
     oldPopup.remove();
 
@@ -3518,14 +4076,14 @@ function openRewards() {
   }
 
 
-  const winsDone =
+  const winsCount =
     Math.min(
       dailyTasks.wins,
       3
     );
 
 
-  const gamesDone =
+  const gamesCount =
     Math.min(
       dailyTasks.games,
       5
@@ -3535,18 +4093,26 @@ function openRewards() {
   const winsPercent =
     Math.min(
       100,
-      (
-        winsDone / 3
-      ) * 100
+      Math.round(
+        (
+          dailyTasks.wins /
+          3
+        ) *
+        100
+      )
     );
 
 
   const gamesPercent =
     Math.min(
       100,
-      (
-        gamesDone / 5
-      ) * 100
+      Math.round(
+        (
+          dailyTasks.games /
+          5
+        ) *
+        100
+      )
     );
 
 
@@ -3583,7 +4149,7 @@ function openRewards() {
 
 
       <h2>
-        Deine täglichen Aufgaben
+        Deine Aufgaben
       </h2>
 
 
@@ -3591,8 +4157,6 @@ function openRewards() {
         Erfülle Aufgaben und verdiene Münzen.
       </p>
 
-
-      <!-- AUFGABE 1 -->
 
       <div class="reward-task">
 
@@ -3607,11 +4171,9 @@ function openRewards() {
             Gewinne 3 Partien
           </strong>
 
-
           <span>
-            ${winsDone} / 3 geschafft
+            ${winsCount} / 3 geschafft
           </span>
-
 
           <div class="task-progress">
 
@@ -3625,19 +4187,11 @@ function openRewards() {
 
 
         <div class="task-reward">
-
-          ${
-            dailyTasks.winsRewarded
-              ? "✅"
-              : "🪙 100"
-          }
-
+          🪙 100
         </div>
 
       </div>
 
-
-      <!-- AUFGABE 2 -->
 
       <div class="reward-task">
 
@@ -3652,11 +4206,9 @@ function openRewards() {
             Spiele 5 Partien
           </strong>
 
-
           <span>
-            ${gamesDone} / 5 geschafft
+            ${gamesCount} / 5 geschafft
           </span>
-
 
           <div class="task-progress">
 
@@ -3670,19 +4222,11 @@ function openRewards() {
 
 
         <div class="task-reward">
-
-          ${
-            dailyTasks.gamesRewarded
-              ? "✅"
-              : "🪙 75"
-          }
-
+          🪙 75
         </div>
 
       </div>
 
-
-      <!-- MÜNZEN -->
 
       <div class="rewards-total">
 
@@ -3690,18 +4234,9 @@ function openRewards() {
           Deine Münzen
         </span>
 
-
         <strong>
           🪙 ${coins}
         </strong>
-
-      </div>
-
-
-      <div class="rewards-reset-info">
-
-        🔄 Die Aufgaben werden jeden Tag
-        automatisch zurückgesetzt.
 
       </div>
 
@@ -3721,7 +4256,9 @@ function openRewards() {
     );
 
 
-  if (closeButton) {
+  if (
+    closeButton
+  ) {
 
     closeButton.addEventListener(
       "click",
@@ -3739,7 +4276,8 @@ function openRewards() {
     event => {
 
       if (
-        event.target === popup
+        event.target ===
+        popup
       ) {
 
         popup.remove();
@@ -3772,15 +4310,15 @@ function createModal(
 
     <div class="sa-modal-backdrop"></div>
 
-
     <div class="sa-modal-window">
 
       <div class="sa-modal-header">
 
         <h2>
-          ${escapeHtml(title)}
+          ${escapeHtml(
+            title
+          )}
         </h2>
-
 
         <button
           class="sa-modal-close"
@@ -3804,7 +4342,8 @@ function createModal(
 
 
   const close =
-    () => wrapper.remove();
+    () =>
+      wrapper.remove();
 
 
   wrapper
@@ -3837,15 +4376,14 @@ function createModal(
 
 function closeCurrentModal() {
 
-  const modal =
-    document.querySelector(
+  document
+    .querySelectorAll(
       ".sa-modal"
+    )
+    .forEach(
+      modal =>
+        modal.remove()
     );
-
-
-  if (modal) {
-    modal.remove();
-  }
 }
 
 
@@ -3865,26 +4403,49 @@ function updateDashboardName() {
     );
 
 
-  if (welcome) {
+  if (
+    welcome
+  ) {
 
     welcome.innerHTML =
-      escapeHtml(name) +
+      escapeHtml(
+        name
+      ) +
       ' <span class="verified">✓</span>';
   }
 
 
-  document
-    .querySelectorAll(
+  const profileNames =
+    document.querySelectorAll(
       ".profile-box h3"
-    )
-    .forEach(
-      element => {
-
-        element.innerHTML =
-          escapeHtml(name) +
-          ' <span class="verified small">✓</span>';
-      }
     );
+
+
+  profileNames.forEach(
+    element => {
+
+      element.innerHTML =
+        escapeHtml(
+          name
+        ) +
+        ' <span class="verified small">✓</span>';
+    }
+  );
+
+
+  const profileImages =
+    document.querySelectorAll(
+      'img[alt="Nico"]'
+    );
+
+
+  profileImages.forEach(
+    image => {
+
+      image.alt =
+        name;
+    }
+  );
 }
 
 
@@ -4001,7 +4562,7 @@ function setupNavigation() {
 
 
 /* =========================================================
-   SPIELLOBBY
+   SPIEL-LOBBY
 ========================================================= */
 
 function showGameLobby() {
@@ -4067,7 +4628,6 @@ function showGameLobby() {
               Raum beitreten
             </b>
 
-
             <div>
 
               <input
@@ -4076,7 +4636,6 @@ function showGameLobby() {
                 maxlength="12"
                 placeholder="Raumcode"
               >
-
 
               <button
                 onclick="joinFromModal()"
@@ -4101,7 +4660,7 @@ function showGameLobby() {
 
 
 /* =========================================================
-   AUS MODAL BEITRETEN
+   RAUM AUS MODAL
 ========================================================= */
 
 function joinFromModal() {
@@ -4118,11 +4677,16 @@ function joinFromModal() {
       .toUpperCase();
 
 
-  if (!code) {
+  if (
+    !code
+  ) {
 
     showMessage(
       "Bitte Raumcode eingeben."
     );
+
+
+    input?.focus();
 
     return;
   }
@@ -4150,7 +4714,10 @@ function setupTopButtons() {
 
 
   buttons.forEach(
-    (button, index) => {
+    (
+      button,
+      index
+    ) => {
 
       button.addEventListener(
         "click",
@@ -4159,7 +4726,9 @@ function setupTopButtons() {
           event.preventDefault();
 
 
-          if (index === 0) {
+          if (
+            index === 0
+          ) {
 
             showGameLobby();
 
@@ -4179,7 +4748,9 @@ function setupTopButtons() {
     );
 
 
-  if (profileButton) {
+  if (
+    profileButton
+  ) {
 
     profileButton.addEventListener(
       "click",
@@ -4206,7 +4777,9 @@ function setupDashboardButtons() {
     );
 
 
-  if (profileButton) {
+  if (
+    profileButton
+  ) {
 
     const profileCard =
       profileButton.closest(
@@ -4221,7 +4794,9 @@ function setupDashboardButtons() {
           ".side-title"
         )
         ?.textContent
-        .includes("PROFIL")
+        .includes(
+          "PROFIL"
+        )
     ) {
 
       profileButton.addEventListener(
@@ -4243,11 +4818,14 @@ function setupDashboardButtons() {
     );
 
 
-  if (search) {
+  if (
+    search
+  ) {
 
     search.addEventListener(
       "input",
-      () => refreshRooms()
+      () =>
+        refreshRooms()
     );
   }
 }
@@ -4257,7 +4835,9 @@ function setupDashboardButtons() {
    TOAST
 ========================================================= */
 
-function showMessage(text) {
+function showMessage(
+  text
+) {
 
   const old =
     document.querySelector(
@@ -4265,7 +4845,10 @@ function showMessage(text) {
     );
 
 
-  if (old) {
+  if (
+    old
+  ) {
+
     old.remove();
   }
 
@@ -4308,16 +4891,8 @@ function showMessage(text) {
 
 
       setTimeout(
-        () => {
-
-          if (
-            message.parentNode
-          ) {
-
-            message.remove();
-          }
-
-        },
+        () =>
+          message.remove(),
         250
       );
 
@@ -4328,7 +4903,7 @@ function showMessage(text) {
 
 
 /* =========================================================
-   APP CSS / POPUP CSS
+   APP CSS
 ========================================================= */
 
 function addAppStyles() {
@@ -4338,6 +4913,7 @@ function addAppStyles() {
       "schacharena-app-style"
     )
   ) {
+
     return;
   }
 
@@ -4354,997 +4930,448 @@ function addAppStyles() {
 
   style.textContent = `
 
-    /* =========================
-       MODAL
-    ========================= */
-
     .sa-modal {
-
       position: fixed;
       inset: 0;
-
       z-index: 10000;
-
       display: flex;
-
       align-items: center;
       justify-content: center;
-
       padding: 20px;
     }
 
-
     .sa-modal-backdrop {
-
       position: absolute;
       inset: 0;
-
-      background:
-        rgba(0,0,0,.72);
-
-      backdrop-filter:
-        blur(8px);
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(8px);
     }
-
 
     .sa-modal-window {
-
       position: relative;
-
-      width:
-        min(100%, 620px);
-
+      width: min(100%, 620px);
       max-height: 90vh;
-
       overflow: auto;
-
-      background:
-        #151923;
-
-      color:
-        #fff;
-
-      border:
-        1px solid
-        rgba(255,255,255,.12);
-
-      border-radius:
-        22px;
-
-      box-shadow:
-        0 30px 100px
-        rgba(0,0,0,.6);
+      background: #151923;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 22px;
+      box-shadow: 0 30px 100px rgba(0,0,0,.6);
     }
-
 
     .sa-modal-header {
-
-      display:
-        flex;
-
-      justify-content:
-        space-between;
-
-      align-items:
-        center;
-
-      padding:
-        22px 24px;
-
-      border-bottom:
-        1px solid
-        rgba(255,255,255,.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 24px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
     }
-
 
     .sa-modal-header h2 {
       margin: 0;
     }
 
-
     .sa-modal-close {
-
       border: 0;
-
-      background:
-        rgba(255,255,255,.08);
-
-      color:
-        #fff;
-
-      width:
-        38px;
-
-      height:
-        38px;
-
-      border-radius:
-        50%;
-
-      font-size:
-        25px;
-
-      cursor:
-        pointer;
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-size: 25px;
+      cursor: pointer;
     }
-
 
     .sa-modal-content {
       padding: 24px;
     }
 
-
-    /* =========================
-       PLAY
-    ========================= */
-
     .play-options {
-
-      display:
-        grid;
-
-      gap:
-        14px;
+      display: grid;
+      gap: 14px;
     }
-
 
     .play-option {
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      gap:
-        16px;
-
-      width:
-        100%;
-
-      padding:
-        18px;
-
-      border:
-        1px solid
-        rgba(255,255,255,.1);
-
-      border-radius:
-        16px;
-
-      background:
-        rgba(255,255,255,.05);
-
-      color:
-        white;
-
-      text-align:
-        left;
-
-      cursor:
-        pointer;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px;
+      background: rgba(255,255,255,.05);
+      color: white;
+      text-align: left;
+      cursor: pointer;
     }
-
 
     .play-option:hover {
-
-      background:
-        rgba(255,255,255,.1);
+      background: rgba(255,255,255,.1);
     }
-
 
     .play-option > span {
       font-size: 30px;
     }
-
 
     .play-option b,
     .play-option small {
       display: block;
     }
 
-
     .play-option small {
-
-      margin-top:
-        4px;
-
-      opacity:
-        .65;
+      margin-top: 4px;
+      opacity: .65;
     }
-
 
     .play-join {
-
-      padding:
-        18px;
-
-      border-radius:
-        16px;
-
-      background:
-        rgba(255,255,255,.04);
+      padding: 18px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.04);
     }
-
 
     .play-join > b {
-
-      display:
-        block;
-
-      margin-bottom:
-        10px;
+      display: block;
+      margin-bottom: 10px;
     }
-
 
     .play-join > div {
-
-      display:
-        flex;
-
-      gap:
-        8px;
+      display: flex;
+      gap: 8px;
     }
-
 
     .play-join input,
     .settings-form input {
-
-      min-width:
-        0;
-
-      flex:
-        1;
-
-      padding:
-        12px 14px;
-
-      border-radius:
-        10px;
-
-      border:
-        1px solid
-        rgba(255,255,255,.15);
-
-      background:
-        rgba(0,0,0,.25);
-
-      color:
-        white;
+      min-width: 0;
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(0,0,0,.25);
+      color: white;
     }
-
 
     .play-join button,
     .modal-primary,
     .modal-friend button {
-
-      border:
-        0;
-
-      border-radius:
-        10px;
-
-      padding:
-        11px 16px;
-
-      cursor:
-        pointer;
-
-      background:
-        #267cff;
-
-      color:
-        white;
-
-      font-weight:
-        700;
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      cursor: pointer;
+      background: #267cff;
+      color: white;
+      font-weight: 700;
     }
-
-
-    /* =========================
-       FRIENDS
-    ========================= */
 
     .modal-friends {
-
-      display:
-        grid;
-
-      gap:
-        10px;
+      display: grid;
+      gap: 10px;
     }
-
 
     .modal-friend {
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      gap:
-        12px;
-
-      padding:
-        13px;
-
-      border-radius:
-        13px;
-
-      background:
-        rgba(255,255,255,.05);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px;
+      border-radius: 13px;
+      background: rgba(255,255,255,.05);
     }
-
 
     .modal-friend > div:nth-child(2) {
       flex: 1;
     }
-
 
     .modal-friend b,
     .modal-friend small {
       display: block;
     }
 
-
     .modal-friend small {
-
-      opacity:
-        .6;
-
-      margin-top:
-        3px;
+      opacity: .6;
+      margin-top: 3px;
     }
-
-
-    .modal-friend.offline {
-      opacity: .5;
-    }
-
 
     .modal-avatar {
-
-      width:
-        42px;
-
-      height:
-        42px;
-
-      border-radius:
-        50%;
-
-      display:
-        grid;
-
-      place-items:
-        center;
-
-      background:
-        #39435d;
-
-      font-weight:
-        800;
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #39435d;
+      font-weight: 800;
     }
 
+    .friend-delete {
+      background: rgba(255,255,255,.08) !important;
+      color: white !important;
+      font-size: 18px;
+      min-width: 40px;
+    }
+
+    .friends-empty {
+      text-align: center;
+      padding: 25px 10px 15px;
+    }
+
+    .friends-empty-icon {
+      font-size: 50px;
+      margin-bottom: 10px;
+    }
+
+    .friends-empty h3 {
+      margin: 5px 0 8px;
+    }
+
+    .friends-empty p {
+      margin: 0 auto;
+      max-width: 400px;
+      opacity: .6;
+      line-height: 1.5;
+    }
 
     .modal-primary {
-
-      margin-top:
-        18px;
-
-      width:
-        100%;
+      margin-top: 18px;
+      width: 100%;
     }
-
-
-    /* =========================
-       SETTINGS
-    ========================= */
 
     .settings-form {
-
-      display:
-        grid;
-
-      gap:
-        18px;
+      display: grid;
+      gap: 18px;
     }
-
 
     .settings-form label {
-
-      display:
-        grid;
-
-      gap:
-        8px;
-
-      font-weight:
-        600;
+      display: grid;
+      gap: 8px;
+      font-weight: 600;
     }
-
 
     .setting-check {
-
-      display:
-        flex !important;
-
-      align-items:
-        center;
+      display: flex !important;
+      align-items: center;
     }
-
-
-    /* =========================
-       PROFILE
-    ========================= */
 
     .profile-modal {
       text-align: center;
     }
 
-
     .profile-modal-avatar {
-
-      width:
-        100px;
-
-      height:
-        100px;
-
-      margin:
-        0 auto 15px;
-
-      overflow:
-        hidden;
-
-      border-radius:
-        50%;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 15px;
+      overflow: hidden;
+      border-radius: 50%;
     }
-
 
     .profile-modal-avatar img {
-
-      width:
-        100%;
-
-      height:
-        100%;
-
-      object-fit:
-        cover;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
-
 
     .profile-stat-grid {
-
-      display:
-        grid;
-
-      grid-template-columns:
-        repeat(3, 1fr);
-
-      gap:
-        10px;
-
-      margin-top:
-        22px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 22px;
     }
-
 
     .profile-stat-grid > div {
-
-      padding:
-        15px 8px;
-
-      border-radius:
-        12px;
-
-      background:
-        rgba(255,255,255,.05);
+      padding: 15px 8px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.05);
     }
-
 
     .profile-stat-grid strong,
     .profile-stat-grid small {
-
-      display:
-        block;
+      display: block;
     }
-
 
     .profile-stat-grid small {
-
-      opacity:
-        .6;
-
-      margin-top:
-        3px;
+      opacity: .6;
+      margin-top: 3px;
     }
-
-
-    /* =========================
-       MESSAGES
-    ========================= */
 
     .message-item {
-
-      display:
-        flex;
-
-      gap:
-        12px;
-
-      padding:
-        15px;
-
-      border-radius:
-        13px;
-
-      background:
-        rgba(255,255,255,.05);
+      display: flex;
+      gap: 12px;
+      padding: 15px;
+      border-radius: 13px;
+      background: rgba(255,255,255,.05);
     }
-
 
     .message-item p {
-
-      margin:
-        5px 0;
+      margin: 5px 0;
     }
-
 
     .message-item small {
-
-      opacity:
-        .55;
+      opacity: .55;
     }
-
 
     .message-avatar {
-
-      width:
-        42px;
-
-      height:
-        42px;
-
-      border-radius:
-        50%;
-
-      display:
-        grid;
-
-      place-items:
-        center;
-
-      background:
-        #303b59;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #303b59;
     }
-
 
     .message-empty {
-
-      margin-top:
-        18px;
-
-      opacity:
-        .55;
-
-      text-align:
-        center;
+      margin-top: 18px;
+      opacity: .55;
+      text-align: center;
     }
 
+    .toast {
+      position: fixed;
+      z-index: 20000;
+      left: 50%;
+      bottom: 30px;
+      transform: translate(-50%, 20px);
+      padding: 13px 18px;
+      border-radius: 12px;
+      background: #171a23;
+      color: white;
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 15px 40px rgba(0,0,0,.4);
+      opacity: 0;
+      transition: .25s ease;
+      pointer-events: none;
+      text-align: center;
+    }
 
-    /* =========================
-       BELOHNUNGEN
-    ========================= */
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
 
     .rewards-popup-overlay {
-
-      position:
-        fixed;
-
-      inset:
-        0;
-
-      z-index:
-        20000;
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        center;
-
-      padding:
-        20px;
-
-      background:
-        rgba(0,0,0,.72);
-
-      backdrop-filter:
-        blur(8px);
+      position: fixed;
+      inset: 0;
+      z-index: 20000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(8px);
     }
-
 
     .rewards-popup {
-
-      position:
-        relative;
-
-      width:
-        min(100%, 560px);
-
-      max-height:
-        90vh;
-
-      overflow:
-        auto;
-
-      padding:
-        30px;
-
-      border-radius:
-        24px;
-
-      background:
-        #151923;
-
-      color:
-        white;
-
-      border:
-        1px solid
-        rgba(255,255,255,.12);
-
-      box-shadow:
-        0 30px 100px
-        rgba(0,0,0,.65);
+      position: relative;
+      width: min(100%, 560px);
+      max-height: 90vh;
+      overflow: auto;
+      padding: 30px 24px 24px;
+      border-radius: 22px;
+      background: #151923;
+      color: white;
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 30px 100px rgba(0,0,0,.6);
     }
-
 
     .rewards-popup-close {
-
-      position:
-        absolute;
-
-      top:
-        15px;
-
-      right:
-        15px;
-
-      width:
-        38px;
-
-      height:
-        38px;
-
-      border:
-        0;
-
-      border-radius:
-        50%;
-
-      background:
-        rgba(255,255,255,.08);
-
-      color:
-        white;
-
-      font-size:
-        25px;
-
-      cursor:
-        pointer;
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(255,255,255,.08);
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
     }
-
 
     .rewards-popup-icon {
-
-      width:
-        64px;
-
-      height:
-        64px;
-
-      margin:
-        0 auto 12px;
-
-      display:
-        grid;
-
-      place-items:
-        center;
-
-      border-radius:
-        18px;
-
-      background:
-        rgba(255,215,70,.12);
-
-      font-size:
-        34px;
+      font-size: 45px;
+      text-align: center;
+      margin-bottom: 5px;
     }
-
 
     .rewards-popup h2 {
-
-      margin:
-        0;
-
-      text-align:
-        center;
+      text-align: center;
+      margin: 5px 0;
     }
-
 
     .rewards-subtitle {
-
-      margin:
-        8px 0 24px;
-
-      text-align:
-        center;
-
-      opacity:
-        .65;
+      text-align: center;
+      opacity: .6;
+      margin: 5px 0 22px;
     }
-
 
     .reward-task {
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      gap:
-        14px;
-
-      padding:
-        16px;
-
-      margin-bottom:
-        12px;
-
-      border:
-        1px solid
-        rgba(255,255,255,.08);
-
-      border-radius:
-        16px;
-
-      background:
-        rgba(255,255,255,.04);
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 15px;
+      background: rgba(255,255,255,.05);
     }
-
 
     .task-icon {
-
-      width:
-        44px;
-
-      height:
-        44px;
-
-      flex:
-        0 0 44px;
-
-      display:
-        grid;
-
-      place-items:
-        center;
-
-      border-radius:
-        12px;
-
-      background:
-        rgba(255,255,255,.08);
-
-      font-size:
-        23px;
+      width: 42px;
+      min-width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: rgba(255,255,255,.08);
+      font-size: 22px;
     }
-
 
     .task-content {
-
-      flex:
-        1;
-
-      min-width:
-        0;
+      flex: 1;
+      min-width: 0;
     }
 
-
-    .task-content strong {
-
-      display:
-        block;
-
-      margin-bottom:
-        5px;
+    .task-content strong,
+    .task-content span {
+      display: block;
     }
-
 
     .task-content span {
-
-      display:
-        block;
-
-      font-size:
-        13px;
-
-      opacity:
-        .65;
-
-      margin-bottom:
-        8px;
+      margin-top: 4px;
+      font-size: 13px;
+      opacity: .6;
     }
-
 
     .task-progress {
-
-      width:
-        100%;
-
-      height:
-        7px;
-
-      overflow:
-        hidden;
-
-      border-radius:
-        999px;
-
-      background:
-        rgba(255,255,255,.1);
+      height: 7px;
+      margin-top: 9px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: rgba(255,255,255,.1);
     }
 
-
-    .task-progress div {
-
-      height:
-        100%;
-
-      border-radius:
-        inherit;
-
-      background:
-        #267cff;
-
-      transition:
-        width .3s ease;
+    .task-progress > div {
+      height: 100%;
+      border-radius: inherit;
+      background: #267cff;
+      transition: width .3s ease;
     }
-
 
     .task-reward {
-
-      min-width:
-        65px;
-
-      text-align:
-        right;
-
-      font-weight:
-        700;
+      white-space: nowrap;
+      font-weight: 800;
     }
-
 
     .rewards-total {
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        space-between;
-
-      margin-top:
-        20px;
-
-      padding:
-        18px;
-
-      border-radius:
-        15px;
-
-      background:
-        rgba(255,255,255,.07);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      margin-top: 18px;
+      padding: 17px;
+      border-radius: 15px;
+      background: rgba(38,124,255,.12);
     }
-
 
     .rewards-total strong {
       font-size: 18px;
     }
-
-
-    .rewards-reset-info {
-
-      margin-top:
-        14px;
-
-      text-align:
-        center;
-
-      font-size:
-        12px;
-
-      opacity:
-        .5;
-    }
-
-
-    /* =========================
-       TOAST
-    ========================= */
-
-    .toast {
-
-      position:
-        fixed;
-
-      z-index:
-        30000;
-
-      left:
-        50%;
-
-      bottom:
-        30px;
-
-      transform:
-        translate(-50%, 20px);
-
-      padding:
-        13px 18px;
-
-      border-radius:
-        12px;
-
-      background:
-        #171a23;
-
-      color:
-        white;
-
-      border:
-        1px solid
-        rgba(255,255,255,.12);
-
-      box-shadow:
-        0 15px 40px
-        rgba(0,0,0,.4);
-
-      opacity:
-        0;
-
-      transition:
-        .25s ease;
-
-      pointer-events:
-        none;
-
-      text-align:
-        center;
-    }
-
-
-    .toast.show {
-
-      opacity:
-        1;
-
-      transform:
-        translate(-50%, 0);
-    }
-
 
     @media(max-width:600px) {
 
@@ -5368,16 +5395,11 @@ function addAppStyles() {
         grid-template-columns: 1fr;
       }
 
-      .rewards-popup {
-        padding: 24px 16px;
-      }
-
       .reward-task {
-        gap: 9px;
+        align-items: flex-start;
       }
 
       .task-reward {
-        min-width: 52px;
         font-size: 13px;
       }
 
@@ -5398,43 +5420,42 @@ function addAppStyles() {
 
 function initApp() {
 
-  /* Tagesaufgaben sofort initialisieren */
+  addAppStyles();
+
 
   createDailyTasks();
 
 
-  /* CSS */
-
-  addAppStyles();
-
-
-  /* Dashboard */
-
   updateDashboardName();
+
 
   updateRanking();
 
 
-  /* Navigation */
+  updateCoinDisplays();
+
+
+  updateRewardsDisplays();
+
 
   setupNavigation();
 
+
   setupTopButtons();
+
 
   setupDashboardButtons();
 
 
-  /* Räume */
-
   refreshRooms();
 
-
-  /* Ranking */
 
   loadLeaderboard();
 
 
-  /* Alter Name */
+  /* -----------------------------------------
+     NAME INPUT
+  ----------------------------------------- */
 
   const nameInput =
     document.getElementById(
@@ -5442,9 +5463,13 @@ function initApp() {
     );
 
 
-  if (nameInput) {
+  if (
+    nameInput
+  ) {
 
-    if (nameInput.value) {
+    if (
+      nameInput.value
+    ) {
 
       setName(
         nameInput.value
@@ -5460,16 +5485,19 @@ function initApp() {
           nameInput.value
         );
 
+
         syncPlayer();
 
-        updateDashboardName();
 
+        updateDashboardName();
       }
     );
   }
 
 
-  /* Enter beim Raumcode */
+  /* -----------------------------------------
+     ENTER BEI RAUMCODE
+  ----------------------------------------- */
 
   const roomInput =
     document.getElementById(
@@ -5477,14 +5505,17 @@ function initApp() {
     );
 
 
-  if (roomInput) {
+  if (
+    roomInput
+  ) {
 
     roomInput.addEventListener(
       "keydown",
       event => {
 
         if (
-          event.key === "Enter"
+          event.key ===
+          "Enter"
         ) {
 
           event.preventDefault();
@@ -5496,7 +5527,9 @@ function initApp() {
               .toUpperCase();
 
 
-          if (code) {
+          if (
+            code
+          ) {
 
             joinRoomByCode(
               code
@@ -5508,12 +5541,9 @@ function initApp() {
   }
 
 
-  /* =====================================================
-     WICHTIG:
-     ALLE FUNKTIONEN GLOBAL MACHEN
-     Damit onclick="" aus deiner HTML-Datei
-     sie ebenfalls findet.
-  ===================================================== */
+  /* -----------------------------------------
+     GLOBALE FUNKTIONEN
+  ----------------------------------------- */
 
   window.startQuickGame =
     startQuickGame;
@@ -5554,6 +5584,9 @@ function initApp() {
   window.addFriend =
     addFriend;
 
+  window.removeFriend =
+    removeFriend;
+
   window.challengeFriend =
     challengeFriend;
 
@@ -5566,9 +5599,6 @@ function initApp() {
   window.backLobby =
     backLobby;
 
-  window.showMessage =
-    showMessage;
-
   window.closeCurrentModal =
     closeCurrentModal;
 
@@ -5578,17 +5608,14 @@ function initApp() {
   window.saveSettings =
     saveSettings;
 
-  window.createRoomDashboard =
-    createRoom;
-
-  window.findOpponent =
-    quickJoin;
+  window.showMessage =
+    showMessage;
 
 
   /* Dashboard-Raum beitreten */
 
   window.joinRoomDashboard =
-    function () {
+    () => {
 
       const input =
         document.getElementById(
@@ -5596,7 +5623,9 @@ function initApp() {
         );
 
 
-      if (!input) {
+      if (
+        !input
+      ) {
 
         showMessage(
           "Raumcode-Feld wurde nicht gefunden."
@@ -5612,7 +5641,9 @@ function initApp() {
           .toUpperCase();
 
 
-      if (!code) {
+      if (
+        !code
+      ) {
 
         input.focus();
 
@@ -5622,13 +5653,10 @@ function initApp() {
 
 
         setTimeout(
-          () => {
-
+          () =>
             input.classList.remove(
               "error"
-            );
-
-          },
+            ),
           600
         );
 
@@ -5643,14 +5671,24 @@ function initApp() {
     };
 
 
-  /* Schachbrett starten */
+  window.createRoomDashboard =
+    createRoom;
+
+
+  window.findOpponent =
+    quickJoin;
+
+
+  /* -----------------------------------------
+     SCHACH STARTEN
+  ----------------------------------------- */
 
   fresh();
 }
 
 
 /* =========================================================
-   START
+   APP STARTEN
 ========================================================= */
 
 if (
