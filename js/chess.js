@@ -161,6 +161,7 @@ if(type==="k"){
 
   return false;
 }
+}
 
 /*
   Prüft, ob ein bestimmtes Feld von einer Farbe
