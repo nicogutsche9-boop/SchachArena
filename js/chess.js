@@ -400,3 +400,83 @@ function legal(r1,c1,r2,c2){
 
   return true;
 }
+/*
+  Prüft, ob eine Farbe mindestens einen legalen Zug hat.
+*/
+function hasLegalMove(color){
+
+  // Aktuellen Spieler merken
+  const oldTurn=turn;
+
+  // Temporär die zu prüfende Farbe setzen
+  turn=color;
+
+  // Alle Felder des Brettes durchsuchen
+  for(let r1=0;r1<8;r1++){
+
+    for(let c1=0;c1<8;c1++){
+
+      const piece=board[r1][c1];
+
+      // Nur eigene Figuren prüfen
+      if(
+        piece==="." ||
+        colorOf(piece)!==color
+      ){
+        continue;
+      }
+
+      // Jedes mögliche Zielfeld ausprobieren
+      for(let r2=0;r2<8;r2++){
+
+        for(let c2=0;c2<8;c2++){
+
+          if(legal(r1,c1,r2,c2)){
+
+            // Ursprünglichen Spieler wiederherstellen
+            turn=oldTurn;
+
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  // Ursprünglichen Spieler wiederherstellen
+  turn=oldTurn;
+
+  return false;
+}
+
+
+/*
+  Prüft, ob eine Farbe Schachmatt ist.
+
+  Schachmatt bedeutet:
+  1. Der König steht im Schach.
+  2. Es gibt keinen legalen Zug mehr.
+*/
+function isCheckmate(color){
+
+  return (
+    isInCheck(color) &&
+    !hasLegalMove(color)
+  );
+}
+
+
+/*
+  Prüft, ob eine Farbe Patt ist.
+
+  Patt bedeutet:
+  1. Der König steht NICHT im Schach.
+  2. Es gibt keinen legalen Zug mehr.
+*/
+function isStalemate(color){
+
+  return (
+    !isInCheck(color) &&
+    !hasLegalMove(color)
+  );
+}
