@@ -1,5 +1,47 @@
 let coins = Number(localStorage.getItem("sa_coins")) || 0;
 
+let dailyTasks = JSON.parse(
+  localStorage.getItem("sa_daily_tasks") || "null"
+);
+
+function getToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function createDailyTasks() {
+
+  const today = getToday();
+
+  if (!dailyTasks || dailyTasks.date !== today) {
+
+    dailyTasks = {
+      date: today,
+
+      wins: 0,
+      games: 0,
+
+      winsRewarded: false,
+      gamesRewarded: false
+    };
+
+    saveDailyTasks();
+  }
+}
+
+function saveDailyTasks() {
+  localStorage.setItem(
+    "sa_daily_tasks",
+    JSON.stringify(dailyTasks)
+  );
+}
+
+function saveCoins() {
+  localStorage.setItem(
+    "sa_coins",
+    coins
+  );
+}
+
 function saveCoins(){
   localStorage.setItem("sa_coins", coins);
 }
@@ -17,7 +59,58 @@ function spendCoins(amount){
 
   return true;
 }
+function updateDailyTasks(result) {
 
+  createDailyTasks();
+
+  // Jede gespielte Partie zählt
+  dailyTasks.games++;
+
+  // Sieg zählt zusätzlich
+  if (result === "win") {
+    dailyTasks.wins++;
+  }
+
+  // Aufgabe 1: 3 Siege
+  if (
+    dailyTasks.wins >= 3 &&
+    !dailyTasks.winsRewarded
+  ) {
+
+    dailyTasks.winsRewarded = true;
+
+    coins += 100;
+
+    saveCoins();
+
+    alert(
+      "🏆 Aufgabe geschafft!\n\n" +
+      "Gewinne 3 Partien\n\n" +
+      "🪙 +100 Münzen"
+    );
+  }
+
+  // Aufgabe 2: 5 Partien spielen
+  if (
+    dailyTasks.games >= 5 &&
+    !dailyTasks.gamesRewarded
+  ) {
+
+    dailyTasks.gamesRewarded = true;
+
+    coins += 75;
+
+    saveCoins();
+
+    alert(
+      "⚔️ Aufgabe geschafft!\n\n" +
+      "Spiele 5 Partien\n\n" +
+      "🪙 +75 Münzen"
+    );
+  }
+
+  saveDailyTasks();
+}
 /* =========================================================
    SCHACHARENA – APP.JS
    Version 1.0.0
@@ -270,47 +363,31 @@ function saveRanking() {
    SPIELERGEBNIS
 ========================================================= */
 
-async function score(result) {
+async function score(win){
 
-  if (localResultDone) {
-    return;
-  }
+  if(localResultDone) return;
 
   localResultDone = true;
 
-
-  if (result === "win") {
+  // Statistik aktualisieren
+  if(win){
 
     rating += 25;
     wins++;
 
-    showMessage(
-      "🎉 Gewonnen! +25 Punkte"
-    );
+    alert("🎉 Gewonnen! +25 Punkte");
 
-  } else if (result === "loss") {
-
-    rating =
-      Math.max(
-        0,
-        rating - 15
-      );
-
-    losses++;
-
-    showMessage(
-      "😕 Verloren. -15 Punkte"
-    );
+    updateDailyTasks("win");
 
   } else {
 
-    draws++;
+    rating = Math.max(0, rating - 15);
+    losses++;
 
-    showMessage(
-      "🤝 Remis"
-    );
+    alert("😕 Verloren. -15 Punkte");
+
+    updateDailyTasks("loss");
   }
-
 
   saveRanking();
 
