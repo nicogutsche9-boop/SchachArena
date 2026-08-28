@@ -526,54 +526,439 @@ function updateRewardsDisplays() {
    TÄGLICHE HERAUSFORDERUNGEN – AKTUELLEN STAND ANZEIGEN
 ========================================================= */
 /* =========================================================
-   MÜNZ-SHOP
+   SCHACHARENA – ERWEITERTER MÜNZ-SHOP
+   Version 2.0
+
+   Enthalten:
+   - großer Shop
+   - Kategorien
+   - viele Artikel
+   - scrollbarer Inhalt
+   - Münzsystem
+   - Käufe werden gespeichert
+   - "Im Besitz"
+   - Tagesangebot
+   - Favoriten
+   - Shop-Navigation
+========================================================= */
+
+
+/* =========================================================
+   SHOP-ARTIKEL
 ========================================================= */
 
 const SHOP_ITEMS = [
+
+  /* =======================================================
+     SCHACHBRETTER
+  ======================================================= */
+
   {
     id: "board_ocean",
-    name: "🌊 Ozean-Brett",
-    description: "Ein blaues Schachbrett im Wasser-Stil.",
-    price: 150
+    category: "boards",
+    name: "Ozean-Brett",
+    description: "Ein leuchtendes Brett im Wasser-Stil.",
+    icon: "🌊",
+    price: 150,
+    rarity: "Selten"
   },
+
   {
     id: "board_forest",
-    name: "🌲 Wald-Brett",
-    description: "Ein dunkles, grünes Brett für dein Spiel.",
-    price: 200
+    category: "boards",
+    name: "Wald-Brett",
+    description: "Ein natürliches Brett mit Wald-Optik.",
+    icon: "🌲",
+    price: 200,
+    rarity: "Selten"
   },
+
+  {
+    id: "board_galaxy",
+    category: "boards",
+    name: "Galaxie-Brett",
+    description: "Spiele deine Partien mitten im Weltall.",
+    icon: "🌌",
+    price: 350,
+    rarity: "Episch"
+  },
+
+  {
+    id: "board_lava",
+    category: "boards",
+    name: "Lava-Brett",
+    description: "Ein glühendes Brett für heiße Partien.",
+    icon: "🔥",
+    price: 450,
+    rarity: "Episch"
+  },
+
+  {
+    id: "board_ice",
+    category: "boards",
+    name: "Eis-Brett",
+    description: "Ein eisiges und kristallklares Brett.",
+    icon: "❄️",
+    price: 450,
+    rarity: "Episch"
+  },
+
+  {
+    id: "board_marble",
+    category: "boards",
+    name: "Marmor-Brett",
+    description: "Eleganter Marmor für dein Schachbrett.",
+    icon: "🏛️",
+    price: 600,
+    rarity: "Legendär"
+  },
+
+  {
+    id: "board_shadow",
+    category: "boards",
+    name: "Schatten-Brett",
+    description: "Dunkle Optik für geheimnisvolle Partien.",
+    icon: "🌑",
+    price: 550,
+    rarity: "Episch"
+  },
+
+  {
+    id: "board_neon",
+    category: "boards",
+    name: "Neon-Brett",
+    description: "Modernes Neon-Design mit futuristischem Look.",
+    icon: "💠",
+    price: 700,
+    rarity: "Legendär"
+  },
+
+
+  /* =======================================================
+     FIGUREN
+  ======================================================= */
+
   {
     id: "pieces_gold",
-    name: "👑 Goldene Figuren",
-    description: "Goldene Schachfiguren für deine Partien.",
-    price: 300
+    category: "pieces",
+    name: "Goldene Figuren",
+    description: "Edle goldene Schachfiguren.",
+    icon: "👑",
+    price: 300,
+    rarity: "Selten"
   },
+
+  {
+    id: "pieces_silver",
+    category: "pieces",
+    name: "Silberne Figuren",
+    description: "Elegante Figuren im Silber-Stil.",
+    icon: "♜",
+    price: 250,
+    rarity: "Selten"
+  },
+
+  {
+    id: "pieces_crystal",
+    category: "pieces",
+    name: "Kristall-Figuren",
+    description: "Leuchtende Figuren aus Kristall.",
+    icon: "💎",
+    price: 600,
+    rarity: "Episch"
+  },
+
+  {
+    id: "pieces_shadow",
+    category: "pieces",
+    name: "Schatten-Figuren",
+    description: "Dunkle Figuren mit mystischem Stil.",
+    icon: "♟️",
+    price: 500,
+    rarity: "Episch"
+  },
+
+  {
+    id: "pieces_robot",
+    category: "pieces",
+    name: "Roboter-Figuren",
+    description: "Futuristische Figuren im Roboter-Stil.",
+    icon: "🤖",
+    price: 500,
+    rarity: "Episch"
+  },
+
+  {
+    id: "pieces_fire",
+    category: "pieces",
+    name: "Feuer-Figuren",
+    description: "Glühende Figuren für deine Partien.",
+    icon: "🔥",
+    price: 800,
+    rarity: "Legendär"
+  },
+
+  {
+    id: "pieces_ice",
+    category: "pieces",
+    name: "Eis-Figuren",
+    description: "Kristallklare Figuren aus Eis.",
+    icon: "❄️",
+    price: 750,
+    rarity: "Legendär"
+  },
+
+  {
+    id: "pieces_royal",
+    category: "pieces",
+    name: "Königliche Figuren",
+    description: "Ein besonders luxuriöses Figurenset.",
+    icon: "👑",
+    price: 1000,
+    rarity: "Legendär"
+  },
+
+
+  /* =======================================================
+     EFFEKTE
+  ======================================================= */
+
   {
     id: "effect_fire",
-    name: "🔥 Feuer-Effekt",
-    description: "Ein besonderer Effekt für dein Schachspiel.",
-    price: 400
+    category: "effects",
+    name: "Feuer-Effekt",
+    description: "Feuriger Effekt für besondere Momente.",
+    icon: "🔥",
+    price: 400,
+    rarity: "Selten"
   },
+
   {
-    id: "profile_frame",
-    name: "💎 Diamant-Rahmen",
-    description: "Ein besonderer Rahmen für dein Profil.",
-    price: 500
+    id: "effect_ice",
+    category: "effects",
+    name: "Eis-Effekt",
+    description: "Eiskalter Effekt beim Spielen.",
+    icon: "❄️",
+    price: 400,
+    rarity: "Selten"
+  },
+
+  {
+    id: "effect_lightning",
+    category: "effects",
+    name: "Blitz-Effekt",
+    description: "Elektrischer Blitz für deine Züge.",
+    icon: "⚡",
+    price: 550,
+    rarity: "Episch"
+  },
+
+  {
+    id: "effect_spark",
+    category: "effects",
+    name: "Funken-Effekt",
+    description: "Leuchtende Funken bei besonderen Zügen.",
+    icon: "✨",
+    price: 450,
+    rarity: "Episch"
+  },
+
+  {
+    id: "effect_smoke",
+    category: "effects",
+    name: "Rauch-Effekt",
+    description: "Dunkler Effekt für dramatische Züge.",
+    icon: "💨",
+    price: 450,
+    rarity: "Episch"
+  },
+
+  {
+    id: "effect_victory",
+    category: "effects",
+    name: "Sieg-Effekt",
+    description: "Besonderer Effekt nach einem Sieg.",
+    icon: "🏆",
+    price: 750,
+    rarity: "Legendär"
+  },
+
+  {
+    id: "effect_stars",
+    category: "effects",
+    name: "Sternen-Effekt",
+    description: "Leuchtende Sterne bei besonderen Aktionen.",
+    icon: "🌟",
+    price: 600,
+    rarity: "Episch"
+  },
+
+  {
+    id: "effect_gold",
+    category: "effects",
+    name: "Gold-Explosion",
+    description: "Goldener Effekt für deine besten Momente.",
+    icon: "💥",
+    price: 900,
+    rarity: "Legendär"
+  },
+
+
+  /* =======================================================
+     PROFIL
+  ======================================================= */
+
+  {
+    id: "profile_diamond",
+    category: "profile",
+    name: "Diamant-Rahmen",
+    description: "Ein exklusiver Rahmen für dein Profil.",
+    icon: "💎",
+    price: 350,
+    rarity: "Episch"
+  },
+
+  {
+    id: "profile_fire",
+    category: "profile",
+    name: "Feuer-Rahmen",
+    description: "Ein leuchtender Rahmen mit Feuer-Effekt.",
+    icon: "🔥",
+    price: 450,
+    rarity: "Episch"
+  },
+
+  {
+    id: "profile_gold",
+    category: "profile",
+    name: "Gold-Rahmen",
+    description: "Ein luxuriöser Rahmen für dein Profil.",
+    icon: "👑",
+    price: 600,
+    rarity: "Legendär"
+  },
+
+  {
+    id: "profile_neon",
+    category: "profile",
+    name: "Neon-Rahmen",
+    description: "Futuristischer Rahmen mit Neon-Look.",
+    icon: "💠",
+    price: 500,
+    rarity: "Episch"
+  },
+
+
+  /* =======================================================
+     ABZEICHEN
+  ======================================================= */
+
+  {
+    id: "badge_champion",
+    category: "badges",
+    name: "Champion-Abzeichen",
+    description: "Zeige, dass du ein echter Champion bist.",
+    icon: "🏆",
+    price: 500,
+    rarity: "Episch"
+  },
+
+  {
+    id: "badge_tactician",
+    category: "badges",
+    name: "Taktiker-Abzeichen",
+    description: "Für Spieler mit cleveren Zügen.",
+    icon: "🧠",
+    price: 400,
+    rarity: "Episch"
+  },
+
+  {
+    id: "badge_master",
+    category: "badges",
+    name: "Meister-Abzeichen",
+    description: "Ein Abzeichen für erfahrene Spieler.",
+    icon: "♛",
+    price: 750,
+    rarity: "Legendär"
+  },
+
+  {
+    id: "badge_lightning",
+    category: "badges",
+    name: "Blitzspieler-Abzeichen",
+    description: "Für schnelle und aggressive Spieler.",
+    icon: "⚡",
+    price: 450,
+    rarity: "Selten"
+  },
+
+
+  /* =======================================================
+     SPECIALS
+  ======================================================= */
+
+  {
+    id: "special_lucky",
+    category: "specials",
+    name: "Glücks-Charm",
+    description: "Ein exklusives kosmetisches Extra.",
+    icon: "🍀",
+    price: 300,
+    rarity: "Selten"
+  },
+
+  {
+    id: "special_crown",
+    category: "specials",
+    name: "Goldene Krone",
+    description: "Ein exklusives Prestige-Item.",
+    icon: "👑",
+    price: 900,
+    rarity: "Legendär"
+  },
+
+  {
+    id: "special_diamond",
+    category: "specials",
+    name: "Diamant-Truhe",
+    description: "Ein besonders seltenes Shop-Item.",
+    icon: "💎",
+    price: 1200,
+    rarity: "Legendär"
+  },
+
+  {
+    id: "special_treasure",
+    category: "specials",
+    name: "Legendäre Truhe",
+    description: "Ein exklusives Sammler-Item.",
+    icon: "🎁",
+    price: 999,
+    rarity: "Legendär"
   }
+
 ];
 
 
-/* Gekaufte Gegenstände laden */
+/* =========================================================
+   GEKAUFTE ITEMS
+========================================================= */
 
 function getPurchasedItems() {
 
   try {
 
-    return JSON.parse(
-      localStorage.getItem(
-        "sa_shop_items"
-      ) || "[]"
-    );
+    const saved =
+      JSON.parse(
+        localStorage.getItem(
+          "sa_shop_items"
+        ) || "[]"
+      );
+
+    return Array.isArray(saved)
+      ? saved
+      : [];
 
   } catch (error) {
 
@@ -587,8 +972,6 @@ function getPurchasedItems() {
 }
 
 
-/* Gekaufte Gegenstände speichern */
-
 function savePurchasedItems(items) {
 
   localStorage.setItem(
@@ -598,26 +981,1565 @@ function savePurchasedItems(items) {
 }
 
 
-/* Prüfen, ob Gegenstand gekauft wurde */
-
 function ownsShopItem(id) {
 
-  return getPurchasedItems().includes(id);
+  return getPurchasedItems()
+    .includes(id);
 }
 
 
-/* Münz-Shop öffnen */
+/* =========================================================
+   SHOP-KATEGORIEN
+========================================================= */
+
+const SHOP_CATEGORIES = {
+
+  all: {
+    name: "Alle",
+    icon: "▦"
+  },
+
+  boards: {
+    name: "Bretter",
+    icon: "♟"
+  },
+
+  pieces: {
+    name: "Figuren",
+    icon: "♛"
+  },
+
+  effects: {
+    name: "Effekte",
+    icon: "✨"
+  },
+
+  profile: {
+    name: "Profile",
+    icon: "👤"
+  },
+
+  badges: {
+    name: "Abzeichen",
+    icon: "🏆"
+  },
+
+  specials: {
+    name: "Specials",
+    icon: "🔥"
+  }
+
+};
+
+
+/* =========================================================
+   SHOP-STYLES
+========================================================= */
+
+function addShopStyles() {
+
+  if (
+    document.getElementById(
+      "schacharena-shop-style"
+    )
+  ) {
+
+    return;
+  }
+
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.id =
+    "schacharena-shop-style";
+
+
+  style.textContent = `
+
+    .shop-v2-overlay {
+
+      position: fixed;
+      inset: 0;
+
+      z-index: 16000;
+
+      background:
+        radial-gradient(
+          circle at top,
+          rgba(52, 84, 170, .25),
+          rgba(0, 0, 0, .82)
+        );
+
+      backdrop-filter: blur(10px);
+
+      padding: 20px;
+
+      overflow-y: auto;
+
+    }
+
+
+    .shop-v2 {
+
+      width: min(
+        1450px,
+        100%
+      );
+
+      min-height: 88vh;
+
+      margin: 0 auto;
+
+      display: grid;
+
+      grid-template-columns:
+        220px
+        minmax(0, 1fr)
+        260px;
+
+      background:
+        linear-gradient(
+          145deg,
+          #10182c,
+          #080d19
+        );
+
+      color: white;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      border-radius: 24px;
+
+      overflow: hidden;
+
+      box-shadow:
+        0 30px 100px
+        rgba(0,0,0,.65);
+
+    }
+
+
+    /* ================================
+       SIDEBAR
+    ================================= */
+
+    .shop-sidebar {
+
+      padding: 24px 16px;
+
+      border-right:
+        1px solid
+        rgba(255,255,255,.08);
+
+      background:
+        rgba(4,9,20,.45);
+
+    }
+
+
+    .shop-brand {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 10px;
+
+      margin-bottom: 28px;
+
+      font-size: 20px;
+
+      font-weight: 800;
+
+    }
+
+
+    .shop-brand-icon {
+
+      font-size: 28px;
+
+    }
+
+
+    .shop-nav {
+
+      display: grid;
+
+      gap: 6px;
+
+    }
+
+
+    .shop-nav-button {
+
+      width: 100%;
+
+      border: 0;
+
+      border-radius: 10px;
+
+      padding: 12px;
+
+      background:
+        transparent;
+
+      color:
+        rgba(255,255,255,.72);
+
+      text-align: left;
+
+      font-size: 14px;
+
+      font-weight: 600;
+
+      cursor: pointer;
+
+      transition: .2s ease;
+
+    }
+
+
+    .shop-nav-button:hover {
+
+      background:
+        rgba(255,255,255,.06);
+
+      color: white;
+
+    }
+
+
+    .shop-nav-button.active {
+
+      background:
+        linear-gradient(
+          135deg,
+          #216cff,
+          #7a35e8
+        );
+
+      color: white;
+
+      box-shadow:
+        0 8px 25px
+        rgba(74,75,255,.28);
+
+    }
+
+
+    .shop-sidebar-coins {
+
+      margin-top: 28px;
+
+      padding: 15px;
+
+      border-radius: 14px;
+
+      background:
+        rgba(255,196,0,.08);
+
+      border:
+        1px solid
+        rgba(255,196,0,.18);
+
+    }
+
+
+    .shop-sidebar-coins small {
+
+      display: block;
+
+      opacity: .6;
+
+      margin-bottom: 5px;
+
+    }
+
+
+    .shop-sidebar-coins strong {
+
+      font-size: 21px;
+
+    }
+
+
+    /* ================================
+       MAIN
+    ================================= */
+
+    .shop-main {
+
+      min-width: 0;
+
+      display: flex;
+
+      flex-direction: column;
+
+    }
+
+
+    .shop-header {
+
+      padding: 24px 28px 18px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.08);
+
+    }
+
+
+    .shop-header-top {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 15px;
+
+    }
+
+
+    .shop-title-wrap h1 {
+
+      margin: 0;
+
+      font-size: 28px;
+
+    }
+
+
+    .shop-title-wrap p {
+
+      margin: 5px 0 0;
+
+      opacity: .55;
+
+      font-size: 14px;
+
+    }
+
+
+    .shop-balance-big {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 9px;
+
+      padding: 11px 17px;
+
+      border-radius: 13px;
+
+      background:
+        rgba(255,196,0,.1);
+
+      border:
+        1px solid
+        rgba(255,196,0,.2);
+
+    }
+
+
+    .shop-balance-big strong {
+
+      font-size: 20px;
+
+    }
+
+
+    .shop-close {
+
+      width: 38px;
+
+      height: 38px;
+
+      border: 0;
+
+      border-radius: 50%;
+
+      background:
+        rgba(255,255,255,.08);
+
+      color: white;
+
+      font-size: 24px;
+
+      cursor: pointer;
+
+    }
+
+
+    /* ================================
+       CATEGORY BAR
+    ================================= */
+
+    .shop-category-bar {
+
+      display: flex;
+
+      gap: 8px;
+
+      overflow-x: auto;
+
+      padding: 15px 28px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.06);
+
+    }
+
+
+    .shop-category-bar::-webkit-scrollbar {
+
+      height: 5px;
+
+    }
+
+
+    .shop-category-button {
+
+      flex:
+        0 0 auto;
+
+      border:
+        1px solid
+        rgba(255,255,255,.08);
+
+      border-radius: 9px;
+
+      padding: 10px 14px;
+
+      background:
+        rgba(255,255,255,.035);
+
+      color:
+        rgba(255,255,255,.7);
+
+      cursor: pointer;
+
+      font-weight: 600;
+
+    }
+
+
+    .shop-category-button:hover {
+
+      background:
+        rgba(255,255,255,.08);
+
+      color: white;
+
+    }
+
+
+    .shop-category-button.active {
+
+      background:
+        linear-gradient(
+          135deg,
+          #267cff,
+          #6937d8
+        );
+
+      color: white;
+
+      border-color:
+        transparent;
+
+    }
+
+
+    /* ================================
+       CONTENT
+    ================================= */
+
+    .shop-content {
+
+      flex: 1;
+
+      overflow-y: auto;
+
+      padding: 22px 28px 30px;
+
+    }
+
+
+    .shop-content::-webkit-scrollbar {
+
+      width: 8px;
+
+    }
+
+
+    .shop-content::-webkit-scrollbar-thumb {
+
+      background:
+        rgba(255,255,255,.14);
+
+      border-radius: 20px;
+
+    }
+
+
+    .shop-banner {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 15px;
+
+      padding: 18px 22px;
+
+      margin-bottom: 24px;
+
+      border-radius: 16px;
+
+      background:
+        linear-gradient(
+          100deg,
+          rgba(87,40,170,.65),
+          rgba(31,104,214,.3)
+        );
+
+      border:
+        1px solid
+        rgba(148,105,255,.35);
+
+    }
+
+
+    .shop-banner-title {
+
+      font-size: 18px;
+
+      font-weight: 800;
+
+    }
+
+
+    .shop-banner-text {
+
+      margin-top: 4px;
+
+      opacity: .65;
+
+      font-size: 13px;
+
+    }
+
+
+    .shop-banner-icon {
+
+      font-size: 42px;
+
+    }
+
+
+    .shop-section {
+
+      margin-bottom: 30px;
+
+    }
+
+
+    .shop-section-header {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      margin-bottom: 13px;
+
+    }
+
+
+    .shop-section-header h2 {
+
+      margin: 0;
+
+      font-size: 18px;
+
+    }
+
+
+    .shop-section-count {
+
+      font-size: 12px;
+
+      opacity: .5;
+
+    }
+
+
+    .shop-grid {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          auto-fill,
+          minmax(155px, 1fr)
+        );
+
+      gap: 12px;
+
+    }
+
+
+    /* ================================
+       ITEM
+    ================================= */
+
+    .shop-card {
+
+      position: relative;
+
+      overflow: hidden;
+
+      border-radius: 15px;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255,255,255,.07),
+          rgba(255,255,255,.025)
+        );
+
+      border:
+        1px solid
+        rgba(255,255,255,.09);
+
+      transition:
+        transform .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease;
+
+    }
+
+
+    .shop-card:hover {
+
+      transform:
+        translateY(-3px);
+
+      border-color:
+        rgba(111,145,255,.55);
+
+      box-shadow:
+        0 12px 30px
+        rgba(0,0,0,.25);
+
+    }
+
+
+    .shop-card-preview {
+
+      height: 120px;
+
+      display: grid;
+
+      place-items: center;
+
+      background:
+        radial-gradient(
+          circle,
+          rgba(52,111,255,.25),
+          rgba(0,0,0,.18)
+        );
+
+      font-size: 52px;
+
+    }
+
+
+    .shop-card-body {
+
+      padding: 12px;
+
+    }
+
+
+    .shop-rarity {
+
+      display: inline-block;
+
+      padding: 3px 7px;
+
+      border-radius: 5px;
+
+      font-size: 9px;
+
+      font-weight: 800;
+
+      margin-bottom: 6px;
+
+      background:
+        rgba(49,128,255,.2);
+
+      color:
+        #75adff;
+
+    }
+
+
+    .shop-rarity.epic {
+
+      background:
+        rgba(151,74,255,.2);
+
+      color:
+        #bf8aff;
+
+    }
+
+
+    .shop-rarity.legendary {
+
+      background:
+        rgba(255,190,30,.18);
+
+      color:
+        #ffd15b;
+
+    }
+
+
+    .shop-card-title {
+
+      font-size: 14px;
+
+      font-weight: 750;
+
+      white-space: nowrap;
+
+      overflow: hidden;
+
+      text-overflow: ellipsis;
+
+    }
+
+
+    .shop-card-description {
+
+      margin-top: 4px;
+
+      min-height: 32px;
+
+      font-size: 10px;
+
+      line-height: 1.4;
+
+      opacity: .5;
+
+    }
+
+
+    .shop-card-bottom {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 7px;
+
+      margin-top: 10px;
+
+    }
+
+
+    .shop-price {
+
+      font-weight: 800;
+
+      font-size: 13px;
+
+      white-space: nowrap;
+
+    }
+
+
+    .shop-buy-button {
+
+      flex: 1;
+
+      border: 0;
+
+      border-radius: 8px;
+
+      padding: 8px 7px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #208f45,
+          #31b85d
+        );
+
+      color: white;
+
+      font-size: 11px;
+
+      font-weight: 800;
+
+      cursor: pointer;
+
+    }
+
+
+    .shop-buy-button:hover {
+
+      filter:
+        brightness(1.12);
+
+    }
+
+
+    .shop-owned-button {
+
+      flex: 1;
+
+      border: 1px solid
+        rgba(64,214,118,.3);
+
+      border-radius: 8px;
+
+      padding: 7px;
+
+      background:
+        rgba(64,214,118,.08);
+
+      color:
+        #6de59a;
+
+      font-size: 10px;
+
+      font-weight: 700;
+
+    }
+
+
+    /* ================================
+       RIGHT SIDE
+    ================================= */
+
+    .shop-right {
+
+      padding: 20px 15px;
+
+      border-left:
+        1px solid
+        rgba(255,255,255,.08);
+
+      background:
+        rgba(4,9,20,.35);
+
+      overflow-y: auto;
+
+    }
+
+
+    .shop-right-title {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 7px;
+
+      font-weight: 800;
+
+      margin-bottom: 12px;
+
+    }
+
+
+    .shop-offer {
+
+      padding: 15px;
+
+      border-radius: 15px;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255,177,0,.15),
+          rgba(255,89,0,.06)
+        );
+
+      border:
+        1px solid
+        rgba(255,183,40,.3);
+
+    }
+
+
+    .shop-offer-icon {
+
+      text-align: center;
+
+      font-size: 60px;
+
+      margin-bottom: 8px;
+
+    }
+
+
+    .shop-offer-name {
+
+      font-weight: 800;
+
+      font-size: 14px;
+
+    }
+
+
+    .shop-offer-price {
+
+      margin-top: 8px;
+
+      font-size: 18px;
+
+      font-weight: 900;
+
+      color:
+        #ffd35c;
+
+    }
+
+
+    .shop-offer-button {
+
+      width: 100%;
+
+      margin-top: 12px;
+
+      padding: 10px;
+
+      border: 0;
+
+      border-radius: 9px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #f3a900,
+          #ffce38
+        );
+
+      color: #201700;
+
+      font-weight: 900;
+
+      cursor: pointer;
+
+    }
+
+
+    .shop-side-box {
+
+      margin-top: 18px;
+
+      padding: 14px;
+
+      border-radius: 14px;
+
+      background:
+        rgba(255,255,255,.035);
+
+      border:
+        1px solid
+        rgba(255,255,255,.07);
+
+    }
+
+
+    .shop-side-box h3 {
+
+      margin: 0 0 10px;
+
+      font-size: 13px;
+
+    }
+
+
+    .shop-favorite {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 9px;
+
+      padding: 8px 0;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.05);
+
+      font-size: 11px;
+
+    }
+
+
+    .shop-favorite:last-child {
+
+      border-bottom: 0;
+
+    }
+
+
+    .shop-favorite-icon {
+
+      width: 32px;
+
+      height: 32px;
+
+      display: grid;
+
+      place-items: center;
+
+      border-radius: 8px;
+
+      background:
+        rgba(255,255,255,.07);
+
+      font-size: 17px;
+
+    }
+
+
+    .shop-favorite-text {
+
+      flex: 1;
+
+    }
+
+
+    .shop-favorite-text strong {
+
+      display: block;
+
+    }
+
+
+    .shop-favorite-text small {
+
+      opacity: .45;
+
+    }
+
+
+    .shop-more-coins {
+
+      text-align: center;
+
+      padding: 15px;
+
+      border-radius: 14px;
+
+      background:
+        linear-gradient(
+          135deg,
+          rgba(96,40,210,.4),
+          rgba(25,111,255,.2)
+        );
+
+    }
+
+
+    .shop-more-coins-icon {
+
+      font-size: 32px;
+
+    }
+
+
+    .shop-more-coins strong {
+
+      display: block;
+
+      margin-top: 5px;
+
+    }
+
+
+    .shop-more-coins small {
+
+      display: block;
+
+      margin-top: 5px;
+
+      opacity: .6;
+
+      line-height: 1.4;
+
+    }
+
+
+    .shop-empty {
+
+      padding: 45px 20px;
+
+      text-align: center;
+
+      opacity: .5;
+
+    }
+
+
+    /* ================================
+       MOBILE
+    ================================= */
+
+    @media(max-width:1050px) {
+
+      .shop-v2 {
+
+        grid-template-columns:
+          180px
+          minmax(0,1fr);
+
+      }
+
+      .shop-right {
+
+        display: none;
+
+      }
+
+    }
+
+
+    @media(max-width:700px) {
+
+      .shop-v2 {
+
+        display: block;
+
+        min-height: 95vh;
+
+        border-radius: 16px;
+
+      }
+
+
+      .shop-sidebar {
+
+        border-right: 0;
+
+        border-bottom:
+          1px solid
+          rgba(255,255,255,.08);
+
+        padding: 12px;
+
+      }
+
+
+      .shop-brand {
+
+        margin-bottom: 10px;
+
+      }
+
+
+      .shop-nav {
+
+        display: flex;
+
+        overflow-x: auto;
+
+      }
+
+
+      .shop-nav-button {
+
+        width: auto;
+
+        white-space: nowrap;
+
+      }
+
+
+      .shop-sidebar-coins {
+
+        display: none;
+
+      }
+
+
+      .shop-header {
+
+        padding: 18px;
+
+      }
+
+
+      .shop-header-top {
+
+        align-items: flex-start;
+
+      }
+
+
+      .shop-title-wrap h1 {
+
+        font-size: 23px;
+
+      }
+
+
+      .shop-balance-big {
+
+        padding: 9px 12px;
+
+      }
+
+
+      .shop-category-bar {
+
+        padding:
+          10px 18px;
+
+      }
+
+
+      .shop-content {
+
+        padding:
+          18px;
+
+      }
+
+
+      .shop-grid {
+
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0,1fr)
+          );
+
+      }
+
+
+      .shop-card-preview {
+
+        height: 95px;
+
+      }
+
+
+      .shop-card-body {
+
+        padding: 9px;
+
+      }
+
+    }
+
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+}
+
+
+/* =========================================================
+   SHOP ARTIKEL RENDERN
+========================================================= */
+
+function renderShopItems(
+  category = "all"
+) {
+
+  const container =
+    document.getElementById(
+      "shopItemsContainer"
+    );
+
+
+  if (!container) {
+
+    return;
+  }
+
+
+  let items =
+    SHOP_ITEMS;
+
+
+  if (
+    category !== "all"
+  ) {
+
+    items =
+      SHOP_ITEMS.filter(
+        item =>
+          item.category ===
+          category
+      );
+
+  }
+
+
+  if (!items.length) {
+
+    container.innerHTML = `
+      <div class="shop-empty">
+        Keine Artikel in dieser Kategorie.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  const groups = {};
+
+
+  if (
+    category === "all"
+  ) {
+
+    items.forEach(
+      item => {
+
+        if (
+          !groups[item.category]
+        ) {
+
+          groups[item.category] = [];
+
+        }
+
+        groups[item.category]
+          .push(item);
+
+      }
+    );
+
+  } else {
+
+    groups[category] =
+      items;
+
+  }
+
+
+  container.innerHTML =
+    Object.entries(groups)
+      .map(
+        ([group, groupItems]) => {
+
+          const categoryData =
+            SHOP_CATEGORIES[group];
+
+
+          return `
+
+            <section
+              class="shop-section"
+            >
+
+              <div
+                class="shop-section-header"
+              >
+
+                <h2>
+                  ${categoryData?.icon || "🛒"}
+                  ${categoryData?.name || "Shop"}
+                </h2>
+
+                <span
+                  class="shop-section-count"
+                >
+                  ${groupItems.length}
+                  Artikel
+                </span>
+
+              </div>
+
+
+              <div
+                class="shop-grid"
+              >
+
+                ${groupItems
+                  .map(
+                    item =>
+                      createShopCard(
+                        item
+                      )
+                  )
+                  .join("")}
+
+              </div>
+
+            </section>
+
+          `;
+
+        }
+      )
+      .join("");
+}
+
+
+/* =========================================================
+   SHOP-KARTE
+========================================================= */
+
+function createShopCard(
+  item
+) {
+
+  const owned =
+    ownsShopItem(
+      item.id
+    );
+
+
+  const rarityClass =
+    item.rarity === "Episch"
+      ? "epic"
+      : item.rarity === "Legendär"
+      ? "legendary"
+      : "";
+
+
+  return `
+
+    <article
+      class="shop-card"
+    >
+
+      <div
+        class="shop-card-preview"
+      >
+        ${item.icon}
+      </div>
+
+
+      <div
+        class="shop-card-body"
+      >
+
+        <span
+          class="shop-rarity ${rarityClass}"
+        >
+          ${escapeHtml(
+            item.rarity
+          )}
+        </span>
+
+
+        <div
+          class="shop-card-title"
+          title="${escapeHtml(
+            item.name
+          )}"
+        >
+          ${escapeHtml(
+            item.name
+          )}
+        </div>
+
+
+        <div
+          class="shop-card-description"
+        >
+          ${escapeHtml(
+            item.description
+          )}
+        </div>
+
+
+        <div
+          class="shop-card-bottom"
+        >
+
+          <span
+            class="shop-price"
+          >
+            🪙 ${item.price}
+          </span>
+
+
+          ${
+            owned
+
+              ? `
+
+                <button
+                  class="shop-owned-button"
+                  disabled
+                >
+                  ✓ Im Besitz
+                </button>
+
+              `
+
+              : `
+
+                <button
+                  class="shop-buy-button"
+                  onclick="buyShopItem('${item.id}')"
+                >
+                  Kaufen
+                </button>
+
+              `
+          }
+
+        </div>
+
+      </div>
+
+    </article>
+
+  `;
+}
+
+
+/* =========================================================
+   SHOP ÖFFNEN
+========================================================= */
 
 function openShop() {
 
-  const oldShop =
+  addShopStyles();
+
+
+  const existing =
     document.getElementById(
       "shopPopup"
     );
 
-  if (oldShop) {
 
-    oldShop.remove();
+  if (existing) {
+
+    existing.remove();
 
     return;
   }
@@ -627,115 +2549,846 @@ function openShop() {
     getPurchasedItems();
 
 
+  const favoriteItems =
+    SHOP_ITEMS.filter(
+      item =>
+        purchased.includes(
+          item.id
+        )
+    )
+    .slice(0, 4);
+
+
+  const dailyOffer =
+    SHOP_ITEMS.find(
+      item =>
+        item.id ===
+        "special_treasure"
+    );
+
+
   const popup =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
 
   popup.id =
     "shopPopup";
 
+
   popup.className =
-    "shop-popup-overlay";
+    "shop-v2-overlay";
 
 
   popup.innerHTML = `
 
-    <div class="shop-popup">
+    <div
+      class="shop-v2"
+    >
 
-      <button
-        class="shop-popup-close"
-        id="closeShopPopup"
-        aria-label="Shop schließen"
+
+      <!-- =========================================
+           SIDEBAR
+      ========================================== -->
+
+      <aside
+        class="shop-sidebar"
       >
-        ×
-      </button>
+
+        <div
+          class="shop-brand"
+        >
+
+          <span
+            class="shop-brand-icon"
+          >
+            🛒
+          </span>
+
+          <span>
+            Shop
+          </span>
+
+        </div>
 
 
-      <div class="shop-popup-icon">
-        🛒
-      </div>
+        <div
+          class="shop-nav"
+          id="shopSidebarNavigation"
+        >
+
+          ${Object.entries(
+            SHOP_CATEGORIES
+          )
+          .map(
+            ([id, category]) => `
+
+              <button
+                class="
+                  shop-nav-button
+                  ${id === "all" ? "active" : ""}
+                "
+                data-shop-category="${id}"
+              >
+
+                ${category.icon}
+                ${category.name}
+
+              </button>
+
+            `
+          )
+          .join("")}
+
+        </div>
 
 
-      <h2>Münz-Shop</h2>
+        <div
+          class="shop-sidebar-coins"
+        >
+
+          <small>
+            Deine Münzen
+          </small>
+
+          <strong
+            id="shopSidebarCoins"
+          >
+            🪙 ${coins}
+          </strong>
+
+        </div>
+
+      </aside>
 
 
-      <p class="shop-subtitle">
-        Tausche deine Münzen gegen besondere Extras.
-      </p>
+      <!-- =========================================
+           HAUPTBEREICH
+      ========================================== -->
+
+      <main
+        class="shop-main"
+      >
 
 
-      <div class="shop-balance">
-        🪙
-        <strong id="shopCoinBalance">
-          ${coins}
-        </strong>
-        Münzen
-      </div>
+        <header
+          class="shop-header"
+        >
+
+          <div
+            class="shop-header-top"
+          >
+
+            <div
+              class="shop-title-wrap"
+            >
+
+              <h1>
+                🛒 Münz-Shop
+              </h1>
+
+              <p>
+                Entdecke exklusive Designs,
+                Effekte und mehr!
+              </p>
+
+            </div>
 
 
-      <div class="shop-items">
+            <div
+              style="
+                display:flex;
+                align-items:center;
+                gap:10px;
+              "
+            >
 
-        ${
-          SHOP_ITEMS.map(item => {
+              <div
+                class="shop-balance-big"
+              >
 
-            const owned =
-              purchased.includes(item.id);
+                🪙
 
-            return `
+                <strong
+                  id="shopMainCoins"
+                >
+                  ${coins}
+                </strong>
 
-              <div class="shop-item">
-
-                <div class="shop-item-icon">
-                  ${item.name.split(" ")[0]}
-                </div>
-
-
-                <div class="shop-item-content">
-
-                  <strong>
-                    ${escapeHtml(item.name)}
-                  </strong>
-
-                  <small>
-                    ${escapeHtml(item.description)}
-                  </small>
-
-                </div>
-
-
-                <div class="shop-item-action">
-
-                  ${
-                    owned
-
-                      ? `
-                        <button
-                          class="shop-owned"
-                          disabled
-                        >
-                          ✓ Gekauft
-                        </button>
-                      `
-
-                      : `
-                        <button
-                          class="shop-buy"
-                          onclick="buyShopItem('${item.id}')"
-                        >
-                          🪙 ${item.price}
-                        </button>
-                      `
-                  }
-
-                </div>
+                <span>
+                  Münzen
+                </span>
 
               </div>
 
-            `;
 
-          }).join("")
-        }
+              <button
+                class="shop-close"
+                id="closeShopV2"
+                aria-label="Shop schließen"
+              >
+                ×
+              </button>
 
+            </div>
+
+          </div>
+
+        </header>
+
+
+        <!-- =======================================
+             KATEGORIEN
+        ======================================== -->
+
+        <div
+          class="shop-category-bar"
+          id="shopCategoryBar"
+        >
+
+          ${Object.entries(
+            SHOP_CATEGORIES
+          )
+          .map(
+            ([id, category]) => `
+
+              <button
+                class="
+                  shop-category-button
+                  ${id === "all" ? "active" : ""}
+                "
+                data-shop-category="${id}"
+              >
+
+                ${category.icon}
+                ${category.name}
+
+              </button>
+
+            `
+          )
+          .join("")}
+
+        </div>
+
+
+        <!-- =======================================
+             SCROLLBARER SHOP-INHALT
+        ======================================== -->
+
+        <div
+          class="shop-content"
+          id="shopContent"
+        >
+
+
+          <div
+            class="shop-banner"
+          >
+
+            <div>
+
+              <div
+                class="shop-banner-title"
+              >
+                🎁 Exklusive Angebote!
+              </div>
+
+              <div
+                class="shop-banner-text"
+              >
+                Neue Items entdecken und
+                deine Sammlung erweitern.
+              </div>
+
+            </div>
+
+
+            <div
+              class="shop-banner-icon"
+            >
+              🏆
+            </div>
+
+          </div>
+
+
+          <div
+            id="shopItemsContainer"
+          ></div>
+
+
+        </div>
+
+      </main>
+
+
+      <!-- =========================================
+           RECHTE SEITE
+      ========================================== -->
+
+      <aside
+        class="shop-right"
+      >
+
+
+        <div
+          class="shop-right-title"
+        >
+          👑 Tagesangebot
+        </div>
+
+
+        <div
+          class="shop-offer"
+        >
+
+          <div
+            class="shop-offer-icon"
+          >
+            ${dailyOffer.icon}
+          </div>
+
+
+          <div
+            class="shop-offer-name"
+          >
+            ${escapeHtml(
+              dailyOffer.name
+            )}
+          </div>
+
+
+          <div
+            style="
+              font-size:11px;
+              opacity:.55;
+              margin-top:5px;
+            "
+          >
+            Nur heute im Angebot
+          </div>
+
+
+          <div
+            class="shop-offer-price"
+          >
+            🪙 ${dailyOffer.price}
+          </div>
+
+
+          <button
+            class="shop-offer-button"
+            onclick="buyShopItem('${dailyOffer.id}')"
+          >
+            Angebot ansehen
+          </button>
+
+        </div>
+
+
+        <!-- FAVORITEN -->
+
+        <div
+          class="shop-side-box"
+        >
+
+          <h3>
+            ❤️ Deine Items
+          </h3>
+
+
+          ${
+            favoriteItems.length
+
+              ? favoriteItems
+                  .map(
+                    item => `
+
+                      <div
+                        class="shop-favorite"
+                      >
+
+                        <div
+                          class="shop-favorite-icon"
+                        >
+                          ${item.icon}
+                        </div>
+
+                        <div
+                          class="shop-favorite-text"
+                        >
+
+                          <strong>
+                            ${escapeHtml(
+                              item.name
+                            )}
+                          </strong>
+
+                          <small>
+                            ✓ Im Besitz
+                          </small>
+
+                        </div>
+
+                      </div>
+
+                    `
+                  )
+                  .join("")
+
+              : `
+
+                  <div
+                    style="
+                      opacity:.45;
+                      font-size:11px;
+                      line-height:1.5;
+                    "
+                  >
+                    Du hast noch keine
+                    Shop-Items gekauft.
+                  </div>
+
+                `
+          }
+
+        </div>
+
+
+        <!-- BELIEBTE ITEMS -->
+
+        <div
+          class="shop-side-box"
+        >
+
+          <h3>
+            🔥 Beliebte Items
+          </h3>
+
+
+          ${SHOP_ITEMS
+            .slice(0, 5)
+            .map(
+              (item, index) => `
+
+                <div
+                  class="shop-favorite"
+                >
+
+                  <div
+                    class="shop-favorite-icon"
+                  >
+                    ${item.icon}
+                  </div>
+
+                  <div
+                    class="shop-favorite-text"
+                  >
+
+                    <strong>
+                      ${index + 1}.
+                      ${escapeHtml(
+                        item.name
+                      )}
+                    </strong>
+
+                    <small>
+                      🪙 ${item.price}
+                    </small>
+
+                  </div>
+
+                </div>
+
+              `
+            )
+            .join("")}
+
+        </div>
+
+
+        <!-- MEHR MÜNZEN -->
+
+        <div
+          class="shop-more-coins"
+        >
+
+          <div
+            class="shop-more-coins-icon"
+          >
+            🪙
+          </div>
+
+          <strong>
+            Mehr Münzen verdienen
+          </strong>
+
+          <small>
+            Erfülle deine täglichen
+            Aufgaben und verdiene
+            weitere Münzen.
+          </small>
+
+        </div>
+
+
+      </aside>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    popup
+  );
+
+
+  /* Shop-Inhalt anzeigen */
+
+  renderShopItems(
+    "all"
+  );
+
+
+  /* Schließen */
+
+  document
+    .getElementById(
+      "closeShopV2"
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+
+        popup.remove();
+
+      }
+    );
+
+
+  /* Hintergrund schließen */
+
+  popup.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target === popup
+      ) {
+
+        popup.remove();
+
+      }
+
+    }
+  );
+
+
+  /* Kategorien */
+
+  popup
+    .querySelectorAll(
+      "[data-shop-category]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const category =
+              button.dataset
+                .shopCategory;
+
+
+            popup
+              .querySelectorAll(
+                "[data-shop-category]"
+              )
+              .forEach(
+                item => {
+
+                  item.classList.toggle(
+                    "active",
+                    item.dataset
+                      .shopCategory ===
+                      category
+                  );
+
+                }
+              );
+
+
+            renderShopItems(
+              category
+            );
+
+
+            const content =
+              document.getElementById(
+                "shopContent"
+              );
+
+
+            if (content) {
+
+              content.scrollTop =
+                0;
+
+            }
+
+          }
+        );
+
+      }
+    );
+
+
+  /* Global verfügbar */
+
+  window.openShop =
+    openShop;
+
+  window.buyShopItem =
+    buyShopItem;
+}
+
+
+/* =========================================================
+   SHOP-ITEM KAUFEN
+========================================================= */
+
+function buyShopItem(
+  id
+) {
+
+  const item =
+    SHOP_ITEMS.find(
+      shopItem =>
+        shopItem.id === id
+    );
+
+
+  if (!item) {
+
+    showMessage(
+      "Dieser Gegenstand wurde nicht gefunden."
+    );
+
+    return;
+  }
+
+
+  if (
+    ownsShopItem(
+      id
+    )
+  ) {
+
+    showMessage(
+      "Du besitzt diesen Gegenstand bereits."
+    );
+
+    return;
+  }
+
+
+  if (
+    coins <
+    item.price
+  ) {
+
+    showMessage(
+      "❌ Du hast nicht genug Münzen."
+    );
+
+    return;
+  }
+
+
+  /* Münzen abziehen */
+
+  const success =
+    typeof spendCoins === "function"
+      ? spendCoins(
+          item.price
+        )
+      : false;
+
+
+  if (!success) {
+
+    showMessage(
+      "❌ Der Kauf konnte nicht durchgeführt werden."
+    );
+
+    return;
+  }
+
+
+  /* Kauf speichern */
+
+  const purchased =
+    getPurchasedItems();
+
+
+  purchased.push(
+    item.id
+  );
+
+
+  savePurchasedItems(
+    purchased
+  );
+
+
+  /* Erfolgsnachricht */
+
+  showMessage(
+    "🎉 " +
+    item.name +
+    " gekauft!"
+  );
+
+
+  /* Shop aktualisieren */
+
+  const popup =
+    document.getElementById(
+      "shopPopup"
+    );
+
+
+  if (popup) {
+
+    popup.remove();
+
+    openShop();
+
+  }
+
+
+  /* Münzanzeigen aktualisieren */
+
+  if (
+    typeof updateCoinDisplays ===
+    "function"
+  ) {
+
+    updateCoinDisplays();
+
+  }
+
+}
+
+
+/* =========================================================
+   SHOP-NAVIGATION AUF DER SEITE
+========================================================= */
+
+function setupShopNavigation() {
+
+  const links =
+    document.querySelectorAll(
+      ".nav-link"
+    );
+
+
+  links.forEach(
+    link => {
+
+      const text =
+        link
+          .textContent
+          .trim()
+          .toLowerCase();
+
+
+      if (
+        text.includes("shop")
+      ) {
+
+        link.addEventListener(
+          "click",
+          event => {
+
+            event.preventDefault();
+
+            openShop();
+
+          }
+        );
+
+      }
+
+    }
+  );
+
+
+  /* Auch vorhandene Shop-Buttons */
+
+  document
+    .querySelectorAll(
+      "[data-open-shop]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          event => {
+
+            event.preventDefault();
+
+            openShop();
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   SHOP GLOBAL VERFÜGBAR
+========================================================= */
+
+window.openShop =
+  openShop;
+
+window.buyShopItem =
+  buyShopItem;
+
+
+/* =========================================================
+   SHOP NAVIGATION STARTEN
+========================================================= */
+
+if (
+  document.readyState ===
+  "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+      setupShopNavigation();
+
+    }
+  );
+
+} else {
+
+  setupShopNavigation();
+
+}
       </div>
 
 
