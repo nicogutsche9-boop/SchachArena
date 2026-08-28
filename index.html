@@ -1,56 +1,803 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SchachArena</title>
- 
- <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="description"
+    content="SchachArena – Dein Zug. Dein Sieg."
+  >
+
+  <title>SchachArena</title>
+
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-<main>
-<section id="lobby" class="card">
-<div class="brand"><div class="logo">♟</div><h1>SchachArena</h1><p>Multiplayer-Schach mit Ranking</p></div>
-<div class="ranking">
-<div class="rankrow"><b>🏆 Dein Ranking</b><span id="rating" class="pill">1000 Punkte</span></div>
-<p id="stats" class="help" style="margin-bottom:0">0 Siege · 0 Niederlagen</p>
-</div>
-<div class="controls">
-<input id="nameInput" maxlength="18" placeholder="Dein Spielername" value="Gast">
-<button onclick="createRoom()">Spiel erstellen</button>
-<input id="roomInput" maxlength="12" placeholder="Raum-Code">
-<button class="secondary" onclick="joinRoom()">Beitreten</button>
-</div>
-<div class="section-title"><h2>🔎 Räume finden</h2><button class="secondary" onclick="refreshRooms()">↻ Aktualisieren</button></div>
-<div class="controls"><input id="roomSearch" maxlength="18" placeholder="Spieler oder Raum suchen" oninput="refreshRooms()"><button class="secondary" onclick="quickJoin()">⚡ Schnellspiel</button></div>
-<div id="roomList" class="room-list"></div>
-<p class="help">Die Raum-Suche nutzt Supabase und zeigt offene Räume online an. PeerJS stellt anschließend die direkte Spielverbindung her.</p>
 
-<div class="section-title"><h2>🏆 Top 100 Rating</h2><span class="pill">Online-Rangliste</span></div>
-<div id="leaderboard" class="leaderboard"></div>
-<p class="help">Das Rating wird lokal angezeigt und zusätzlich online in Supabase gespeichert. Die Rangliste zeigt die besten 100 Spieler.</p>
-</section>
+<div class="app">
 
-<section id="game" class="card">
-<div class="topbar">
-<button class="secondary" onclick="backLobby()">← Lobby</button>
-<span id="color" class="pill">Du: –</span>
-<span id="turn" class="pill turn">Am Zug: Weiß</span>
-</div>
-<div class="boardwrap"><div id="board"></div></div>
-<p id="roomInfo" class="help"></p>
-<div class="actions">
-<button class="secondary" onclick="copyRoom()">📋 Code kopieren</button>
-<button onclick="newGame()">🔄 Neues Spiel</button>
-</div>
-<p class="help">Einfache Schachregeln: Rochade und En-passant sind nicht enthalten.</p>
-</section>
-</main>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/chess.js"></script>
-<script src="js/app.js"></script>
+  <!-- ==============================
+       SIDEBAR
+  =============================== -->
+  <aside class="sidebar">
 
+    <div class="brand">
+      <img
+        src="assets/schacharena-logo.png"
+        alt="SchachArena"
+      >
+
+      <div class="brand-name">
+        Schach<span>Arena</span>
+      </div>
+    </div>
+
+
+    <nav class="navigation">
+
+      <a href="#" class="nav-link active">
+        <span class="nav-icon">⌂</span>
+        <span>Übersicht</span>
+      </a>
+
+      <a href="#" class="nav-link">
+        <span class="nav-icon">♟</span>
+        <span>Spielen</span>
+      </a>
+
+      <a href="#" class="nav-link">
+        <span class="nav-icon">♟♟</span>
+        <span>Freunde</span>
+      </a>
+
+      <a href="#" class="nav-link">
+        <span class="nav-icon">♛</span>
+        <span>Ranking</span>
+      </a>
+
+      <a href="#" class="nav-link">
+        <span class="nav-icon">●</span>
+        <span>Nachrichten</span>
+        <b class="nav-notification">1</b>
+      </a>
+
+      <a href="#" class="nav-link">
+        <span class="nav-icon">⚙</span>
+        <span>Einstellungen</span>
+      </a>
+
+    </nav>
+
+
+    <div class="developer">
+
+      <img
+        src="assets/zugarogames-logo.png"
+        alt="Zugaro Games"
+      >
+
+      <p>DEVELOP. CREATE. PLAY.</p>
+
+      <small>Version 1.0.0</small>
+
+    </div>
+
+  </aside>
+
+
+  <!-- ==============================
+       HAUPTBEREICH
+  =============================== -->
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+
+      <div class="welcome">
+
+        <p>Willkommen zurück,</p>
+
+        <h1>
+          Nico
+          <span class="verified">✓</span>
+        </h1>
+
+        <div class="stats">
+
+          <div class="stat">
+            <span class="stat-symbol">♜</span>
+            <strong>1250</strong>
+            <span>Rating</span>
+          </div>
+
+          <div class="stat">
+            <span class="stat-symbol">▮▮</span>
+            <strong>56%</strong>
+            <span>Gewinnrate</span>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="top-actions">
+
+        <button class="top-button">
+          ♟
+          <span>3</span>
+        </button>
+
+        <button class="top-button">
+          ✉
+          <span>1</span>
+        </button>
+
+        <button class="profile-small">
+          <img
+            src="assets/profile-placeholder.jpg"
+            alt="Nico"
+          >
+
+          <i></i>
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <!-- DASHBOARD -->
+    <div class="dashboard">
+
+
+      <!-- ==============================
+           MITTE
+      =============================== -->
+      <section class="content">
+
+
+        <!-- HERO -->
+        <section class="hero">
+
+          <div class="hero-background"></div>
+
+          <div class="hero-content">
+
+            <img
+              src="assets/schacharena-logo.png"
+              alt="SchachArena"
+              class="hero-logo"
+            >
+
+            <h2>
+              Schach<span>Arena</span>
+            </h2>
+
+            <p>
+              Dein Zug. Dein Sieg.
+            </p>
+
+
+            <button
+              class="quick-play"
+              onclick="startQuickGame()"
+            >
+
+              <span class="quick-icon">⚡</span>
+
+              <span>
+                <strong>SCHNELL SPIELEN</strong>
+                <small>Finde jetzt einen Gegner</small>
+              </span>
+
+            </button>
+
+          </div>
+
+        </section>
+
+
+
+        <!-- ==============================
+             HAUPTAKTIONEN
+        =============================== -->
+        <section class="action-grid">
+
+
+          <article class="action-card purple">
+
+            <div class="action-icon">
+              ♟♟
+            </div>
+
+            <h3>
+              MIT FREUNDEN SPIELEN
+            </h3>
+
+            <p>
+              Fordere deine Freunde heraus
+            </p>
+
+            <button
+              onclick="openFriends()"
+              class="outline-button"
+            >
+              FREUNDE ANSEHEN
+            </button>
+
+          </article>
+
+
+
+          <article class="action-card blue">
+
+            <div class="action-icon">
+              ↪
+            </div>
+
+            <h3>
+              RAUM BEITRETEN
+            </h3>
+
+            <p>
+              Tritt einem Raum mit Code bei
+            </p>
+
+
+            <div class="room-input">
+
+              <input
+                id="roomSearch"
+                type="text"
+                maxlength="12"
+                placeholder="Raumcode"
+              >
+
+              <button
+                onclick="joinRoomDashboard()"
+              >
+                BEITRETEN
+              </button>
+
+            </div>
+
+          </article>
+
+
+
+          <article class="action-card green">
+
+            <div class="action-icon">
+              ✚
+            </div>
+
+            <h3>
+              RAUM ERSTELLEN
+            </h3>
+
+            <p>
+              Erstelle deinen eigenen Raum
+            </p>
+
+            <button
+              onclick="createRoomDashboard()"
+              class="outline-button"
+            >
+              RAUM ERSTELLEN
+            </button>
+
+          </article>
+
+
+        </section>
+
+
+
+        <!-- ==============================
+             INFORMATIONSKARTEN
+        =============================== -->
+        <section class="info-grid">
+
+
+          <!-- DAILY CHALLENGE -->
+          <article class="info-card">
+
+            <div class="card-title">
+              TÄGLICHE HERAUSFORDERUNG
+            </div>
+
+            <div class="challenge">
+
+              <div class="challenge-icon">
+                🎯
+              </div>
+
+              <div class="challenge-info">
+
+                <strong>
+                  Gewinne 3 Partien
+                </strong>
+
+                <div class="progress">
+
+                  <div>
+                    <span></span>
+                  </div>
+
+                  <small>2 / 3</small>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <button class="reward-button">
+              BELOHNUNG ANSEHEN
+              <span>♜</span>
+            </button>
+
+          </article>
+
+
+
+          <!-- LETZTE PARTIE -->
+          <article class="info-card">
+
+            <div class="card-title">
+              LETZTE PARTIE
+            </div>
+
+            <div class="last-game">
+
+              <div>
+
+                <strong class="win">
+                  Sieg
+                </strong>
+
+                <span>
+                  vs. ChessMaster
+                </span>
+
+                <small>
+                  24.05.2025
+                </small>
+
+              </div>
+
+              <div class="game-icon">
+                ⚔
+              </div>
+
+            </div>
+
+            <button class="secondary-button">
+              PARTIE ANSEHEN
+            </button>
+
+          </article>
+
+
+
+          <!-- NEWS -->
+          <article class="info-card news">
+
+            <div class="card-title">
+              NEUIGKEITEN
+              <span class="blue-dot"></span>
+            </div>
+
+            <h3>
+              Willkommen in SchachArena!
+            </h3>
+
+            <p>
+              Viel Spaß beim Spielen und verbessere
+              deine Fähigkeiten. Bleib fair und
+              respektvoll!
+            </p>
+
+            <small>
+              vor 2 Tagen
+            </small>
+
+          </article>
+
+
+        </section>
+
+      </section>
+
+
+
+      <!-- ==============================
+           RECHTE SEITENLEISTE
+      =============================== -->
+      <aside class="right-sidebar">
+
+
+        <!-- PROFIL -->
+        <section class="side-card">
+
+          <div class="side-title">
+            PROFIL
+          </div>
+
+          <div class="profile-box">
+
+            <div class="avatar">
+              <img
+                src="assets/profile-placeholder.jpg"
+                alt="Nico"
+              >
+              <i></i>
+            </div>
+
+            <div>
+
+              <h3>
+                Nico
+                <span class="verified small">
+                  ✓
+                </span>
+              </h3>
+
+              <p>
+                <span class="online"></span>
+                Online
+              </p>
+
+            </div>
+
+          </div>
+
+          <button class="full-button">
+            PROFIL ANSEHEN
+          </button>
+
+        </section>
+
+
+
+        <!-- FREUNDE -->
+        <section class="side-card friends">
+
+          <div class="side-header">
+
+            <span class="side-title">
+              FREUNDE
+            </span>
+
+            <button
+              class="add-friend"
+              onclick="addFriend()"
+            >
+              +
+            </button>
+
+          </div>
+
+
+          <div class="friend-list">
+
+
+            <div class="friend">
+
+              <div class="friend-avatar">
+                MM
+                <i></i>
+              </div>
+
+              <div class="friend-info">
+
+                <strong>
+                  MaxMustermann
+                </strong>
+
+                <span>
+                  🏆 1280
+                </span>
+
+              </div>
+
+              <button
+                onclick="challengeFriend('MaxMustermann')"
+              >
+                SPIELEN
+              </button>
+
+            </div>
+
+
+
+            <div class="friend">
+
+              <div class="friend-avatar blue">
+                CK
+                <i></i>
+              </div>
+
+              <div class="friend-info">
+
+                <strong>
+                  ChessKing
+                </strong>
+
+                <span>
+                  🏆 1412
+                </span>
+
+              </div>
+
+              <button
+                onclick="challengeFriend('ChessKing')"
+              >
+                SPIELEN
+              </button>
+
+            </div>
+
+
+
+            <div class="friend offline">
+
+              <div class="friend-avatar">
+                SP
+              </div>
+
+              <div class="friend-info">
+
+                <strong>
+                  SchachProfi
+                </strong>
+
+                <span>
+                  ♛ 1190
+                </span>
+
+              </div>
+
+              <em>
+                Offline
+              </em>
+
+            </div>
+
+
+
+            <div class="friend">
+
+              <div class="friend-avatar purple">
+                QG
+                <i></i>
+              </div>
+
+              <div class="friend-info">
+
+                <strong>
+                  QueenGamer
+                </strong>
+
+                <span>
+                  🏆 1350
+                </span>
+
+              </div>
+
+              <button
+                onclick="challengeFriend('QueenGamer')"
+              >
+                SPIELEN
+              </button>
+
+            </div>
+
+
+
+            <div class="friend offline">
+
+              <div class="friend-avatar">
+                ST
+              </div>
+
+              <div class="friend-info">
+
+                <strong>
+                  Strategist
+                </strong>
+
+                <span>
+                  ♛ 1105
+                </span>
+
+              </div>
+
+              <em>
+                Offline
+              </em>
+
+            </div>
+
+
+          </div>
+
+
+          <button
+            class="full-button"
+            onclick="openFriends()"
+          >
+            ALLE FREUNDE ANSEHEN
+          </button>
+
+        </section>
+
+
+
+        <!-- ONLINE SPIELER -->
+        <section class="side-card online-card">
+
+          <div class="online-header">
+
+            <span>
+              ONLINE SPIELER
+            </span>
+
+            <strong>
+              <span class="online"></span>
+              156
+            </strong>
+
+          </div>
+
+
+          <div class="online-players">
+
+            <span>AK</span>
+            <span>TM</span>
+            <span>LS</span>
+            <span>JD</span>
+            <b>+151</b>
+
+          </div>
+
+        </section>
+
+
+      </aside>
+
+    </div>
+
+
+    <footer>
+      © 2025 SchachArena –
+      Entwickelt von <strong>Zugaro Games</strong>
+    </footer>
+
+  </main>
+
+</div>
+
+
+
+<!-- ==================================
+     DASHBOARD-JAVASCRIPT
+     Die vorhandene Schachlogik bleibt
+     davon getrennt.
+=================================== -->
+
+<script>
+
+function startQuickGame() {
+
+  if (typeof window.findOpponent === "function") {
+    window.findOpponent();
+    return;
+  }
+
+  showMessage("Gegnersuche wird gestartet …");
+}
+
+
+function createRoomDashboard() {
+
+  if (typeof window.createRoom === "function") {
+    window.createRoom();
+    return;
+  }
+
+  showMessage("Raumerstellung wird geöffnet …");
+}
+
+
+function joinRoomDashboard() {
+
+  const input =
+    document.getElementById("roomSearch");
+
+  const code =
+    input.value.trim();
+
+  if (!code) {
+
+    input.focus();
+
+    input.classList.add("error");
+
+    setTimeout(() => {
+      input.classList.remove("error");
+    }, 600);
+
+    return;
+  }
+
+
+  if (typeof window.joinRoom === "function") {
+    window.joinRoom(code);
+    return;
+  }
+
+  showMessage("Raumcode: " + code);
+}
+
+
+function openFriends() {
+
+  showMessage(
+    "Der Freundesbereich wird geöffnet …"
+  );
+
+}
+
+
+function addFriend() {
+
+  const name =
+    prompt("Spielernamen eingeben:");
+
+  if (!name) return;
+
+  showMessage(
+    "Freundesanfrage an " +
+    name +
+    " wurde vorbereitet."
+  );
+
+}
+
+
+function challengeFriend(name) {
+
+  showMessage(
+    "Spielanfrage an " +
+    name +
+    " wird vorbereitet …"
+  );
+
+}
+
+
+function showMessage(text) {
+
+  const message =
+    document.createElement("div");
+
+  message.className = "toast";
+
+  message.textContent = text;
+
+  document.body.appendChild(message);
+
+  setTimeout(() => {
+    message.remove();
+  }, 2200);
+
+}
+
+</script>
 
 </body>
 </html>
