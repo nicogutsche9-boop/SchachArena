@@ -1,1 +1,128 @@
+const PIECES={r:"♜",n:"♞",b:"♝",q:"♛",k:"♚",p:"♟",R:"♖",N:"♘",B:"♗",Q:"♕",K:"♔",P:"♙"};
+const SUPABASE_URL="https://ocqdfvfshbudnsssxdxi.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jcWRmdmZzaGJ1ZG5zc3N4ZHhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5MTA1MDksImV4cCI6MjEwMzQ4NjUwOX0.TktaxxzGeChjr8B9xrl9wWbcq6A-mEBJlqKBT5EJufE";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+let board=[],turn="w",selected=null,lastMove=null,peer=null,conn=null,myColor=null,room="",gameOver=false,localResultDone=false;
+let rating=+localStorage.getItem("sa_rating")||1000,wins=+localStorage.getItem("sa_wins")||0,losses=+localStorage.getItem("sa_losses")||0,draws=+localStorage.getItem("sa_draws")||0;
 
+function rank(v=rating){return v>=1400?"Gold":v>=1200?"Silber":v>=1000?"Bronze":"Anfänger"}
+function updateRanking(){document.getElementById("rating").textContent=rating+" Punkte · "+rank();document.getElementById("stats").textContent=wins+" Siege · "+losses+" Niederlagen · "+draws+" Remis"}
+function saveRanking(){localStorage.setItem("sa_rating",rating);localStorage.setItem("sa_wins",wins);localStorage.setItem("sa_losses",losses);localStorage.setItem("sa_draws",draws);updateRanking()}
+
+async function syncPlayer(){
+ const username=getName();
+ if(username.toLowerCase()==="gast") return;
+ try{
+  const {error}=await sb.from("players").upsert({username,rating,games_played:wins+losses+draws,wins,losses,draws,updated_at:new Date().toISOString()},{onConflict:"username"});
+  if(error) throw error;
+  await loadLeaderboard();
+ }catch(e){console.warn("Rating konnte nicht synchronisiert werden:",e);}
+}
+async function score(win){
+ if(localResultDone)return;
+ localResultDone=true;
+ if(win){rating+=25;wins++;alert("🎉 Gewonnen! +25 Punkte")}
+ else{rating=Math.max(0,rating-15);losses++;alert("😕 Verloren. -15 Punkte")}
+ saveRanking();
+ await syncPlayer();
+}
+async function loadLeaderboard(){
+ const box=document.getElementById("leaderboard");
+ if(!box)return;
+ box.innerHTML='<div class="empty">⏳ Top 100 werden geladen…</div>';
+ try{
+  const {data,error}=await sb.from("players").select("username,rating,wins,losses,draws").order("rating",{ascending:false}).limit(100);
+  if(error)throw error;
+  const list=data||[];
+  if(!list.length){
+   box.innerHTML='<div class="empty">Noch keine Spieler in der Rangliste.</div>';
+   return;
+  }
+  box.innerHTML=list.map((x,i)=>{
+   const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":String(i+1);
+   const me=x.username===getName()?"me":"";
+   return `<div class="leader-item ${me}"><span class="rank-num">${medal}</span><span class="player-name"><b>${escapeHtml(x.username)}</b><small>${rank(x.rating)} · ${x.wins||0} Siege</small></span><span class="pill">${x.rating}</span></div>`;
+  }).join("");
+ }catch(e){
+  console.error(e);
+  box.innerHTML='<div class="empty">⚠️ Die Online-Rangliste konnte nicht geladen werden. Prüfe die Supabase-Tabelle und Berechtigungen.</div>';
+ }
+}
+function fresh(){board=["rnbqkbnr","pppppppp","........","........","........","........","PPPPPPPP","RNBQKBNR"].map(x=>[...x]);turn="w";selected=null;lastMove=null;gameOver=false;localResultDone=false;draw()}
+function colorOf(p){return p&&p!=="."?(p===p.toUpperCase()?"w":"b"):null}
+function clearPath(r1,c1,r2,c2){let dr=Math.sign(r2-r1),dc=Math.sign(c2-c1),r=r1+dr,c=c1+dc;while(r!==r2||c!==c2){if(board[r][c]!==".")return false;r+=dr;c+=dc}return true}
+function legal(r1,c1,r2,c2){
+ const p=board[r1][c1],t=board[r2][c2];if(!p||p==="."||colorOf(p)!==turn||colorOf(t)===turn)return false;
+ const dr=r2-r1,dc=c2-c1,a=Math.abs(dr),d=Math.abs(dc),type=p.toLowerCase();
+ if(type==="p"){const dir=turn==="w"?-1:1,start=turn==="w"?6:1;return(dc===0&&t==="."&&(dr===dir||(r1===start&&dr===2*dir&&board[r1+dir][c1]===".")))||(d===1&&dr===dir&&t!==".")}
+ if(type==="n")return(a===2&&d===1)||(a===1&&d===2);
+ if(type==="b")return a===d&&clearPath(r1,c1,r2,c2);
+ if(type==="r")return(a===0||d===0)&&clearPath(r1,c1,r2,c2);
+ if(type==="q")return(a===d||a===0||d===0)&&clearPath(r1,c1,r2,c2);
+ if(type==="k")return Math.max(a,d)===1;
+ return false
+}
+function draw(){
+ const e=document.getElementById("board");e.innerHTML="";
+ for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+  const s=document.createElement("div");s.className="sq "+((r+c)%2?"dark":"light");
+  if(selected&&selected[0]===r&&selected[1]===c)s.classList.add("selected");
+  if(lastMove&&((lastMove[0]===r&&lastMove[1]===c)||(lastMove[2]===r&&lastMove[3]===c)))s.classList.add("last");
+  const p=board[r][c];const span=document.createElement("span");span.className="piece "+(colorOf(p)==="b"?"black":colorOf(p)==="w"?"white":"");span.textContent=(PIECES[p]||"")+"︎";s.appendChild(span);s.onclick=()=>tap(r,c);e.appendChild(s)
+ }
+ document.getElementById("turn").textContent="Am Zug: "+(turn==="w"?"Weiß":"Schwarz")
+}
+function tap(r,c){if(gameOver||(myColor&&myColor!==turn))return;const p=board[r][c];if(!selected){if(colorOf(p)===turn)selected=[r,c]}else if(colorOf(p)===turn)selected=[r,c];else if(legal(selected[0],selected[1],r,c)){const m=[selected[0],selected[1],r,c];applyMove(...m,true);selected=null}else selected=null;draw()}
+function applyMove(r1,c1,r2,c2,send){
+ const moving=board[r1][c1],captured=board[r2][c2];board[r2][c2]=moving;board[r1][c1]=".";
+ if(moving==="P"&&r2===0)board[r2][c2]="Q";if(moving==="p"&&r2===7)board[r2][c2]="q";
+ lastMove=[r1,c1,r2,c2];
+ if(captured==="K"||captured==="k"){gameOver=true;draw();const winner=colorOf(captured)==="w"?"b":"w";score(winner===myColor);if(send&&conn)conn.send({type:"gameover",winner});return}
+ turn=turn==="w"?"b":"w";draw();if(send&&conn)conn.send({type:"move",m:[r1,c1,r2,c2]})
+}
+function getName(){return(document.getElementById("nameInput")?.value||"Gast").trim().slice(0,18)||"Gast"}
+
+async function registerRoom(){
+ try{
+  const {error}=await sb.from("rooms").upsert({room_code:room,player_name:getName(),player_rating:rating,status:"open",created_at:new Date().toISOString()},{onConflict:"room_code"});
+  if(error)throw error;
+  await refreshRooms();
+ }catch(e){console.warn("Raum konnte online nicht registriert werden:",e);roomInfo("Raum-Code: "+room+" · Online-Raumliste nicht verfügbar")}
+}
+async function unregisterRoom(){if(!room)return;try{await sb.from("rooms").delete().eq("room_code",room)}catch(e){console.warn(e)}}
+async function refreshRooms(){
+ const box=document.getElementById("roomList");if(!box)return;
+ const q=(document.getElementById("roomSearch")?.value||"").trim();box.innerHTML='<div class="empty">⏳ Räume werden geladen…</div>';
+ try{
+  let query=sb.from("rooms").select("room_code,player_name,player_rating,created_at,status").eq("status","open").order("created_at",{ascending:false}).limit(50);
+  const {data,error}=await query;if(error)throw error;
+  const rooms=(data||[]).filter(x=>!q||x.room_code.toLowerCase().includes(q.toLowerCase())||x.player_name.toLowerCase().includes(q.toLowerCase()));
+  if(!rooms.length){box.innerHTML='<div class="empty">Keine offenen Räume gefunden.</div>';return;}
+  box.innerHTML=rooms.map(x=>`<div class="room-item"><div><b>♟ ${escapeHtml(x.player_name)}</b><br><small>Raum ${escapeHtml(x.room_code)} · ${x.player_rating} Punkte</small></div><div class="room-actions"><span class="pill">🟢 Offen</span><button onclick="joinListedRoom('${escapeJs(x.room_code)}')">Beitreten</button></div></div>`).join("");
+ }catch(e){console.error(e);box.innerHTML='<div class="empty">⚠️ Räume konnten nicht geladen werden. Prüfe die Supabase-Tabelle „rooms“.</div>'}
+}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function escapeJs(v){return String(v).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
+function joinListedRoom(code){document.getElementById("roomInput").value=code;joinRoom()}
+async function quickJoin(){try{const {data,error}=await sb.from("rooms").select("room_code").eq("status","open").limit(50);if(error)throw error;if(!data?.length)return alert("Keine offenen Räume gefunden.");joinListedRoom(data[Math.floor(Math.random()*data.length)].room_code)}catch(e){alert("Die Raum-Suche ist momentan nicht verfügbar.")}}
+function createRoom(){
+ syncPlayer();
+ room=Math.random().toString(36).slice(2,8).toUpperCase();myColor="w";registerRoom();showGame();peer=new Peer("schacharena-"+room);
+ peer.on("open",()=>{roomInfo("Raum-Code: "+room+" · Warte auf Gegner…")});
+ peer.on("connection",c=>{conn=c;setupConnection();c.on("open",()=>c.send({type:"state",b:board,turn:turn}))});
+ peer.on("error",()=>roomInfo("Verbindung konnte nicht hergestellt werden."))
+}
+function joinRoom(){syncPlayer();room=document.getElementById("roomInput").value.trim().toUpperCase();if(!room)return alert("Bitte einen Raum-Code eingeben.");myColor="b";showGame();peer=new Peer();peer.on("open",()=>{conn=peer.connect("schacharena-"+room);setupConnection()});peer.on("error",()=>roomInfo("Raum nicht gefunden oder nicht mehr verfügbar."))}
+function setupConnection(){
+ document.getElementById("color").textContent="Du: "+(myColor==="w"?"Weiß":"Schwarz");
+ conn.on("open",()=>{roomInfo("Verbunden · Raum-Code: "+room);unregisterRoom()});
+ conn.on("data",m=>{if(m.type==="state"){board=m.b;turn=m.turn;draw()}if(m.type==="move")applyMove(...m.m,false);if(m.type==="gameover"){gameOver=true;draw();score(m.winner===myColor)}if(m.type==="reset"){fresh()}})
+}
+function showGame(){document.getElementById("lobby").classList.add("hide");document.getElementById("game").style.display="block";document.getElementById("color").textContent="Du: "+(myColor==="w"?"Weiß":"Schwarz");fresh()}
+function roomInfo(t){document.getElementById("roomInfo").textContent=t}
+function copyRoom(){navigator.clipboard?.writeText(room);alert("Raum-Code kopiert: "+room)}
+function newGame(){fresh();if(conn)conn.send({type:"reset"})}
+async function backLobby(){await unregisterRoom();location.reload()}
+
+document.getElementById("nameInput").addEventListener("change",()=>syncPlayer());
+updateRanking();fresh();refreshRooms();loadLeaderboard();
