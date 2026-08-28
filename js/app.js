@@ -1,136 +1,11 @@
-let coins = Number(localStorage.getItem("sa_coins")) || 0;
-
-let dailyTasks = JSON.parse(
-  localStorage.getItem("sa_daily_tasks") || "null"
-);
-
-function getToday() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function createDailyTasks() {
-
-  const today = getToday();
-
-  if (!dailyTasks || dailyTasks.date !== today) {
-
-    dailyTasks = {
-      date: today,
-
-      wins: 0,
-      games: 0,
-
-      winsRewarded: false,
-      gamesRewarded: false
-    };
-
-    saveDailyTasks();
-  }
-}
-
-function saveDailyTasks() {
-  localStorage.setItem(
-    "sa_daily_tasks",
-    JSON.stringify(dailyTasks)
-  );
-}
-
-function saveCoins() {
-  localStorage.setItem(
-    "sa_coins",
-    coins
-  );
-}
-
-function saveCoins(){
-  localStorage.setItem("sa_coins", coins);
-}
-
-function addCoins(amount){
-  coins += amount;
-  saveCoins();
-}
-
-function spendCoins(amount){
-  if(coins < amount) return false;
-
-  coins -= amount;
-  saveCoins();
-
-  return true;
-}
-function updateDailyTasks(result) {
-
-  createDailyTasks();
-
-  // Jede gespielte Partie zählt
-  dailyTasks.games++;
-
-  // Sieg zählt zusätzlich
-  if (result === "win") {
-    dailyTasks.wins++;
-  }
-
-  // Aufgabe 1: 3 Siege
-  if (
-    dailyTasks.wins >= 3 &&
-    !dailyTasks.winsRewarded
-  ) {
-
-    dailyTasks.winsRewarded = true;
-
-    coins += 100;
-
-    saveCoins();
-
-    alert(
-      "🏆 Aufgabe geschafft!\n\n" +
-      "Gewinne 3 Partien\n\n" +
-      "🪙 +100 Münzen"
-    );
-  }
-
-  // Aufgabe 2: 5 Partien spielen
-  if (
-    dailyTasks.games >= 5 &&
-    !dailyTasks.gamesRewarded
-  ) {
-
-    dailyTasks.gamesRewarded = true;
-
-    coins += 75;
-
-    saveCoins();
-
-    alert(
-      "⚔️ Aufgabe geschafft!\n\n" +
-      "Spiele 5 Partien\n\n" +
-      "🪙 +75 Münzen"
-    );
-  }
-
-  saveDailyTasks();
-}
 /* =========================================================
    SCHACHARENA – APP.JS
-   Version 1.0.0
-
-   Verbindet:
-   - neue SchachArena-Startseite
-   - Schachspiel
-   - Räume
-   - PeerJS
-   - Supabase
-   - Ranking
-   - Freunde
-   - Nachrichten
-   - Einstellungen
-   - Profil
+   Korrigierte Version
 ========================================================= */
 
 
 /* =========================================================
-   KONFIGURATION
+   SUPABASE
 ========================================================= */
 
 const SUPABASE_URL =
@@ -138,7 +13,6 @@ const SUPABASE_URL =
 
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jcWRmdmZzaGJ1ZG5zc3N4ZHhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5MTA1MDksImV4cCI6MjEwMzQ4NjUwOX0.TktaxxzGeChjr8B9xrl9wWbcq6A-mEBJlqKBT5EJufE";
-
 
 const sb =
   window.supabase
@@ -208,17 +82,194 @@ let draws =
 
 
 /* =========================================================
+   MÜNZEN
+========================================================= */
+
+let coins =
+  Number(localStorage.getItem("sa_coins")) || 0;
+
+
+/* =========================================================
+   TÄGLICHE AUFGABEN
+========================================================= */
+
+let dailyTasks = JSON.parse(
+  localStorage.getItem("sa_daily_tasks") || "null"
+);
+
+
+function getToday() {
+
+  return new Date()
+    .toISOString()
+    .slice(0, 10);
+}
+
+
+function createDailyTasks() {
+
+  const today =
+    getToday();
+
+
+  if (
+    !dailyTasks ||
+    dailyTasks.date !== today
+  ) {
+
+    dailyTasks = {
+
+      date: today,
+
+      wins: 0,
+      games: 0,
+
+      winsRewarded: false,
+      gamesRewarded: false
+
+    };
+
+
+    saveDailyTasks();
+  }
+}
+
+
+function saveDailyTasks() {
+
+  localStorage.setItem(
+    "sa_daily_tasks",
+    JSON.stringify(dailyTasks)
+  );
+}
+
+
+function saveCoins() {
+
+  localStorage.setItem(
+    "sa_coins",
+    String(coins)
+  );
+}
+
+
+function addCoins(amount) {
+
+  amount =
+    Number(amount) || 0;
+
+  coins += amount;
+
+  saveCoins();
+}
+
+
+function spendCoins(amount) {
+
+  amount =
+    Number(amount) || 0;
+
+  if (
+    coins < amount
+  ) {
+
+    return false;
+  }
+
+
+  coins -= amount;
+
+  saveCoins();
+
+  return true;
+}
+
+
+/* =========================================================
+   TÄGLICHE AUFGABEN AKTUALISIEREN
+========================================================= */
+
+function updateDailyTasks(result) {
+
+  createDailyTasks();
+
+
+  /* Jede beendete Partie zählt */
+
+  dailyTasks.games++;
+
+
+  /* Nur ein Sieg zählt als Sieg */
+
+  if (
+    result === "win"
+  ) {
+
+    dailyTasks.wins++;
+  }
+
+
+  /* -----------------------------------------
+     3 SIEGE
+  ----------------------------------------- */
+
+  if (
+    dailyTasks.wins >= 3 &&
+    !dailyTasks.winsRewarded
+  ) {
+
+    dailyTasks.winsRewarded = true;
+
+    addCoins(100);
+
+    showMessage(
+      "🏆 Aufgabe geschafft! +100 Münzen"
+    );
+  }
+
+
+  /* -----------------------------------------
+     5 PARTIEN
+  ----------------------------------------- */
+
+  if (
+    dailyTasks.games >= 5 &&
+    !dailyTasks.gamesRewarded
+  ) {
+
+    dailyTasks.gamesRewarded = true;
+
+    addCoins(75);
+
+    showMessage(
+      "⚔️ Aufgabe geschafft! +75 Münzen"
+    );
+  }
+
+
+  saveDailyTasks();
+}
+
+
+/* =========================================================
    HILFSFUNKTIONEN
 ========================================================= */
 
 function getName() {
 
   const stored =
-    localStorage.getItem("sa_username");
+    localStorage.getItem(
+      "sa_username"
+    );
+
 
   if (stored) {
-    return stored.trim().slice(0, 18) || "Gast";
+
+    return stored
+      .trim()
+      .slice(0, 18) || "Gast";
   }
+
 
   return "Gast";
 }
@@ -231,30 +282,33 @@ function setName(name) {
       .trim()
       .slice(0, 18);
 
+
   if (!name) {
     name = "Gast";
   }
+
 
   localStorage.setItem(
     "sa_username",
     name
   );
 
+
   return name;
 }
 
 
-function rank(v = rating) {
+function rank(value = rating) {
 
-  if (v >= 1400) {
+  if (value >= 1400) {
     return "Gold";
   }
 
-  if (v >= 1200) {
+  if (value >= 1200) {
     return "Silber";
   }
 
-  if (v >= 1000) {
+  if (value >= 1000) {
     return "Bronze";
   }
 
@@ -265,40 +319,55 @@ function rank(v = rating) {
 function escapeHtml(value) {
 
   return String(value)
-    .replace(/[&<>"']/g, char => {
+    .replace(
+      /[&<>"']/g,
+      char => {
 
-      const map = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      };
+        const map = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        };
 
-      return map[char];
-    });
+        return map[char];
+      }
+    );
 }
 
 
 function escapeJs(value) {
 
   return String(value)
-    .replace(/\\/g, "\\\\")
-    .replace(/'/g, "\\'");
+    .replace(
+      /\\/g,
+      "\\\\"
+    )
+    .replace(
+      /'/g,
+      "\\'"
+    );
 }
 
 
 /* =========================================================
-   RATING SPEICHERN
+   RATING ANZEIGEN
 ========================================================= */
 
 function updateRanking() {
 
   const ratingElement =
-    document.getElementById("rating");
+    document.getElementById(
+      "rating"
+    );
+
 
   const statsElement =
-    document.getElementById("stats");
+    document.getElementById(
+      "stats"
+    );
+
 
   if (ratingElement) {
 
@@ -307,6 +376,7 @@ function updateRanking() {
       " Punkte · " +
       rank();
   }
+
 
   if (statsElement) {
 
@@ -320,18 +390,23 @@ function updateRanking() {
   }
 
 
-  const ratingElements =
-    document.querySelectorAll(
+  document
+    .querySelectorAll(
       "[data-rating]"
+    )
+    .forEach(
+      element => {
+
+        element.textContent =
+          rating;
+      }
     );
-
-  ratingElements.forEach(element => {
-
-    element.textContent =
-      rating;
-  });
 }
 
+
+/* =========================================================
+   RATING SPEICHERN
+========================================================= */
 
 function saveRanking() {
 
@@ -355,6 +430,7 @@ function saveRanking() {
     String(draws)
   );
 
+
   updateRanking();
 }
 
@@ -363,31 +439,80 @@ function saveRanking() {
    SPIELERGEBNIS
 ========================================================= */
 
-async function score(win){
+async function score(result) {
 
-  if(localResultDone) return;
+  if (
+    localResultDone
+  ) {
+
+    return;
+  }
+
 
   localResultDone = true;
 
-  // Statistik aktualisieren
-  if(win){
+
+  /* SIEG */
+
+  if (
+    result === "win"
+  ) {
 
     rating += 25;
+
     wins++;
 
-    alert("🎉 Gewonnen! +25 Punkte");
+    updateDailyTasks(
+      "win"
+    );
 
-    updateDailyTasks("win");
+    showMessage(
+      "🎉 Gewonnen! +25 Punkte"
+    );
+  }
 
-  } else {
 
-    rating = Math.max(0, rating - 15);
+  /* NIEDERLAGE */
+
+  else if (
+    result === "loss"
+  ) {
+
+    rating =
+      Math.max(
+        0,
+        rating - 15
+      );
+
     losses++;
 
-    alert("😕 Verloren. -15 Punkte");
+    updateDailyTasks(
+      "loss"
+    );
 
-    updateDailyTasks("loss");
+    showMessage(
+      "😕 Verloren. -15 Punkte"
+    );
   }
+
+
+  /* REMIS */
+
+  else if (
+    result === "draw"
+  ) {
+
+    draws++;
+
+    updateDailyTasks(
+      "draw"
+    );
+
+    showMessage(
+      "🤝 Remis"
+    );
+  }
+
 
   saveRanking();
 
@@ -405,13 +530,16 @@ async function syncPlayer() {
     return;
   }
 
+
   const username =
     getName();
+
 
   if (
     username.toLowerCase() ===
     "gast"
   ) {
+
     return;
   }
 
@@ -426,14 +554,18 @@ async function syncPlayer() {
         .upsert(
           {
             username,
+
             rating,
+
             games_played:
               wins +
               losses +
               draws,
+
             wins,
             losses,
             draws,
+
             updated_at:
               new Date().toISOString()
           },
@@ -450,6 +582,7 @@ async function syncPlayer() {
 
 
     await loadLeaderboard();
+
 
   } catch (error) {
 
@@ -472,7 +605,12 @@ async function loadLeaderboard() {
       "leaderboard"
     );
 
-  if (!box || !sb) {
+
+  if (
+    !box ||
+    !sb
+  ) {
+
     return;
   }
 
@@ -510,7 +648,9 @@ async function loadLeaderboard() {
       data || [];
 
 
-    if (!players.length) {
+    if (
+      !players.length
+    ) {
 
       box.innerHTML =
         '<div class="empty">Noch keine Spieler in der Rangliste.</div>';
@@ -543,11 +683,13 @@ async function loadLeaderboard() {
 
             return `
               <div class="leader-item ${me}">
+
                 <span class="rank-num">
                   ${medal}
                 </span>
 
                 <span class="player-name">
+
                   <b>
                     ${escapeHtml(
                       player.username
@@ -555,16 +697,20 @@ async function loadLeaderboard() {
                   </b>
 
                   <small>
-                    ${rank(player.rating)}
+                    ${rank(
+                      player.rating
+                    )}
                     ·
                     ${player.wins || 0}
                     Siege
                   </small>
+
                 </span>
 
                 <span class="pill">
                   ${player.rating}
                 </span>
+
               </div>
             `;
           }
@@ -579,23 +725,24 @@ async function loadLeaderboard() {
       error
     );
 
-    box.innerHTML =
-      `
+
+    box.innerHTML = `
       <div class="empty">
         ⚠️ Die Online-Rangliste konnte nicht geladen werden.
       </div>
-      `;
+    `;
   }
 }
 
 
 /* =========================================================
-   SCHACHBRETT – NEUES SPIEL
+   NEUES SCHACHSPIEL
 ========================================================= */
 
 function fresh() {
 
   board = [
+
     "rnbqkbnr",
     "pppppppp",
     "........",
@@ -604,7 +751,10 @@ function fresh() {
     "........",
     "PPPPPPPP",
     "RNBQKBNR"
-  ].map(row => [...row]);
+
+  ].map(
+    row => [...row]
+  );
 
 
   turn = "w";
@@ -618,17 +768,21 @@ function fresh() {
   localResultDone = false;
 
 
-  /* Sonderzüge zurücksetzen */
-
-  if (typeof chessState !== "undefined") {
+  if (
+    typeof chessState !==
+    "undefined"
+  ) {
 
     chessState.whiteKingMoved = false;
+
     chessState.blackKingMoved = false;
 
     chessState.whiteRookAMoved = false;
+
     chessState.whiteRookHMoved = false;
 
     chessState.blackRookAMoved = false;
+
     chessState.blackRookHMoved = false;
 
     chessState.enPassantTarget = null;
@@ -646,7 +800,10 @@ function fresh() {
 function draw() {
 
   const boardElement =
-    document.getElementById("board");
+    document.getElementById(
+      "board"
+    );
+
 
   if (!boardElement) {
     return;
@@ -669,7 +826,9 @@ function draw() {
     ) {
 
       const square =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
 
       square.className =
@@ -739,7 +898,9 @@ function draw() {
         PIECES[piece] || "";
 
 
-      square.appendChild(span);
+      square.appendChild(
+        span
+      );
 
 
       square.addEventListener(
@@ -756,7 +917,9 @@ function draw() {
 
 
   const turnElement =
-    document.getElementById("turn");
+    document.getElementById(
+      "turn"
+    );
 
 
   if (turnElement) {
@@ -779,7 +942,10 @@ function draw() {
     );
 
 
-  if (colorElement && myColor) {
+  if (
+    colorElement &&
+    myColor
+  ) {
 
     colorElement.textContent =
       "Du: " +
@@ -793,7 +959,7 @@ function draw() {
 
 
 /* =========================================================
-   SPIELBRETT – KLICK
+   BRETT – KLICK
 ========================================================= */
 
 function tap(r, c) {
@@ -807,6 +973,7 @@ function tap(r, c) {
     myColor &&
     myColor !== turn
   ) {
+
     showMessage(
       "Der Gegner ist am Zug."
     );
@@ -825,7 +992,10 @@ function tap(r, c) {
       colorOf(piece) === turn
     ) {
 
-      selected = [r, c];
+      selected = [
+        r,
+        c
+      ];
 
       draw();
     }
@@ -838,7 +1008,10 @@ function tap(r, c) {
     colorOf(piece) === turn
   ) {
 
-    selected = [r, c];
+    selected = [
+      r,
+      c
+    ];
 
     draw();
 
@@ -899,7 +1072,12 @@ function applyMove(
   const moving =
     board[r1][c1];
 
-  if (!moving || moving === ".") {
+
+  if (
+    !moving ||
+    moving === "."
+  ) {
+
     return;
   }
 
@@ -912,9 +1090,7 @@ function applyMove(
     board[r2][c2];
 
 
-  /* --------------------------------
-     EN PASSANT
-  -------------------------------- */
+  /* EN PASSANT */
 
   const isEnPassant =
     moving.toLowerCase() === "p" &&
@@ -926,20 +1102,13 @@ function applyMove(
     chessState.enPassantTarget[1] === c2;
 
 
-  /* --------------------------------
-     FIGUR ZIEHEN
-  -------------------------------- */
-
   board[r2][c2] =
     moving;
+
 
   board[r1][c1] =
     ".";
 
-
-  /* --------------------------------
-     EN PASSANT BAUER ENTFERNEN
-  -------------------------------- */
 
   if (isEnPassant) {
 
@@ -954,9 +1123,7 @@ function applyMove(
   }
 
 
-  /* --------------------------------
-     ROCHADE
-  -------------------------------- */
+  /* ROCHADE */
 
   if (
     moving.toLowerCase() === "k" &&
@@ -965,8 +1132,6 @@ function applyMove(
 
     const row = r1;
 
-
-    /* kurze Rochade */
 
     if (c2 === 6) {
 
@@ -977,8 +1142,6 @@ function applyMove(
         ".";
     }
 
-
-    /* lange Rochade */
 
     if (c2 === 2) {
 
@@ -991,20 +1154,24 @@ function applyMove(
   }
 
 
-  /* --------------------------------
-     ROCHADE-STATUS
-  -------------------------------- */
+  /* ROCHADE-STATUS */
 
   if (
-    typeof chessState !== "undefined"
+    typeof chessState !==
+    "undefined"
   ) {
 
     if (moving === "K") {
-      chessState.whiteKingMoved = true;
+
+      chessState.whiteKingMoved =
+        true;
     }
 
+
     if (moving === "k") {
-      chessState.blackKingMoved = true;
+
+      chessState.blackKingMoved =
+        true;
     }
 
 
@@ -1053,9 +1220,7 @@ function applyMove(
   }
 
 
-  /* --------------------------------
-     BAUERN UMWANDELN
-  -------------------------------- */
+  /* BAUERNUMWANDLUNG */
 
   if (
     moving === "P" &&
@@ -1077,12 +1242,11 @@ function applyMove(
   }
 
 
-  /* --------------------------------
-     EN-PASSANT-ZIEL
-  -------------------------------- */
+  /* EN-PASSANT-ZIEL */
 
   if (
-    typeof chessState !== "undefined"
+    typeof chessState !==
+    "undefined"
   ) {
 
     chessState.enPassantTarget =
@@ -1095,8 +1259,11 @@ function applyMove(
     ) {
 
       chessState.enPassantTarget = [
+
         (r1 + r2) / 2,
+
         c1
+
       ];
     }
   }
@@ -1110,10 +1277,6 @@ function applyMove(
   ];
 
 
-  /* --------------------------------
-     SPIELER WECHSELN
-  -------------------------------- */
-
   turn =
     turn === "w"
       ? "b"
@@ -1123,16 +1286,8 @@ function applyMove(
   draw();
 
 
-  /* --------------------------------
-     SPIELENDE PRÜFEN
-  -------------------------------- */
-
   checkGameEnd();
 
-
-  /* --------------------------------
-     ZUG AN GEGNER SENDEN
-  -------------------------------- */
 
   if (
     send &&
@@ -1142,6 +1297,7 @@ function applyMove(
 
     conn.send({
       type: "move",
+
       m: [
         r1,
         c1,
@@ -1154,19 +1310,23 @@ function applyMove(
 
 
 /* =========================================================
-   SCHACH / MATT / PATT
+   SPIELENDE
 ========================================================= */
 
 function checkGameEnd() {
 
   if (
-    typeof isCheckmate !== "function" ||
-    typeof isStalemate !== "function"
+    typeof isCheckmate !==
+      "function" ||
+    typeof isStalemate !==
+      "function"
   ) {
 
     return;
   }
 
+
+  /* SCHACHMATT */
 
   if (
     isCheckmate(turn)
@@ -1181,15 +1341,8 @@ function checkGameEnd() {
         : "w";
 
 
-    const winnerName =
-      winner === myColor
-        ? "Du gewinnst!"
-        : "Du hast verloren.";
-
-
     showMessage(
-      "♚ Schachmatt! " +
-      winnerName
+      "♚ Schachmatt!"
     );
 
 
@@ -1212,6 +1365,7 @@ function checkGameEnd() {
 
       conn.send({
         type: "gameover",
+
         winner
       });
     }
@@ -1222,6 +1376,8 @@ function checkGameEnd() {
     return;
   }
 
+
+  /* PATT */
 
   if (
     isStalemate(turn)
@@ -1255,7 +1411,7 @@ function checkGameEnd() {
 
 
 /* =========================================================
-   SPIELSTATUS FÜR PEERJS
+   SPIELSTATUS
 ========================================================= */
 
 function getGameState() {
@@ -1263,7 +1419,9 @@ function getGameState() {
   return {
 
     board:
-      board.map(row => [...row]),
+      board.map(
+        row => [...row]
+      ),
 
     turn,
 
@@ -1273,8 +1431,10 @@ function getGameState() {
         : null,
 
     chessState:
-      typeof chessState !== "undefined"
+      typeof chessState !==
+      "undefined"
         ? {
+
             whiteKingMoved:
               chessState.whiteKingMoved,
 
@@ -1299,6 +1459,7 @@ function getGameState() {
                     ...chessState.enPassantTarget
                   ]
                 : null
+
           }
         : null
   };
@@ -1313,7 +1474,9 @@ function restoreGameState(state) {
 
 
   if (
-    Array.isArray(state.board)
+    Array.isArray(
+      state.board
+    )
   ) {
 
     board =
@@ -1335,7 +1498,8 @@ function restoreGameState(state) {
 
   if (
     state.chessState &&
-    typeof chessState !== "undefined"
+    typeof chessState !==
+      "undefined"
   ) {
 
     Object.assign(
@@ -1357,12 +1521,16 @@ function restoreGameState(state) {
 
 
 /* =========================================================
-   RAUM – SUPABASE REGISTRIEREN
+   RAUM REGISTRIEREN
 ========================================================= */
 
 async function registerRoom() {
 
-  if (!sb || !room) {
+  if (
+    !sb ||
+    !room
+  ) {
+
     return;
   }
 
@@ -1376,12 +1544,22 @@ async function registerRoom() {
         .from("rooms")
         .upsert(
           {
-            room_code: room,
-            player_name: getName(),
-            player_rating: rating,
-            status: "open",
+
+            room_code:
+              room,
+
+            player_name:
+              getName(),
+
+            player_rating:
+              rating,
+
+            status:
+              "open",
+
             created_at:
               new Date().toISOString()
+
           },
           {
             onConflict:
@@ -1416,7 +1594,7 @@ async function registerRoom() {
 
 
 /* =========================================================
-   RAUM – LÖSCHEN
+   RAUM LÖSCHEN
 ========================================================= */
 
 async function unregisterRoom() {
@@ -1425,6 +1603,7 @@ async function unregisterRoom() {
     !sb ||
     !room
   ) {
+
     return;
   }
 
@@ -1450,7 +1629,7 @@ async function unregisterRoom() {
 
 
 /* =========================================================
-   RAUM – LISTE
+   RÄUME LADEN
 ========================================================= */
 
 async function refreshRooms() {
@@ -1461,7 +1640,11 @@ async function refreshRooms() {
     );
 
 
-  if (!box || !sb) {
+  if (
+    !box ||
+    !sb
+  ) {
+
     return;
   }
 
@@ -1519,16 +1702,23 @@ async function refreshRooms() {
         .filter(
           r =>
             !query ||
-            String(r.room_code)
+            String(
+              r.room_code
+            )
               .toLowerCase()
               .includes(query) ||
-            String(r.player_name)
+
+            String(
+              r.player_name
+            )
               .toLowerCase()
               .includes(query)
         );
 
 
-    if (!rooms.length) {
+    if (
+      !rooms.length
+    ) {
 
       box.innerHTML =
         '<div class="empty">Keine offenen Räume gefunden.</div>';
@@ -1541,9 +1731,11 @@ async function refreshRooms() {
       rooms
         .map(
           r => `
+
             <div class="room-item">
 
               <div>
+
                 <b>
                   ♟
                   ${escapeHtml(
@@ -1562,6 +1754,7 @@ async function refreshRooms() {
                   ${r.player_rating || 1000}
                   Punkte
                 </small>
+
               </div>
 
               <div class="room-actions">
@@ -1581,6 +1774,7 @@ async function refreshRooms() {
               </div>
 
             </div>
+
           `
         )
         .join("");
@@ -1594,35 +1788,40 @@ async function refreshRooms() {
     );
 
 
-    box.innerHTML =
-      `
+    box.innerHTML = `
       <div class="empty">
         ⚠️ Räume konnten nicht geladen werden.
       </div>
-      `;
+    `;
   }
 }
 
 
 /* =========================================================
-   RAUM – LISTE BEITRETEN
+   RAUM AUS LISTE BEITRETEN
 ========================================================= */
 
-function joinListedRoom(code){
+function joinListedRoom(code) {
 
   const input =
-    document.getElementById("roomInput") ||
-    document.getElementById("roomSearch");
+    document.getElementById(
+      "roomInput"
+    ) ||
+    document.getElementById(
+      "roomSearch"
+    );
+
 
   if (input) {
-    input.value = code;
+
+    input.value =
+      code;
   }
 
-  joinRoom(code);
-}
 
-
-  joinRoom();
+  joinRoom(
+    code
+  );
 }
 
 
@@ -1665,7 +1864,9 @@ async function quickJoin() {
     }
 
 
-    if (!data?.length) {
+    if (
+      !data?.length
+    ) {
 
       showMessage(
         "Keine offenen Räume gefunden."
@@ -1704,10 +1905,6 @@ async function quickJoin() {
 }
 
 
-/* =========================================================
-   SCHNELL SPIELEN – ALIAS
-========================================================= */
-
 function startQuickGame() {
 
   quickJoin();
@@ -1715,7 +1912,7 @@ function startQuickGame() {
 
 
 /* =========================================================
-   RAUMCODE BEITRETEN
+   RAUMCODE
 ========================================================= */
 
 function joinRoomByCode(code) {
@@ -1743,12 +1940,15 @@ function joinRoomByCode(code) {
 
 
   if (input) {
+
     input.value =
       cleanCode;
   }
 
 
-  joinRoom();
+  joinRoom(
+    cleanCode
+  );
 }
 
 
@@ -1785,7 +1985,8 @@ async function createRoom() {
 
 
   if (
-    typeof Peer === "undefined"
+    typeof Peer ===
+    "undefined"
   ) {
 
     roomInfo(
@@ -1794,9 +1995,11 @@ async function createRoom() {
       " · PeerJS konnte nicht geladen werden."
     );
 
+
     showMessage(
       "PeerJS ist nicht geladen."
     );
+
 
     return;
   }
@@ -1849,9 +2052,13 @@ async function createRoom() {
           () => {
 
             conn.send({
-              type: "state",
+
+              type:
+                "state",
+
               state:
                 getGameState()
+
             });
 
 
@@ -1900,59 +2107,152 @@ async function createRoom() {
    RAUM BEITRETEN
 ========================================================= */
 
- function joinRoom(codeFromDashboard = null){
+function joinRoom(
+  codeFromDashboard = null
+) {
 
   syncPlayer();
 
-  // Raumcode aus Dashboard oder Lobby übernehmen
-  let input = document.getElementById("roomInput");
+
+  let input =
+    document.getElementById(
+      "roomInput"
+    );
+
 
   if (!input) {
-    input = document.getElementById("roomSearch");
+
+    input =
+      document.getElementById(
+        "roomSearch"
+      );
   }
+
 
   const code = (
     codeFromDashboard ||
     input?.value ||
     ""
-  ).trim().toUpperCase();
+  )
+    .trim()
+    .toUpperCase();
+
 
   if (!code) {
-    alert("Bitte einen Raum-Code eingeben.");
+
+    showMessage(
+      "Bitte einen Raum-Code eingeben."
+    );
+
+
     input?.focus();
+
+
     return;
   }
 
-  room = code;
-  myColor = "b";
+
+  room =
+    code;
+
+
+  myColor =
+    "b";
+
 
   showGame();
 
-  peer = new Peer();
 
-  peer.on("open", () => {
+  fresh();
 
-    conn = peer.connect(
-      "schacharena-" + room
-    );
 
-    setupConnection();
+  roomInfo(
+    "Verbinde mit Raum " +
+    room +
+    " …"
+  );
 
-  });
 
-  peer.on("error", (error) => {
-
-    console.error("Peer-Fehler:", error);
+  if (
+    typeof Peer ===
+    "undefined"
+  ) {
 
     roomInfo(
-      "❌ Raum nicht gefunden oder Verbindung fehlgeschlagen."
+      "PeerJS konnte nicht geladen werden."
     );
 
-  });
+
+    showMessage(
+      "PeerJS ist nicht geladen."
+    );
+
+
+    return;
+  }
+
+
+  try {
+
+    peer =
+      new Peer();
+
+
+    peer.on(
+      "open",
+      () => {
+
+        conn =
+          peer.connect(
+            "schacharena-" +
+            room
+          );
+
+
+        setupConnection();
+      }
+    );
+
+
+    peer.on(
+      "error",
+      error => {
+
+        console.error(
+          "Peer-Fehler:",
+          error
+        );
+
+
+        roomInfo(
+          "❌ Raum nicht gefunden oder Verbindung fehlgeschlagen."
+        );
+
+
+        showMessage(
+          "Verbindung zum Raum fehlgeschlagen."
+        );
+      }
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Beitreten:",
+      error
+    );
+
+
+    roomInfo(
+      "❌ Verbindung fehlgeschlagen."
+    );
+  }
 }
 
+
 /* =========================================================
-   PEERJS VERBINDUNG
+   PEERJS
 ========================================================= */
 
 function setupConnection() {
@@ -2001,15 +2301,16 @@ function setupConnection() {
       }
 
 
-      /* --------------------------------
-         SPIELSTAND
-      -------------------------------- */
+      /* SPIELSTAND */
 
       if (
-        message.type === "state"
+        message.type ===
+        "state"
       ) {
 
-        if (message.state) {
+        if (
+          message.state
+        ) {
 
           restoreGameState(
             message.state
@@ -2017,35 +2318,41 @@ function setupConnection() {
 
         } else {
 
-          /* Unterstützung für altes Format */
-
-          board =
+          if (
             message.b
-              ? message.b.map(
-                  row => [...row]
-                )
-              : board;
+          ) {
+
+            board =
+              message.b.map(
+                row => [...row]
+              );
+          }
+
 
           turn =
-            message.turn || "w";
+            message.turn ||
+            "w";
+
 
           draw();
         }
+
 
         return;
       }
 
 
-      /* --------------------------------
-         ZUG
-      -------------------------------- */
+      /* ZUG */
 
       if (
-        message.type === "move"
+        message.type ===
+        "move"
       ) {
 
         if (
-          Array.isArray(message.m)
+          Array.isArray(
+            message.m
+          )
         ) {
 
           applyMove(
@@ -2054,19 +2361,20 @@ function setupConnection() {
           );
         }
 
+
         return;
       }
 
 
-      /* --------------------------------
-         SPIELENDE
-      -------------------------------- */
+      /* SPIELENDE */
 
       if (
-        message.type === "gameover"
+        message.type ===
+        "gameover"
       ) {
 
-        gameOver = true;
+        gameOver =
+          true;
 
 
         const winner =
@@ -2074,14 +2382,19 @@ function setupConnection() {
 
 
         if (
-          winner === myColor
+          winner ===
+          myColor
         ) {
 
-          score("win");
+          score(
+            "win"
+          );
 
         } else {
 
-          score("loss");
+          score(
+            "loss"
+          );
         }
 
 
@@ -2094,47 +2407,49 @@ function setupConnection() {
 
         draw();
 
+
         return;
       }
 
 
-      /* --------------------------------
-         REMIS
-      -------------------------------- */
+      /* REMIS */
 
       if (
-        message.type === "draw"
+        message.type ===
+        "draw"
       ) {
 
-        gameOver = true;
+        gameOver =
+          true;
 
-        score("draw");
+
+        score(
+          "draw"
+        );
+
 
         showMessage(
           "🤝 Remis"
         );
 
-        draw();
 
-        return;
+        draw();
       }
 
 
-      /* --------------------------------
-         NEUES SPIEL
-      -------------------------------- */
+      /* NEUES SPIEL */
 
       if (
-        message.type === "reset"
+        message.type ===
+        "reset"
       ) {
 
         fresh();
 
+
         showMessage(
           "Neues Spiel gestartet."
         );
-
-        return;
       }
     }
   );
@@ -2206,6 +2521,7 @@ function showGame() {
 
 
     game.innerHTML = `
+
       <div class="game-inner">
 
         <div class="game-header">
@@ -2218,10 +2534,15 @@ function showGame() {
           </button>
 
           <div>
-            <h2>SchachArena</h2>
+
+            <h2>
+              SchachArena
+            </h2>
+
             <p id="roomInfo">
               Spiel wird vorbereitet …
             </p>
+
           </div>
 
           <button
@@ -2296,36 +2617,15 @@ function showGame() {
 
 
   if (app) {
+
     app.style.display =
       "none";
   }
 
 
-  const body =
-    document.body;
-
-
-  body.classList.add(
+  document.body.classList.add(
     "game-active"
   );
-
-
-  const colorElement =
-    document.getElementById(
-      "color"
-    );
-
-
-  if (colorElement) {
-
-    colorElement.textContent =
-      "Du: " +
-      (
-        myColor === "w"
-          ? "Weiß"
-          : "Schwarz"
-      );
-  }
 
 
   draw();
@@ -2333,7 +2633,7 @@ function showGame() {
 
 
 /* =========================================================
-   SPIELANSICHT – CSS FALLBACK
+   GAME CSS
 ========================================================= */
 
 function addGameStyles() {
@@ -2343,6 +2643,7 @@ function addGameStyles() {
       "schacharena-game-style"
     )
   ) {
+
     return;
   }
 
@@ -2416,7 +2717,8 @@ function addGameStyles() {
       grid-template-rows: repeat(8, 1fr);
       overflow: hidden;
       border-radius: 14px;
-      box-shadow: 0 25px 80px rgba(0,0,0,.45);
+      box-shadow:
+        0 25px 80px rgba(0,0,0,.45);
     }
 
     .sq {
@@ -2443,25 +2745,28 @@ function addGameStyles() {
 
     .sq.last {
       box-shadow:
-        inset 0 0 0 4px rgba(255,215,70,.65);
+        inset 0 0 0 4px
+        rgba(255,215,70,.65);
     }
 
     .piece {
-      font-size: clamp(30px, 7vw, 68px);
+      font-size:
+        clamp(30px, 7vw, 68px);
       line-height: 1;
-      transform: translateY(-2px);
     }
 
     .piece.white {
       color: #fff;
       text-shadow:
-        0 2px 2px rgba(0,0,0,.75);
+        0 2px 2px
+        rgba(0,0,0,.75);
     }
 
     .piece.black {
       color: #171717;
       text-shadow:
-        0 1px 1px rgba(255,255,255,.25);
+        0 1px 1px
+        rgba(255,255,255,.25);
     }
 
     .game-controls {
@@ -2472,7 +2777,7 @@ function addGameStyles() {
       flex-wrap: wrap;
     }
 
-    @media (max-width: 600px) {
+    @media(max-width:600px) {
 
       .game-screen {
         padding: 12px;
@@ -2484,9 +2789,6 @@ function addGameStyles() {
         text-align: center;
       }
 
-      .game-status {
-        font-size: 14px;
-      }
     }
 
   `;
@@ -2499,7 +2801,7 @@ function addGameStyles() {
 
 
 /* =========================================================
-   RAUM-INFORMATION
+   RAUMINFO
 ========================================================= */
 
 function roomInfo(text) {
@@ -2585,7 +2887,7 @@ function newGame() {
 
 
 /* =========================================================
-   ZURÜCK ZUR STARTSEITE
+   ZURÜCK
 ========================================================= */
 
 async function backLobby() {
@@ -2610,6 +2912,7 @@ async function backLobby() {
 
 
   conn = null;
+
   peer = null;
 
 
@@ -2645,6 +2948,7 @@ async function backLobby() {
 
 
   room = "";
+
   myColor = null;
 
 
@@ -2660,6 +2964,7 @@ async function backLobby() {
 
 /* =========================================================
    FREUNDE
+   STARTET BEWUSST MIT 0 FREUNDEN
 ========================================================= */
 
 function openFriends() {
@@ -2680,50 +2985,23 @@ function openFriends() {
     createModal(
       "Freunde",
       `
-        <div class="modal-friends">
 
-          <div class="modal-friend">
-            <div class="modal-avatar">MM</div>
-            <div>
-              <b>MaxMustermann</b>
-              <small>🏆 1280 · Online</small>
-            </div>
-            <button onclick="challengeFriend('MaxMustermann')">
-              Spielen
-            </button>
+        <div class="friends-empty">
+
+          <div class="friends-empty-icon">
+            👥
           </div>
 
-          <div class="modal-friend">
-            <div class="modal-avatar">CK</div>
-            <div>
-              <b>ChessKing</b>
-              <small>🏆 1412 · Online</small>
-            </div>
-            <button onclick="challengeFriend('ChessKing')">
-              Spielen
-            </button>
-          </div>
+          <h3>
+            Noch keine Freunde
+          </h3>
 
-          <div class="modal-friend offline">
-            <div class="modal-avatar">SP</div>
-            <div>
-              <b>SchachProfi</b>
-              <small>🏆 1190 · Offline</small>
-            </div>
-          </div>
-
-          <div class="modal-friend">
-            <div class="modal-avatar">QG</div>
-            <div>
-              <b>QueenGamer</b>
-              <small>🏆 1350 · Online</small>
-            </div>
-            <button onclick="challengeFriend('QueenGamer')">
-              Spielen
-            </button>
-          </div>
+          <p>
+            Deine Freundesliste ist momentan leer.
+          </p>
 
         </div>
+
 
         <button
           class="modal-primary"
@@ -2731,8 +3009,13 @@ function openFriends() {
         >
           + Freund hinzufügen
         </button>
+
       `
     );
+
+
+  modal.id =
+    "friendsModal";
 
 
   document.body.appendChild(
@@ -2760,8 +3043,8 @@ function addFriend() {
 
   showMessage(
     "Freundesanfrage an " +
-    name +
-    " wurde gesendet."
+    name.trim() +
+    " wurde vorbereitet."
   );
 }
 
@@ -2781,7 +3064,7 @@ function challengeFriend(name) {
 
 
 /* =========================================================
-   RANKING ANZEIGEN
+   RANKING
 ========================================================= */
 
 function openRanking() {
@@ -2790,11 +3073,15 @@ function openRanking() {
     createModal(
       "Ranking",
       `
+
         <div id="leaderboard">
+
           <div class="empty">
             ⏳ Rangliste wird geladen …
           </div>
+
         </div>
+
       `
     );
 
@@ -2818,29 +3105,43 @@ function openMessages() {
     createModal(
       "Nachrichten",
       `
+
         <div class="message-box">
 
           <div class="message-item unread">
+
             <div class="message-avatar">
               ♟
             </div>
 
             <div>
-              <b>SchachArena</b>
+
+              <b>
+                SchachArena
+              </b>
+
               <p>
                 Willkommen bei SchachArena!
               </p>
+
               <small>
                 Neu
               </small>
+
             </div>
+
           </div>
 
+
           <div class="message-empty">
-            Deine Nachrichten werden hier angezeigt.
+
+            Deine Nachrichten werden
+            hier angezeigt.
+
           </div>
 
         </div>
+
       `
     );
 
@@ -2865,10 +3166,13 @@ function openSettings() {
     createModal(
       "Einstellungen",
       `
+
         <div class="settings-form">
 
           <label>
+
             Benutzername
+
             <input
               id="settingsName"
               type="text"
@@ -2877,16 +3181,20 @@ function openSettings() {
                 currentName
               )}"
             >
+
           </label>
 
 
           <label class="setting-check">
+
             <input
               id="soundSetting"
               type="checkbox"
               checked
             >
+
             Sounds aktivieren
+
           </label>
 
 
@@ -2898,6 +3206,7 @@ function openSettings() {
           </button>
 
         </div>
+
       `
     );
 
@@ -2933,26 +3242,7 @@ function saveSettings() {
   syncPlayer();
 
 
-  const modal =
-    document.getElementById(
-      "settingsModal"
-    );
-
-
-  if (modal) {
-    modal.remove();
-  }
-
-
-  const genericModal =
-    document.querySelector(
-      ".sa-modal"
-    );
-
-
-  if (genericModal) {
-    genericModal.remove();
-  }
+  closeCurrentModal();
 
 
   showMessage(
@@ -2975,55 +3265,336 @@ function openProfile() {
     createModal(
       "Profil",
       `
+
         <div class="profile-modal">
 
           <div class="profile-modal-avatar">
+
             <img
               src="assets/profile-placeholder.jpg"
               alt="${escapeHtml(name)}"
             >
+
           </div>
+
 
           <h3>
             ${escapeHtml(name)}
           </h3>
 
+
           <p>
             🟢 Online
           </p>
 
+
           <div class="profile-stat-grid">
 
             <div>
+
               <strong>
                 ${rating}
               </strong>
-              <small>Rating</small>
+
+              <small>
+                Rating
+              </small>
+
             </div>
 
+
             <div>
+
               <strong>
                 ${wins}
               </strong>
-              <small>Siege</small>
+
+              <small>
+                Siege
+              </small>
+
             </div>
 
+
             <div>
+
               <strong>
                 ${losses}
               </strong>
-              <small>Niederlagen</small>
+
+              <small>
+                Niederlagen
+              </small>
+
             </div>
 
           </div>
 
         </div>
+
       `
     );
 
 
   document.body.appendChild(
     modal
+  );
+}
+
+
+/* =========================================================
+   BELOHNUNGEN
+========================================================= */
+
+function openRewards() {
+
+  const oldPopup =
+    document.getElementById(
+      "rewardsPopup"
+    );
+
+
+  if (oldPopup) {
+
+    oldPopup.remove();
+
+    return;
+  }
+
+
+  createDailyTasks();
+
+
+  const winsDone =
+    Math.min(
+      dailyTasks.wins,
+      3
+    );
+
+
+  const gamesDone =
+    Math.min(
+      dailyTasks.games,
+      5
+    );
+
+
+  const winPercent =
+    Math.min(
+      100,
+      (winsDone / 3) * 100
+    );
+
+
+  const gamePercent =
+    Math.min(
+      100,
+      (gamesDone / 5) * 100
+    );
+
+
+  const popup =
+    document.createElement(
+      "div"
+    );
+
+
+  popup.id =
+    "rewardsPopup";
+
+
+  popup.className =
+    "rewards-popup-overlay";
+
+
+  popup.innerHTML = `
+
+    <div class="rewards-popup">
+
+      <button
+        class="rewards-popup-close"
+        id="closeRewardsPopup"
+        aria-label="Schließen"
+      >
+        ×
+      </button>
+
+
+      <div class="rewards-popup-icon">
+        🏆
+      </div>
+
+
+      <h2>
+        Deine Aufgaben
+      </h2>
+
+
+      <p class="rewards-subtitle">
+        Erfülle Aufgaben und verdiene Münzen.
+      </p>
+
+
+      <!-- Aufgabe 1 -->
+
+      <div class="reward-task">
+
+        <div class="task-icon">
+          ♟
+        </div>
+
+
+        <div class="task-content">
+
+          <strong>
+            Gewinne 3 Partien
+          </strong>
+
+          <span>
+            ${winsDone} / 3 geschafft
+          </span>
+
+
+          <div class="task-progress">
+
+            <div
+              style="width:${winPercent}%"
+            ></div>
+
+          </div>
+
+        </div>
+
+
+        <div class="task-reward">
+          🪙 100
+        </div>
+
+      </div>
+
+
+      <!-- Aufgabe 2 -->
+
+      <div class="reward-task">
+
+        <div class="task-icon">
+          ⚔️
+        </div>
+
+
+        <div class="task-content">
+
+          <strong>
+            Spiele 5 Partien
+          </strong>
+
+          <span>
+            ${gamesDone} / 5 geschafft
+          </span>
+
+
+          <div class="task-progress">
+
+            <div
+              style="width:${gamePercent}%"
+            ></div>
+
+          </div>
+
+        </div>
+
+
+        <div class="task-reward">
+          🪙 75
+        </div>
+
+      </div>
+
+
+      <!-- Weitere Aufgabe -->
+
+      <div class="reward-task">
+
+        <div class="task-icon">
+          ♜
+        </div>
+
+
+        <div class="task-content">
+
+          <strong>
+            Spiele eine Partie
+          </strong>
+
+          <span>
+            ${dailyTasks.games >= 1 ? "1" : "0"} / 1 geschafft
+          </span>
+
+
+          <div class="task-progress">
+
+            <div
+              style="width:${dailyTasks.games >= 1 ? 100 : 0}%"
+            ></div>
+
+          </div>
+
+        </div>
+
+
+        <div class="task-reward">
+          🪙 50
+        </div>
+
+      </div>
+
+
+      <!-- Münzen -->
+
+      <div class="rewards-total">
+
+        <span>
+          Deine Münzen
+        </span>
+
+        <strong>
+          🪙 ${coins}
+        </strong>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    popup
+  );
+
+
+  document
+    .getElementById(
+      "closeRewardsPopup"
+    )
+    .addEventListener(
+      "click",
+      () => popup.remove()
+    );
+
+
+  popup.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target ===
+        popup
+      ) {
+
+        popup.remove();
+      }
+    }
   );
 }
 
@@ -3048,7 +3619,9 @@ function createModal(
 
 
   wrapper.innerHTML = `
+
     <div class="sa-modal-backdrop"></div>
+
 
     <div class="sa-modal-window">
 
@@ -3057,6 +3630,7 @@ function createModal(
         <h2>
           ${escapeHtml(title)}
         </h2>
+
 
         <button
           class="sa-modal-close"
@@ -3067,11 +3641,13 @@ function createModal(
 
       </div>
 
+
       <div class="sa-modal-content">
         ${content}
       </div>
 
     </div>
+
   `;
 
 
@@ -3104,7 +3680,26 @@ function createModal(
 
 
 /* =========================================================
-   DASHBOARD NAME AKTUALISIEREN
+   AKTUELLE MODAL SCHLIESSEN
+========================================================= */
+
+function closeCurrentModal() {
+
+  const modal =
+    document.querySelector(
+      ".sa-modal"
+    );
+
+
+  if (modal) {
+
+    modal.remove();
+  }
+}
+
+
+/* =========================================================
+   DASHBOARD NAME
 ========================================================= */
 
 function updateDashboardName() {
@@ -3143,19 +3738,17 @@ function updateDashboardName() {
   );
 
 
-  const profileImages =
-    document.querySelectorAll(
+  document
+    .querySelectorAll(
       'img[alt="Nico"]'
+    )
+    .forEach(
+      image => {
+
+        image.alt =
+          name;
+      }
     );
-
-
-  profileImages.forEach(
-    image => {
-
-      image.alt =
-        name;
-    }
-  );
 }
 
 
@@ -3183,7 +3776,9 @@ function setupNavigation() {
 
           const text =
             link
-              .querySelector("span:last-child")
+              .querySelector(
+                "span:last-child"
+              )
               ?.textContent
               .trim()
               .toLowerCase();
@@ -3261,7 +3856,6 @@ function setupNavigation() {
               0
             );
           }
-
         }
       );
     }
@@ -3270,7 +3864,7 @@ function setupNavigation() {
 
 
 /* =========================================================
-   SPIELEN – LOBBY
+   SPIEL-LOBBY
 ========================================================= */
 
 function showGameLobby() {
@@ -3279,41 +3873,72 @@ function showGameLobby() {
     createModal(
       "Spielen",
       `
+
         <div class="play-options">
 
           <button
             class="play-option"
-            onclick="startQuickGame(); closeCurrentModal();"
+            onclick="
+              startQuickGame();
+              closeCurrentModal();
+            "
           >
-            <span>⚡</span>
+
+            <span>
+              ⚡
+            </span>
+
             <div>
-              <b>Schnell spielen</b>
+
+              <b>
+                Schnell spielen
+              </b>
+
               <small>
                 Finde automatisch einen Gegner.
               </small>
+
             </div>
+
           </button>
 
 
           <button
             class="play-option"
-            onclick="createRoom(); closeCurrentModal();"
+            onclick="
+              createRoom();
+              closeCurrentModal();
+            "
           >
-            <span>＋</span>
+
+            <span>
+              ＋
+            </span>
+
             <div>
-              <b>Raum erstellen</b>
+
+              <b>
+                Raum erstellen
+              </b>
+
               <small>
                 Erstelle einen privaten Raum.
               </small>
+
             </div>
+
           </button>
 
 
           <div class="play-join">
 
-            <b>Raum beitreten</b>
+            <b>
+              Raum beitreten
+            </b>
+
 
             <div>
+
               <input
                 id="modalRoomInput"
                 type="text"
@@ -3321,16 +3946,19 @@ function showGameLobby() {
                 placeholder="Raumcode"
               >
 
+
               <button
                 onclick="joinFromModal()"
               >
                 Beitreten
               </button>
+
             </div>
 
           </div>
 
         </div>
+
       `
     );
 
@@ -3342,25 +3970,7 @@ function showGameLobby() {
 
 
 /* =========================================================
-   MODAL SCHLIESSEN
-========================================================= */
-
-function closeCurrentModal() {
-
-  const modal =
-    document.querySelector(
-      ".sa-modal"
-    );
-
-
-  if (modal) {
-    modal.remove();
-  }
-}
-
-
-/* =========================================================
-   RAUM AUS MODAL
+   AUS MODAL BEITRETEN
 ========================================================= */
 
 function joinFromModal() {
@@ -3383,11 +3993,16 @@ function joinFromModal() {
       "Bitte Raumcode eingeben."
     );
 
+
+    input?.focus();
+
+
     return;
   }
 
 
   closeCurrentModal();
+
 
   joinRoomByCode(
     code
@@ -3396,7 +4011,7 @@ function joinFromModal() {
 
 
 /* =========================================================
-   TOP-BUTTONS
+   TOP BUTTONS
 ========================================================= */
 
 function setupTopButtons() {
@@ -3417,7 +4032,9 @@ function setupTopButtons() {
           event.preventDefault();
 
 
-          if (index === 0) {
+          if (
+            index === 0
+          ) {
 
             showGameLobby();
 
@@ -3453,12 +4070,10 @@ function setupTopButtons() {
 
 
 /* =========================================================
-   DASHBOARD-BUTTONS
+   DASHBOARD BUTTONS
 ========================================================= */
 
 function setupDashboardButtons() {
-
-  /* Profil */
 
   const profileButton =
     document.querySelector(
@@ -3469,10 +4084,9 @@ function setupDashboardButtons() {
   if (profileButton) {
 
     const profileCard =
-      profileButton
-        .closest(
-          ".side-card"
-        );
+      profileButton.closest(
+        ".side-card"
+      );
 
 
     if (
@@ -3498,8 +4112,6 @@ function setupDashboardButtons() {
   }
 
 
-  /* Room-Suche */
-
   const search =
     document.getElementById(
       "roomSearch"
@@ -3519,149 +4131,7 @@ function setupDashboardButtons() {
 /* =========================================================
    TOAST
 ========================================================= */
-function openRewards() {
 
-  // Prüfen, ob bereits ein Popup geöffnet ist
-  const oldPopup = document.getElementById("rewardsPopup");
-
-  if (oldPopup) {
-    oldPopup.remove();
-    return;
-  }
-
-  const popup = document.createElement("div");
-
-  popup.id = "rewardsPopup";
-  popup.className = "rewards-popup-overlay";
-
-  popup.innerHTML = `
-    <div class="rewards-popup">
-
-      <button
-        class="rewards-popup-close"
-        id="closeRewardsPopup"
-        aria-label="Schließen">
-        ×
-      </button>
-
-      <div class="rewards-popup-icon">
-        🏆
-      </div>
-
-      <h2>Deine Aufgaben</h2>
-
-      <p class="rewards-subtitle">
-        Erfülle Aufgaben und verdiene Münzen.
-      </p>
-
-
-      <div class="reward-task">
-
-        <div class="task-icon">
-          ♟
-        </div>
-
-        <div class="task-content">
-          <strong>Gewinne 3 Partien</strong>
-
-          <span>
-            2 / 3 geschafft
-          </span>
-
-          <div class="task-progress">
-            <div style="width: 66%"></div>
-          </div>
-        </div>
-
-        <div class="task-reward">
-          🪙 100
-        </div>
-
-      </div>
-
-
-      <div class="reward-task">
-
-        <div class="task-icon">
-          ⚔️
-        </div>
-
-        <div class="task-content">
-          <strong>Spiele 5 Partien</strong>
-
-          <span>
-            3 / 5 geschafft
-          </span>
-
-          <div class="task-progress">
-            <div style="width: 60%"></div>
-          </div>
-        </div>
-
-        <div class="task-reward">
-          🪙 75
-        </div>
-
-      </div>
-
-
-      <div class="reward-task">
-
-        <div class="task-icon">
-          ♜
-        </div>
-
-        <div class="task-content">
-          <strong>Spiele eine Partie ohne Aufgabe</strong>
-
-          <span>
-            0 / 1 geschafft
-          </span>
-
-          <div class="task-progress">
-            <div style="width: 0%"></div>
-          </div>
-        </div>
-
-        <div class="task-reward">
-          🪙 50
-        </div>
-
-      </div>
-
-
-      <div class="rewards-total">
-
-        <span>Deine Münzen</span>
-
-        <strong>🪙 ${coins || 0}</strong>
-
-      </div>
-
-    </div>
-  `;
-
-  document.body.appendChild(popup);
-
-
-  // Schließen-Button
-  document
-    .getElementById("closeRewardsPopup")
-    .addEventListener("click", () => {
-      popup.remove();
-    });
-
-
-  // Klick auf den dunklen Hintergrund schließt das Popup
-  popup.addEventListener("click", (event) => {
-
-    if (event.target === popup) {
-      popup.remove();
-    }
-
-  });
-
-}
 function showMessage(text) {
 
   const old =
@@ -3671,6 +4141,7 @@ function showMessage(text) {
 
 
   if (old) {
+
     old.remove();
   }
 
@@ -3711,8 +4182,18 @@ function showMessage(text) {
         "show"
       );
 
+
       setTimeout(
-        () => message.remove(),
+        () => {
+
+          if (
+            message.parentNode
+          ) {
+
+            message.remove();
+          }
+
+        },
         250
       );
 
@@ -3723,7 +4204,7 @@ function showMessage(text) {
 
 
 /* =========================================================
-   FALLBACK CSS FÜR MODALS
+   APP CSS
 ========================================================= */
 
 function addAppStyles() {
@@ -3733,6 +4214,7 @@ function addAppStyles() {
       "schacharena-app-style"
     )
   ) {
+
     return;
   }
 
@@ -3759,12 +4241,14 @@ function addAppStyles() {
       padding: 20px;
     }
 
+
     .sa-modal-backdrop {
       position: absolute;
       inset: 0;
       background: rgba(0,0,0,.72);
       backdrop-filter: blur(8px);
     }
+
 
     .sa-modal-window {
       position: relative;
@@ -3775,24 +4259,30 @@ function addAppStyles() {
       color: #fff;
       border: 1px solid rgba(255,255,255,.12);
       border-radius: 22px;
-      box-shadow: 0 30px 100px rgba(0,0,0,.6);
+      box-shadow:
+        0 30px 100px rgba(0,0,0,.6);
     }
+
 
     .sa-modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 22px 24px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
     }
+
 
     .sa-modal-header h2 {
       margin: 0;
     }
 
+
     .sa-modal-close {
       border: 0;
-      background: rgba(255,255,255,.08);
+      background:
+        rgba(255,255,255,.08);
       color: #fff;
       width: 38px;
       height: 38px;
@@ -3801,14 +4291,17 @@ function addAppStyles() {
       cursor: pointer;
     }
 
+
     .sa-modal-content {
       padding: 24px;
     }
+
 
     .play-options {
       display: grid;
       gap: 14px;
     }
+
 
     .play-option {
       display: flex;
@@ -3816,47 +4309,59 @@ function addAppStyles() {
       gap: 16px;
       width: 100%;
       padding: 18px;
-      border: 1px solid rgba(255,255,255,.1);
+      border:
+        1px solid rgba(255,255,255,.1);
       border-radius: 16px;
-      background: rgba(255,255,255,.05);
+      background:
+        rgba(255,255,255,.05);
       color: white;
       text-align: left;
       cursor: pointer;
     }
 
+
     .play-option:hover {
-      background: rgba(255,255,255,.1);
+      background:
+        rgba(255,255,255,.1);
     }
+
 
     .play-option > span {
       font-size: 30px;
     }
+
 
     .play-option b,
     .play-option small {
       display: block;
     }
 
+
     .play-option small {
       margin-top: 4px;
       opacity: .65;
     }
 
+
     .play-join {
       padding: 18px;
       border-radius: 16px;
-      background: rgba(255,255,255,.04);
+      background:
+        rgba(255,255,255,.04);
     }
+
 
     .play-join > b {
       display: block;
       margin-bottom: 10px;
     }
 
+
     .play-join > div {
       display: flex;
       gap: 8px;
     }
+
 
     .play-join input,
     .settings-form input {
@@ -3864,14 +4369,16 @@ function addAppStyles() {
       flex: 1;
       padding: 12px 14px;
       border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.15);
-      background: rgba(0,0,0,.25);
+      border:
+        1px solid rgba(255,255,255,.15);
+      background:
+        rgba(0,0,0,.25);
       color: white;
     }
 
+
     .play-join button,
-    .modal-primary,
-    .modal-friend button {
+    .modal-primary {
       border: 0;
       border-radius: 10px;
       padding: 11px 16px;
@@ -3881,57 +4388,18 @@ function addAppStyles() {
       font-weight: 700;
     }
 
-    .modal-friends {
-      display: grid;
-      gap: 10px;
-    }
-
-    .modal-friend {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 13px;
-      border-radius: 13px;
-      background: rgba(255,255,255,.05);
-    }
-
-    .modal-friend > div:nth-child(2) {
-      flex: 1;
-    }
-
-    .modal-friend b,
-    .modal-friend small {
-      display: block;
-    }
-
-    .modal-friend small {
-      opacity: .6;
-      margin-top: 3px;
-    }
-
-    .modal-friend.offline {
-      opacity: .5;
-    }
-
-    .modal-avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: #39435d;
-      font-weight: 800;
-    }
 
     .modal-primary {
       margin-top: 18px;
       width: 100%;
     }
 
+
     .settings-form {
       display: grid;
       gap: 18px;
     }
+
 
     .settings-form label {
       display: grid;
@@ -3939,15 +4407,18 @@ function addAppStyles() {
       font-weight: 600;
     }
 
+
     .setting-check {
-      display: flex !important;
-      grid-template-columns: auto 1fr;
+      display:
+        flex !important;
       align-items: center;
     }
+
 
     .profile-modal {
       text-align: center;
     }
+
 
     .profile-modal-avatar {
       width: 100px;
@@ -3957,50 +4428,62 @@ function addAppStyles() {
       border-radius: 50%;
     }
 
+
     .profile-modal-avatar img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
+
     .profile-stat-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns:
+        repeat(3, 1fr);
       gap: 10px;
       margin-top: 22px;
     }
 
+
     .profile-stat-grid > div {
       padding: 15px 8px;
       border-radius: 12px;
-      background: rgba(255,255,255,.05);
+      background:
+        rgba(255,255,255,.05);
     }
+
 
     .profile-stat-grid strong,
     .profile-stat-grid small {
       display: block;
     }
 
+
     .profile-stat-grid small {
       opacity: .6;
       margin-top: 3px;
     }
+
 
     .message-item {
       display: flex;
       gap: 12px;
       padding: 15px;
       border-radius: 13px;
-      background: rgba(255,255,255,.05);
+      background:
+        rgba(255,255,255,.05);
     }
+
 
     .message-item p {
       margin: 5px 0;
     }
 
+
     .message-item small {
       opacity: .55;
     }
+
 
     .message-avatar {
       width: 42px;
@@ -4011,34 +4494,211 @@ function addAppStyles() {
       background: #303b59;
     }
 
+
     .message-empty {
       margin-top: 18px;
       opacity: .55;
       text-align: center;
     }
 
+
+    .friends-empty {
+      text-align: center;
+      padding: 25px 10px;
+    }
+
+
+    .friends-empty-icon {
+      font-size: 55px;
+      margin-bottom: 10px;
+    }
+
+
+    .friends-empty h3 {
+      margin: 5px 0;
+    }
+
+
+    .friends-empty p {
+      opacity: .6;
+    }
+
+
+    .rewards-popup-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 15000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background:
+        rgba(0,0,0,.72);
+      backdrop-filter: blur(8px);
+    }
+
+
+    .rewards-popup {
+      position: relative;
+      width: min(100%, 560px);
+      max-height: 90vh;
+      overflow: auto;
+      padding: 30px;
+      border-radius: 24px;
+      background: #151923;
+      color: white;
+      box-shadow:
+        0 30px 100px rgba(0,0,0,.65);
+    }
+
+
+    .rewards-popup-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 50%;
+      background:
+        rgba(255,255,255,.08);
+      color: white;
+      font-size: 25px;
+      cursor: pointer;
+    }
+
+
+    .rewards-popup-icon {
+      font-size: 48px;
+      text-align: center;
+    }
+
+
+    .rewards-popup h2 {
+      text-align: center;
+      margin: 8px 0;
+    }
+
+
+    .rewards-subtitle {
+      text-align: center;
+      opacity: .6;
+      margin-bottom: 25px;
+    }
+
+
+    .reward-task {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px;
+      margin-bottom: 12px;
+      border-radius: 15px;
+      background:
+        rgba(255,255,255,.05);
+    }
+
+
+    .task-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background:
+        rgba(255,255,255,.08);
+      font-size: 22px;
+    }
+
+
+    .task-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+
+    .task-content strong,
+    .task-content span {
+      display: block;
+    }
+
+
+    .task-content span {
+      margin-top: 4px;
+      font-size: 13px;
+      opacity: .6;
+    }
+
+
+    .task-progress {
+      height: 7px;
+      margin-top: 9px;
+      overflow: hidden;
+      border-radius: 99px;
+      background:
+        rgba(255,255,255,.1);
+    }
+
+
+    .task-progress > div {
+      height: 100%;
+      border-radius: inherit;
+      background: #267cff;
+      transition: width .3s ease;
+    }
+
+
+    .task-reward {
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+
+    .rewards-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding: 17px;
+      border-radius: 15px;
+      background:
+        rgba(255,255,255,.08);
+    }
+
+
+    .rewards-total strong {
+      font-size: 20px;
+    }
+
+
     .toast {
       position: fixed;
       z-index: 20000;
       left: 50%;
       bottom: 30px;
-      transform: translate(-50%, 20px);
+      transform:
+        translate(-50%, 20px);
       padding: 13px 18px;
       border-radius: 12px;
       background: #171a23;
       color: white;
-      border: 1px solid rgba(255,255,255,.12);
-      box-shadow: 0 15px 40px rgba(0,0,0,.4);
+      border:
+        1px solid rgba(255,255,255,.12);
+      box-shadow:
+        0 15px 40px rgba(0,0,0,.4);
       opacity: 0;
       transition: .25s ease;
       pointer-events: none;
       text-align: center;
     }
 
+
     .toast.show {
       opacity: 1;
-      transform: translate(-50%, 0);
+      transform:
+        translate(-50%, 0);
     }
+
 
     @media(max-width:600px) {
 
@@ -4046,21 +4706,36 @@ function addAppStyles() {
         padding: 10px;
       }
 
+
       .sa-modal-content {
         padding: 17px;
       }
+
 
       .play-join > div {
         flex-direction: column;
       }
 
-      .modal-friend {
-        flex-wrap: wrap;
-      }
 
       .profile-stat-grid {
         grid-template-columns: 1fr;
       }
+
+
+      .rewards-popup {
+        padding: 22px 16px;
+      }
+
+
+      .reward-task {
+        align-items: flex-start;
+      }
+
+
+      .task-reward {
+        font-size: 13px;
+      }
+
     }
 
   `;
@@ -4073,35 +4748,112 @@ function addAppStyles() {
 
 
 /* =========================================================
-   INIT
+   DASHBOARD RAUMCODE
+========================================================= */
+
+function joinRoomDashboard() {
+
+  const input =
+    document.getElementById(
+      "roomSearch"
+    );
+
+
+  if (!input) {
+
+    showMessage(
+      "Raumcode-Feld wurde nicht gefunden."
+    );
+
+    return;
+  }
+
+
+  const code =
+    input.value
+      .trim()
+      .toUpperCase();
+
+
+  if (!code) {
+
+    input.focus();
+
+
+    input.classList.add(
+      "error"
+    );
+
+
+    setTimeout(
+      () => {
+
+        input.classList.remove(
+          "error"
+        );
+
+      },
+      600
+    );
+
+
+    return;
+  }
+
+
+  const lobbyInput =
+    document.getElementById(
+      "roomInput"
+    );
+
+
+  if (lobbyInput) {
+
+    lobbyInput.value =
+      code;
+  }
+
+
+  joinRoom(
+    code
+  );
+}
+
+
+/* =========================================================
+   APP INITIALISIEREN
 ========================================================= */
 
 function initApp() {
 
   addAppStyles();
 
+
+  createDailyTasks();
+
+
   updateDashboardName();
+
 
   updateRanking();
 
+
   setupNavigation();
 
+
   setupTopButtons();
+
 
   setupDashboardButtons();
 
 
-  /* vorhandene Room-Liste */
-
   refreshRooms();
 
-
-  /* vorhandene Rangliste */
 
   loadLeaderboard();
 
 
-  /* Name aus alter index.html unterstützen */
+  /* Name */
 
   const nameInput =
     document.getElementById(
@@ -4118,7 +4870,6 @@ function initApp() {
       setName(
         nameInput.value
       );
-
     }
 
 
@@ -4130,7 +4881,9 @@ function initApp() {
           nameInput.value
         );
 
+
         syncPlayer();
+
 
         updateDashboardName();
       }
@@ -4153,33 +4906,21 @@ function initApp() {
       event => {
 
         if (
-          event.key === "Enter"
+          event.key ===
+          "Enter"
         ) {
 
           event.preventDefault();
 
 
-          const code =
-            roomInput.value
-              .trim()
-              .toUpperCase();
-
-
-          if (code) {
-
-            joinRoomByCode(
-              code
-            );
-          }
+          joinRoomDashboard();
         }
       }
     );
   }
 
 
-  /* Falls die alte HTML-Version
-     onclick-Funktionen benutzt,
-     stehen sie ebenfalls global bereit. */
+  /* Globale Funktionen */
 
   window.startQuickGame =
     startQuickGame;
@@ -4192,6 +4933,21 @@ function initApp() {
 
   window.joinRoom =
     joinRoom;
+
+  window.joinRoomByCode =
+    joinRoomByCode;
+
+  window.joinListedRoom =
+    joinListedRoom;
+
+  window.joinRoomDashboard =
+    joinRoomDashboard;
+
+  window.createRoomDashboard =
+    createRoom;
+
+  window.findOpponent =
+    quickJoin;
 
   window.openFriends =
     openFriends;
@@ -4208,6 +4964,9 @@ function initApp() {
   window.openProfile =
     openProfile;
 
+  window.openRewards =
+    openRewards;
+
   window.addFriend =
     addFriend;
 
@@ -4223,65 +4982,27 @@ function initApp() {
   window.backLobby =
     backLobby;
 
-  window.joinListedRoom =
-    joinListedRoom;
+  window.closeCurrentModal =
+    closeCurrentModal;
 
-  window.joinRoomDashboard =
-    () => {
+  window.joinFromModal =
+    joinFromModal;
 
-      const input =
-        document.getElementById(
-          "roomSearch"
-        );
-
-
-      const code =
-        input?.value
-          .trim()
-          .toUpperCase();
-
-
-      if (code) {
-
-        joinRoomByCode(
-          code
-        );
-
-      } else {
-
-        showMessage(
-          "Bitte Raumcode eingeben."
-        );
-      }
-    };
-
-
-  window.createRoomDashboard =
-    createRoom;
-
-
-  window.findOpponent =
-    quickJoin;
-
+  window.saveSettings =
+    saveSettings;
 
   window.showMessage =
     showMessage;
 
 
-  /* Falls chess.js geladen ist,
-     Brett intern vorbereiten */
+  /* Schachbrett vorbereiten */
 
-  if (
-    typeof board !== "undefined"
-  ) {
-
-    fresh();
-  }
+  fresh();
 }
 
 
 /* =========================================================
-   APP STARTEN
+   START
 ========================================================= */
 
 if (
@@ -4297,39 +5018,4 @@ if (
 } else {
 
   initApp();
-}
-function joinRoomDashboard(){
-
-  const input =
-    document.getElementById("roomSearch");
-
-  if (!input) {
-    alert("Raumcode-Feld wurde nicht gefunden.");
-    return;
-  }
-
-  const code =
-    input.value.trim().toUpperCase();
-
-  if (!code) {
-
-    input.focus();
-
-    input.classList.add("error");
-
-    setTimeout(() => {
-      input.classList.remove("error");
-    }, 600);
-
-    return;
-  }
-
-  const lobbyInput =
-    document.getElementById("roomInput");
-
-  if (lobbyInput) {
-    lobbyInput.value = code;
-  }
-
-  joinRoom(code);
 }
