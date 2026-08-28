@@ -61,7 +61,9 @@ function draw(){
 }
 function tap(r,c){if(gameOver||(myColor&&myColor!==turn))return;const p=board[r][c];if(!selected){if(colorOf(p)===turn)selected=[r,c]}else if(colorOf(p)===turn)selected=[r,c];else if(legal(selected[0],selected[1],r,c)){const m=[selected[0],selected[1],r,c];applyMove(...m,true);selected=null}else selected=null;draw()}
 function applyMove(r1,c1,r2,c2,send){
- const moving=board[r1][c1]const movingColor=colorOf(moving);,captured=board[r2][c2];board[r2][c2]=moving;board[r1][c1]=".";
+ const moving = board[r1][c1];
+const movingColor = colorOf(moving);
+const captured = board[r2][c2];board[r2][c2]=moving;board[r1][c1]=".";
  // En-passant ausführen
 if(
   moving.toLowerCase()==="p" &&
