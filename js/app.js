@@ -1,20 +1,6 @@
 /* =========================================================
    SCHACHARENA – APP.JS
-   BEREINIGTE VERSION
-
-   Enthalten:
-   - Schachspiel
-   - Räume
-   - PeerJS
-   - Supabase
-   - Ranking
-   - Freunde
-   - Nachrichten
-   - Einstellungen
-   - Profil
-   - tägliche Herausforderungen
-   - Belohnungen
-   - Münzen
+   KOMPLETT BEREINIGTE VERSION
 ========================================================= */
 
 
@@ -26,7 +12,7 @@ const SUPABASE_URL =
   "https://ocqdfvfshbudnsssxdxi.supabase.co";
 
 const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzYXFkZnZmc2hidWRuc3NzeGR4aSIsInJvbGUiOiJzdXBhYmFzZSIsInJlZiI6Im9jcWRmdmZzaGJ1ZG5zc3N4ZHhpIiwiaWF0IjoxNzg3OTEwNTA5LCJleHAiOjIxMDM0ODY1MDl9.TktaxxzGeChjr8B9xrl9wWbcq6A-mEBJlqKBT5EJufE";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jcWRmdmZzaGJ1ZG5zc3N4ZHhpIiwicm9sZSI6MTc4NzkxMTA1MDksImV4cCI6MjEwMzQ4NjUwOX0.TktaxxzGeChjr8B9xrl9wWbcq6A-mEBJlqKBT5EJufE";
 
 const sb =
   window.supabase
@@ -79,7 +65,7 @@ let localResultDone = false;
 
 
 /* =========================================================
-   RATING
+   RANKING
 ========================================================= */
 
 let rating =
@@ -107,422 +93,32 @@ let coins =
    TÄGLICHE AUFGABEN
 ========================================================= */
 
-let dailyTasks =
-  JSON.parse(
-    localStorage.getItem("sa_daily_tasks") || "null"
-  );
-
-
-function getToday() {
-
-  const now = new Date();
-
-  const year =
-    now.getFullYear();
-
-  const month =
-    String(now.getMonth() + 1)
-      .padStart(2, "0");
-
-  const day =
-    String(now.getDate())
-      .padStart(2, "0");
-
-  return (
-    year +
-    "-" +
-    month +
-    "-" +
-    day
-  );
-}
-
-
-function createDailyTasks() {
-
-  const today =
-    getToday();
-
-
-  if (
-    !dailyTasks ||
-    dailyTasks.date !== today
-  ) {
-
-    dailyTasks = {
-
-      date: today,
-
-      wins: 0,
-
-      games: 0,
-
-      winsRewarded: false,
-
-      gamesRewarded: false
-
-    };
-
-
-    saveDailyTasks();
-  }
-
-
-  return dailyTasks;
-}
-
-
-function saveDailyTasks() {
-
-  localStorage.setItem(
-    "sa_daily_tasks",
-    JSON.stringify(
-      dailyTasks
-    )
-  );
-}
-
-
-/* =========================================================
-   MÜNZEN SPEICHERN
-========================================================= */
-
-function saveCoins() {
-
-  localStorage.setItem(
-    "sa_coins",
-    String(coins)
-  );
-}
-
-
-function addCoins(amount) {
-
-  amount =
-    Number(amount) || 0;
-
-  coins += amount;
-
-  saveCoins();
-
-  updateCoinDisplays();
-}
-
-
-function spendCoins(amount) {
-
-  amount =
-    Number(amount) || 0;
-
-
-  if (
-    coins < amount
-  ) {
-
-    return false;
-  }
-
-
-  coins -= amount;
-
-  saveCoins();
-
-  updateCoinDisplays();
-
-  return true;
-}
-
-
-function updateCoinDisplays() {
-
-  const elements =
-    document.querySelectorAll(
-      "[data-coins]"
-    );
-
-
-  elements.forEach(
-    element => {
-
-      element.textContent =
-        coins;
-    }
-  );
-
-
-  const coinElements =
-    document.querySelectorAll(
-      ".coin-count"
-    );
-
-
-  coinElements.forEach(
-    element => {
-
-      element.textContent =
-        coins;
-    }
-  );
-}
-
-
-/* =========================================================
-   TÄGLICHE AUFGABEN AKTUALISIEREN
-========================================================= */
-
-function updateDailyTasks(result) {
-
-  createDailyTasks();
-
-
-  /* Jede Partie zählt */
-
-  dailyTasks.games++;
-
-
-  /* Nur Siege zählen als Sieg */
-
-  if (
-    result === "win"
-  ) {
-
-    dailyTasks.wins++;
-  }
-
-
-  let rewardMessage = "";
-
-
-  /* -----------------------------------------
-     3 SIEGE
-  ----------------------------------------- */
-
-  if (
-    dailyTasks.wins >= 3 &&
-    !dailyTasks.winsRewarded
-  ) {
-
-    dailyTasks.winsRewarded =
-      true;
-
-    coins += 100;
-
-    saveCoins();
-
-    rewardMessage +=
-      "🏆 Aufgabe geschafft!\n\n" +
-      "Gewinne 3 Partien\n\n" +
-      "🪙 +100 Münzen\n\n";
-  }
-
-
-  /* -----------------------------------------
-     5 PARTIEN
-  ----------------------------------------- */
-
-  if (
-    dailyTasks.games >= 5 &&
-    !dailyTasks.gamesRewarded
-  ) {
-
-    dailyTasks.gamesRewarded =
-      true;
-
-    coins += 75;
-
-    saveCoins();
-
-    rewardMessage +=
-      "⚔️ Aufgabe geschafft!\n\n" +
-      "Spiele 5 Partien\n\n" +
-      "🪙 +75 Münzen";
-  }
-
-
-  saveDailyTasks();
-
-  updateRewardsDisplays();
-
-
-  if (
-    rewardMessage
-  ) {
-
-    alert(
-      rewardMessage
-    );
-  }
-}
-
-
-/* =========================================================
-   BELOHNUNGEN AKTUELL HALTEN
-========================================================= */
-
-function updateRewardsDisplays() {
-
-  createDailyTasks();
-
-
-  const winsCount =
-    Math.min(
-      dailyTasks.wins,
-      3
-    );
-
-
-  const gamesCount =
-    Math.min(
-      dailyTasks.games,
-      5
-    );
-
-
-  const winsPercent =
-    Math.min(
-      100,
-      Math.round(
-        (
-          dailyTasks.wins /
-          3
-        ) *
-        100
-      )
-    );
-
-
-  const gamesPercent =
-    Math.min(
-      100,
-      Math.round(
-        (
-          dailyTasks.games /
-          5
-        ) *
-        100
-      )
-    );
-
-
-  /* Aufgabe Siege */
-
-  document
-    .querySelectorAll(
-      "[data-reward-wins]"
-    )
-    .forEach(
-      element => {
-
-        element.textContent =
-          winsCount +
-          " / 3";
-      }
-    );
-
-
-  /* Aufgabe Partien */
-
-  document
-    .querySelectorAll(
-      "[data-reward-games]"
-    )
-    .forEach(
-      element => {
-
-        element.textContent =
-          gamesCount +
-          " / 5";
-      }
-    );
-
-
-  /* Fortschrittsbalken Siege */
-
-  document
-    .querySelectorAll(
-      "[data-reward-wins-progress]"
-    )
-    .forEach(
-      element => {
-
-        element.style.width =
-          winsPercent +
-          "%";
-      }
-    );
-
-
-  /* Fortschrittsbalken Partien */
-
-  document
-    .querySelectorAll(
-      "[data-reward-games-progress]"
-    )
-    .forEach(
-      element => {
-
-        element.style.width =
-          gamesPercent +
-          "%";
-      }
-    );
-
-
-  /* Dashboard-Texte */
-
-  const dashboardRewards =
-    document.getElementById(
-      "dailyRewards"
-    );
-
-
-  if (
-    dashboardRewards
-  ) {
-
-    dashboardRewards.innerHTML =
-      `
-        <div>
-          🏆 Gewinne 3 Partien:
-          <strong>
-            ${winsCount}/3
-          </strong>
-        </div>
-
-        <div>
-          ⚔️ Spiele 5 Partien:
-          <strong>
-            ${gamesCount}/5
-          </strong>
-        </div>
-      `;
-  }
-
-
-  updateCoinDisplays();
-}
+let dailyTasks = null;
 
 
 /* =========================================================
    HILFSFUNKTIONEN
 ========================================================= */
 
+function getToday() {
+
+  return new Date()
+    .toISOString()
+    .slice(0, 10);
+}
+
+
 function getName() {
 
   const stored =
-    localStorage.getItem(
-      "sa_username"
-    );
-
+    localStorage.getItem("sa_username");
 
   if (stored) {
 
     return stored
       .trim()
-      .slice(0, 18) ||
-      "Gast";
+      .slice(0, 18) || "Gast";
   }
-
 
   return "Gast";
 }
@@ -535,19 +131,14 @@ function setName(name) {
       .trim()
       .slice(0, 18);
 
-
   if (!name) {
-
-    name =
-      "Gast";
+    name = "Gast";
   }
-
 
   localStorage.setItem(
     "sa_username",
     name
   );
-
 
   return name;
 }
@@ -574,42 +165,592 @@ function rank(v = rating) {
 function escapeHtml(value) {
 
   return String(value)
-    .replace(
-      /[&<>"']/g,
-      char => {
+    .replace(/[&<>"']/g, char => {
 
-        const map = {
+      const map = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      };
 
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;"
-
-        };
-
-        return map[char];
-      }
-    );
+      return map[char];
+    });
 }
 
 
 function escapeJs(value) {
 
   return String(value)
-    .replace(
-      /\\/g,
-      "\\\\"
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'");
+}
+
+
+/* =========================================================
+   MÜNZEN SPEICHERN
+========================================================= */
+
+function loadCoins() {
+
+  coins =
+    Number(
+      localStorage.getItem(
+        "sa_coins"
+      )
+    ) || 0;
+
+  return coins;
+}
+
+
+function saveCoins() {
+
+  localStorage.setItem(
+    "sa_coins",
+    String(coins)
+  );
+
+  updateCoinDisplays();
+}
+
+
+function addCoins(amount) {
+
+  amount =
+    Number(amount) || 0;
+
+  coins += amount;
+
+  saveCoins();
+}
+
+
+function spendCoins(amount) {
+
+  amount =
+    Number(amount) || 0;
+
+  if (coins < amount) {
+    return false;
+  }
+
+  coins -= amount;
+
+  saveCoins();
+
+  return true;
+}
+
+
+function updateCoinDisplays() {
+
+  const value =
+    Number(
+      localStorage.getItem(
+        "sa_coins"
+      )
+    ) || 0;
+
+  document
+    .querySelectorAll(
+      "[data-coins], .coin-count"
     )
-    .replace(
-      /'/g,
-      "\\'"
+    .forEach(
+      element => {
+
+        element.textContent =
+          value;
+      }
     );
 }
 
 
 /* =========================================================
-   RATING
+   TÄGLICHE AUFGABEN LADEN
+========================================================= */
+
+function loadDailyTasks() {
+
+  const today =
+    getToday();
+
+  let stored = null;
+
+  try {
+
+    stored =
+      JSON.parse(
+        localStorage.getItem(
+          "sa_daily_tasks"
+        ) || "null"
+      );
+
+  } catch (error) {
+
+    stored = null;
+  }
+
+
+  if (
+    !stored ||
+    stored.date !== today
+  ) {
+
+    stored = {
+
+      date: today,
+
+      wins: 0,
+      games: 0,
+
+      winsRewarded: false,
+      gamesRewarded: false
+
+    };
+
+    localStorage.setItem(
+      "sa_daily_tasks",
+      JSON.stringify(stored)
+    );
+  }
+
+
+  dailyTasks =
+    stored;
+
+  return dailyTasks;
+}
+
+
+function saveDailyTasks() {
+
+  if (!dailyTasks) {
+    return;
+  }
+
+  localStorage.setItem(
+    "sa_daily_tasks",
+    JSON.stringify(
+      dailyTasks
+    )
+  );
+}
+
+
+/* =========================================================
+   TÄGLICHE AUFGABEN AKTUALISIEREN
+========================================================= */
+
+function updateDailyTasks(result) {
+
+  loadDailyTasks();
+
+
+  /* Jede Partie zählt */
+
+  dailyTasks.games =
+    Number(
+      dailyTasks.games
+    ) || 0;
+
+  dailyTasks.wins =
+    Number(
+      dailyTasks.wins
+    ) || 0;
+
+
+  dailyTasks.games++;
+
+
+  /* Sieg zählt zusätzlich */
+
+  if (
+    result === "win"
+  ) {
+
+    dailyTasks.wins++;
+  }
+
+
+  /* ================================================
+     3 SIEGE
+  ================================================= */
+
+  if (
+    dailyTasks.wins >= 3 &&
+    !dailyTasks.winsRewarded
+  ) {
+
+    dailyTasks.winsRewarded =
+      true;
+
+    addCoins(100);
+
+    showMessage(
+      "🏆 Aufgabe geschafft! +100 Münzen"
+    );
+  }
+
+
+  /* ================================================
+     5 PARTIEN
+  ================================================= */
+
+  if (
+    dailyTasks.games >= 5 &&
+    !dailyTasks.gamesRewarded
+  ) {
+
+    dailyTasks.gamesRewarded =
+      true;
+
+    addCoins(75);
+
+    showMessage(
+      "⚔️ Aufgabe geschafft! +75 Münzen"
+    );
+  }
+
+
+  saveDailyTasks();
+
+  updateRewardsDisplays();
+}
+
+
+/* =========================================================
+   BELOHNUNGSANZEIGEN AKTUALISIEREN
+========================================================= */
+
+function updateRewardsDisplays() {
+
+  loadDailyTasks();
+  loadCoins();
+
+
+  const wins =
+    Math.min(
+      Number(dailyTasks.wins) || 0,
+      3
+    );
+
+
+  const games =
+    Math.min(
+      Number(dailyTasks.games) || 0,
+      5
+    );
+
+
+  const winsPercent =
+    Math.min(
+      100,
+      Math.round(
+        wins / 3 * 100
+      )
+    );
+
+
+  const gamesPercent =
+    Math.min(
+      100,
+      Math.round(
+        games / 5 * 100
+      )
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-reward-wins]"
+    )
+    .forEach(
+      element => {
+
+        element.textContent =
+          wins + " / 3";
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-reward-games]"
+    )
+    .forEach(
+      element => {
+
+        element.textContent =
+          games + " / 5";
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-reward-wins-progress]"
+    )
+    .forEach(
+      element => {
+
+        element.style.width =
+          winsPercent + "%";
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-reward-games-progress]"
+    )
+    .forEach(
+      element => {
+
+        element.style.width =
+          gamesPercent + "%";
+
+      }
+    );
+
+
+  updateCoinDisplays();
+}
+
+
+/* =========================================================
+   BELOHNUNGEN POPUP
+========================================================= */
+
+function openRewards() {
+
+  const oldPopup =
+    document.getElementById(
+      "rewardsPopup"
+    );
+
+
+  if (oldPopup) {
+
+    oldPopup.remove();
+
+    return;
+  }
+
+
+  loadDailyTasks();
+  loadCoins();
+
+
+  const wins =
+    Math.min(
+      Number(dailyTasks.wins) || 0,
+      3
+    );
+
+
+  const games =
+    Math.min(
+      Number(dailyTasks.games) || 0,
+      5
+    );
+
+
+  const winsPercent =
+    Math.min(
+      100,
+      Math.round(
+        wins / 3 * 100
+      )
+    );
+
+
+  const gamesPercent =
+    Math.min(
+      100,
+      Math.round(
+        games / 5 * 100
+      )
+    );
+
+
+  const popup =
+    document.createElement(
+      "div"
+    );
+
+
+  popup.id =
+    "rewardsPopup";
+
+
+  popup.className =
+    "rewards-popup-overlay";
+
+
+  popup.innerHTML = `
+
+    <div class="rewards-popup">
+
+      <button
+        type="button"
+        class="rewards-popup-close"
+        id="closeRewardsPopup"
+        aria-label="Schließen"
+      >
+        ×
+      </button>
+
+
+      <div class="rewards-popup-icon">
+        🏆
+      </div>
+
+
+      <h2>
+        Deine täglichen Aufgaben
+      </h2>
+
+
+      <p class="rewards-subtitle">
+        Erfülle Aufgaben und verdiene Münzen.
+      </p>
+
+
+      <div class="reward-task">
+
+        <div class="task-icon">
+          ♟
+        </div>
+
+
+        <div class="task-content">
+
+          <strong>
+            Gewinne 3 Partien
+          </strong>
+
+          <span>
+            ${wins} / 3 geschafft
+          </span>
+
+
+          <div class="task-progress">
+
+            <div
+              style="width:${winsPercent}%"
+            ></div>
+
+          </div>
+
+        </div>
+
+
+        <div class="task-reward">
+          🪙 100
+        </div>
+
+      </div>
+
+
+      <div class="reward-task">
+
+        <div class="task-icon">
+          ⚔️
+        </div>
+
+
+        <div class="task-content">
+
+          <strong>
+            Spiele 5 Partien
+          </strong>
+
+          <span>
+            ${games} / 5 geschafft
+          </span>
+
+
+          <div class="task-progress">
+
+            <div
+              style="width:${gamesPercent}%"
+            ></div>
+
+          </div>
+
+        </div>
+
+
+        <div class="task-reward">
+          🪙 75
+        </div>
+
+      </div>
+
+
+      <div class="rewards-total">
+
+        <span>
+          Deine Münzen
+        </span>
+
+        <strong>
+          🪙 ${coins}
+        </strong>
+
+      </div>
+
+    </div>
+  `;
+
+
+  document.body.appendChild(
+    popup
+  );
+
+
+  const closeButton =
+    document.getElementById(
+      "closeRewardsPopup"
+    );
+
+
+  if (closeButton) {
+
+    closeButton.addEventListener(
+      "click",
+      () => {
+
+        popup.remove();
+
+      }
+    );
+  }
+
+
+  popup.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target === popup
+      ) {
+
+        popup.remove();
+      }
+
+    }
+  );
+}
+
+
+/* =========================================================
+   RATING ANZEIGEN
 ========================================================= */
 
 function updateRanking() {
@@ -626,9 +767,7 @@ function updateRanking() {
     );
 
 
-  if (
-    ratingElement
-  ) {
+  if (ratingElement) {
 
     ratingElement.textContent =
       rating +
@@ -637,9 +776,7 @@ function updateRanking() {
   }
 
 
-  if (
-    statsElement
-  ) {
+  if (statsElement) {
 
     statsElement.textContent =
       wins +
@@ -660,6 +797,7 @@ function updateRanking() {
 
         element.textContent =
           rating;
+
       }
     );
 }
@@ -697,16 +835,12 @@ function saveRanking() {
 
 async function score(result) {
 
-  if (
-    localResultDone
-  ) {
-
+  if (localResultDone) {
     return;
   }
 
 
-  localResultDone =
-    true;
+  localResultDone = true;
 
 
   if (
@@ -718,13 +852,13 @@ async function score(result) {
     wins++;
 
 
-    showMessage(
-      "🎉 Gewonnen! +25 Punkte"
+    updateDailyTasks(
+      "win"
     );
 
 
-    updateDailyTasks(
-      "win"
+    showMessage(
+      "🎉 Gewonnen! +25 Punkte"
     );
 
   } else if (
@@ -740,29 +874,27 @@ async function score(result) {
     losses++;
 
 
-    showMessage(
-      "😕 Verloren. -15 Punkte"
-    );
-
-
     updateDailyTasks(
       "loss"
     );
 
-  } else if (
-    result === "draw"
-  ) {
+
+    showMessage(
+      "😕 Verloren. -15 Punkte"
+    );
+
+  } else {
 
     draws++;
 
 
-    showMessage(
-      "🤝 Remis"
+    updateDailyTasks(
+      "draw"
     );
 
 
-    updateDailyTasks(
-      "draw"
+    showMessage(
+      "🤝 Remis"
     );
   }
 
@@ -774,13 +906,12 @@ async function score(result) {
 
 
 /* =========================================================
-   SUPABASE – SPIELER
+   SUPABASE SPIELER
 ========================================================= */
 
 async function syncPlayer() {
 
   if (!sb) {
-
     return;
   }
 
@@ -793,16 +924,13 @@ async function syncPlayer() {
     username.toLowerCase() ===
     "gast"
   ) {
-
     return;
   }
 
 
   try {
 
-    const {
-      error
-    } =
+    const result =
       await sb
         .from("players")
         .upsert(
@@ -826,9 +954,8 @@ async function syncPlayer() {
         );
 
 
-    if (error) {
-
-      throw error;
+    if (result.error) {
+      throw result.error;
     }
 
 
@@ -860,7 +987,6 @@ async function loadLeaderboard() {
     !box ||
     !sb
   ) {
-
     return;
   }
 
@@ -871,10 +997,7 @@ async function loadLeaderboard() {
 
   try {
 
-    const {
-      data,
-      error
-    } =
+    const result =
       await sb
         .from("players")
         .select(
@@ -889,19 +1012,16 @@ async function loadLeaderboard() {
         .limit(100);
 
 
-    if (error) {
-
-      throw error;
+    if (result.error) {
+      throw result.error;
     }
 
 
     const players =
-      data || [];
+      result.data || [];
 
 
-    if (
-      !players.length
-    ) {
+    if (!players.length) {
 
       box.innerHTML =
         '<div class="empty">Noch keine Spieler in der Rangliste.</div>';
@@ -913,10 +1033,7 @@ async function loadLeaderboard() {
     box.innerHTML =
       players
         .map(
-          (
-            player,
-            index
-          ) => {
+          (player, index) => {
 
             const medal =
               index === 0
@@ -925,9 +1042,7 @@ async function loadLeaderboard() {
                 ? "🥈"
                 : index === 2
                 ? "🥉"
-                : String(
-                    index + 1
-                  );
+                : String(index + 1);
 
 
             const me =
@@ -938,11 +1053,15 @@ async function loadLeaderboard() {
 
 
             return `
-              <div class="leader-item ${me}">
+
+              <div
+                class="leader-item ${me}"
+              >
 
                 <span class="rank-num">
                   ${medal}
                 </span>
+
 
                 <span class="player-name">
 
@@ -951,6 +1070,7 @@ async function loadLeaderboard() {
                       player.username
                     )}
                   </b>
+
 
                   <small>
                     ${rank(
@@ -962,6 +1082,7 @@ async function loadLeaderboard() {
                   </small>
 
                 </span>
+
 
                 <span class="pill">
                   ${player.rating}
@@ -983,16 +1104,16 @@ async function loadLeaderboard() {
 
     box.innerHTML =
       `
-        <div class="empty">
-          ⚠️ Die Online-Rangliste konnte nicht geladen werden.
-        </div>
+      <div class="empty">
+        ⚠️ Die Online-Rangliste konnte nicht geladen werden.
+      </div>
       `;
   }
 }
 
 
 /* =========================================================
-   SCHACH – NEUES SPIEL
+   SCHACHBRETT
 ========================================================= */
 
 function fresh() {
@@ -1013,24 +1134,15 @@ function fresh() {
   );
 
 
-  turn =
-    "w";
+  turn = "w";
 
+  selected = null;
 
-  selected =
-    null;
+  lastMove = null;
 
+  gameOver = false;
 
-  lastMove =
-    null;
-
-
-  gameOver =
-    false;
-
-
-  localResultDone =
-    false;
+  localResultDone = false;
 
 
   if (
@@ -1077,16 +1189,12 @@ function draw() {
     );
 
 
-  if (
-    !boardElement
-  ) {
-
+  if (!boardElement) {
     return;
   }
 
 
-  boardElement.innerHTML =
-    "";
+  boardElement.innerHTML = "";
 
 
   for (
@@ -1110,9 +1218,7 @@ function draw() {
       square.className =
         "sq " +
         (
-          (
-            r + c
-          ) % 2
+          (r + c) % 2
             ? "dark"
             : "light"
         );
@@ -1136,7 +1242,8 @@ function draw() {
           (
             lastMove[0] === r &&
             lastMove[1] === c
-          ) ||
+          )
+          ||
           (
             lastMove[2] === r &&
             lastMove[3] === c
@@ -1182,8 +1289,7 @@ function draw() {
 
       square.addEventListener(
         "click",
-        () =>
-          tap(r, c)
+        () => tap(r, c)
       );
 
 
@@ -1200,9 +1306,7 @@ function draw() {
     );
 
 
-  if (
-    turnElement
-  ) {
+  if (turnElement) {
 
     turnElement.textContent =
       gameOver
@@ -1239,15 +1343,12 @@ function draw() {
 
 
 /* =========================================================
-   BRETT – KLICK
+   BRETT KLICK
 ========================================================= */
 
 function tap(r, c) {
 
-  if (
-    gameOver
-  ) {
-
+  if (gameOver) {
     return;
   }
 
@@ -1272,8 +1373,7 @@ function tap(r, c) {
   if (!selected) {
 
     if (
-      colorOf(piece) ===
-      turn
+      colorOf(piece) === turn
     ) {
 
       selected = [
@@ -1289,8 +1389,7 @@ function tap(r, c) {
 
 
   if (
-    colorOf(piece) ===
-    turn
+    colorOf(piece) === turn
   ) {
 
     selected = [
@@ -1315,25 +1414,16 @@ function tap(r, c) {
     )
   ) {
 
-    const move = [
-
+    applyMove(
       selected[0],
       selected[1],
       r,
-      c
-
-    ];
-
-
-    applyMove(
-      ...move,
+      c,
       true
     );
 
 
-    selected =
-      null;
-
+    selected = null;
 
     draw();
 
@@ -1341,9 +1431,7 @@ function tap(r, c) {
   }
 
 
-  selected =
-    null;
-
+  selected = null;
 
   draw();
 }
@@ -1369,7 +1457,6 @@ function applyMove(
     !moving ||
     moving === "."
   ) {
-
     return;
   }
 
@@ -1381,8 +1468,6 @@ function applyMove(
   const captured =
     board[r2][c2];
 
-
-  /* EN PASSANT */
 
   const isEnPassant =
     moving.toLowerCase() === "p" &&
@@ -1398,14 +1483,11 @@ function applyMove(
   board[r2][c2] =
     moving;
 
-
   board[r1][c1] =
     ".";
 
 
-  if (
-    isEnPassant
-  ) {
+  if (isEnPassant) {
 
     const capturedPawnRow =
       movingColor === "w"
@@ -1418,22 +1500,17 @@ function applyMove(
   }
 
 
-  /* ROCHADE */
+  /* Rochade */
 
   if (
     moving.toLowerCase() === "k" &&
-    Math.abs(
-      c2 - c1
-    ) === 2
+    Math.abs(c2 - c1) === 2
   ) {
 
-    const row =
-      r1;
+    const row = r1;
 
 
-    if (
-      c2 === 6
-    ) {
+    if (c2 === 6) {
 
       board[row][5] =
         board[row][7];
@@ -1443,9 +1520,7 @@ function applyMove(
     }
 
 
-    if (
-      c2 === 2
-    ) {
+    if (c2 === 2) {
 
       board[row][3] =
         board[row][0];
@@ -1456,26 +1531,19 @@ function applyMove(
   }
 
 
-  /* ROCHADE-STATUS */
+  /* Rochade-Status */
 
   if (
     typeof chessState !==
     "undefined"
   ) {
 
-    if (
-      moving === "K"
-    ) {
-
+    if (moving === "K") {
       chessState.whiteKingMoved =
         true;
     }
 
-
-    if (
-      moving === "k"
-    ) {
-
+    if (moving === "k") {
       chessState.blackKingMoved =
         true;
     }
@@ -1526,7 +1594,7 @@ function applyMove(
   }
 
 
-  /* BAUERNUMWANDLUNG */
+  /* Bauernumwandlung */
 
   if (
     moving === "P" &&
@@ -1548,7 +1616,7 @@ function applyMove(
   }
 
 
-  /* EN-PASSANT-ZIEL */
+  /* En Passant Ziel */
 
   if (
     typeof chessState !==
@@ -1561,14 +1629,13 @@ function applyMove(
 
     if (
       moving.toLowerCase() === "p" &&
-      Math.abs(
-        r2 - r1
-      ) === 2
+      Math.abs(r2 - r1) === 2
     ) {
 
       chessState.enPassantTarget = [
 
         (r1 + r2) / 2,
+
         c1
 
       ];
@@ -1577,12 +1644,10 @@ function applyMove(
 
 
   lastMove = [
-
     r1,
     c1,
     r2,
     c2
-
   ];
 
 
@@ -1609,12 +1674,10 @@ function applyMove(
       type: "move",
 
       m: [
-
         r1,
         c1,
         r2,
         c2
-
       ]
 
     });
@@ -1643,8 +1706,7 @@ function checkGameEnd() {
     isCheckmate(turn)
   ) {
 
-    gameOver =
-      true;
+    gameOver = true;
 
 
     const winner =
@@ -1653,32 +1715,23 @@ function checkGameEnd() {
         : "w";
 
 
-    const winnerName =
-      winner === myColor
-        ? "Du gewinnst!"
-        : "Du hast verloren.";
-
-
-    showMessage(
-      "♚ Schachmatt! " +
-      winnerName
-    );
-
-
     if (
       winner === myColor
     ) {
 
-      score(
-        "win"
-      );
+      score("win");
 
     } else {
 
-      score(
-        "loss"
-      );
+      score("loss");
     }
+
+
+    showMessage(
+      winner === myColor
+        ? "♚ Schachmatt – Du gewinnst!"
+        : "♚ Schachmatt – Du hast verloren."
+    );
 
 
     if (
@@ -1688,8 +1741,7 @@ function checkGameEnd() {
 
       conn.send({
 
-        type:
-          "gameover",
+        type: "gameover",
 
         winner
 
@@ -1707,17 +1759,14 @@ function checkGameEnd() {
     isStalemate(turn)
   ) {
 
-    gameOver =
-      true;
+    gameOver = true;
+
+
+    score("draw");
 
 
     showMessage(
       "🤝 Patt – Remis"
-    );
-
-
-    score(
-      "draw"
     );
 
 
@@ -1728,8 +1777,7 @@ function checkGameEnd() {
 
       conn.send({
 
-        type:
-          "draw"
+        type: "draw"
 
       });
     }
@@ -1763,6 +1811,7 @@ function getGameState() {
     chessState:
       typeof chessState !==
         "undefined"
+
         ? {
 
             whiteKingMoved:
@@ -1791,17 +1840,15 @@ function getGameState() {
                 : null
 
           }
+
         : null
   };
 }
 
 
-function restoreGameState(
-  state
-) {
+function restoreGameState(state) {
 
   if (!state) {
-
     return;
   }
 
@@ -1820,8 +1867,7 @@ function restoreGameState(
 
 
   turn =
-    state.turn ||
-    "w";
+    state.turn || "w";
 
 
   lastMove =
@@ -1843,16 +1889,11 @@ function restoreGameState(
   }
 
 
-  selected =
-    null;
+  selected = null;
 
+  gameOver = false;
 
-  gameOver =
-    false;
-
-
-  localResultDone =
-    false;
+  localResultDone = false;
 
 
   draw();
@@ -1869,16 +1910,13 @@ async function registerRoom() {
     !sb ||
     !room
   ) {
-
     return;
   }
 
 
   try {
 
-    const {
-      error
-    } =
+    const result =
       await sb
         .from("rooms")
         .upsert(
@@ -1902,17 +1940,14 @@ async function registerRoom() {
 
           },
           {
-
             onConflict:
               "room_code"
-
           }
         );
 
 
-    if (error) {
-
-      throw error;
+    if (result.error) {
+      throw result.error;
     }
 
 
@@ -1945,7 +1980,6 @@ async function unregisterRoom() {
     !sb ||
     !room
   ) {
-
     return;
   }
 
@@ -1971,7 +2005,7 @@ async function unregisterRoom() {
 
 
 /* =========================================================
-   RAUMLISTE
+   RÄUME AKTUALISIEREN
 ========================================================= */
 
 async function refreshRooms() {
@@ -1986,7 +2020,6 @@ async function refreshRooms() {
     !box ||
     !sb
   ) {
-
     return;
   }
 
@@ -2012,10 +2045,7 @@ async function refreshRooms() {
 
   try {
 
-    const {
-      data,
-      error
-    } =
+    const result =
       await sb
         .from("rooms")
         .select(
@@ -2028,21 +2058,19 @@ async function refreshRooms() {
         .order(
           "created_at",
           {
-            ascending:
-              false
+            ascending: false
           }
         )
         .limit(50);
 
 
-    if (error) {
-
-      throw error;
+    if (result.error) {
+      throw result.error;
     }
 
 
     const rooms =
-      (data || [])
+      (result.data || [])
         .filter(
           r =>
             !query ||
@@ -2059,9 +2087,7 @@ async function refreshRooms() {
         );
 
 
-    if (
-      !rooms.length
-    ) {
+    if (!rooms.length) {
 
       box.innerHTML =
         '<div class="empty">Keine offenen Räume gefunden.</div>';
@@ -2094,14 +2120,12 @@ async function refreshRooms() {
                     r.room_code
                   )}
                   ·
-                  ${
-                    r.player_rating ||
-                    1000
-                  }
+                  ${r.player_rating || 1000}
                   Punkte
                 </small>
 
               </div>
+
 
               <div class="room-actions">
 
@@ -2109,7 +2133,9 @@ async function refreshRooms() {
                   🟢 Offen
                 </span>
 
+
                 <button
+                  type="button"
                   onclick="joinListedRoom('${escapeJs(
                     r.room_code
                   )}')"
@@ -2135,9 +2161,9 @@ async function refreshRooms() {
 
     box.innerHTML =
       `
-        <div class="empty">
-          ⚠️ Räume konnten nicht geladen werden.
-        </div>
+      <div class="empty">
+        ⚠️ Räume konnten nicht geladen werden.
+      </div>
       `;
   }
 }
@@ -2147,9 +2173,7 @@ async function refreshRooms() {
    RAUM AUS LISTE BEITRETEN
 ========================================================= */
 
-function joinListedRoom(
-  code
-) {
+function joinListedRoom(code) {
 
   const input =
     document.getElementById(
@@ -2160,12 +2184,8 @@ function joinListedRoom(
     );
 
 
-  if (
-    input
-  ) {
-
-    input.value =
-      code;
+  if (input) {
+    input.value = code;
   }
 
 
@@ -2193,10 +2213,7 @@ async function quickJoin() {
 
   try {
 
-    const {
-      data,
-      error
-    } =
+    const result =
       await sb
         .from("rooms")
         .select(
@@ -2209,14 +2226,13 @@ async function quickJoin() {
         .limit(50);
 
 
-    if (error) {
-
-      throw error;
+    if (result.error) {
+      throw result.error;
     }
 
 
     if (
-      !data?.length
+      !result.data?.length
     ) {
 
       showMessage(
@@ -2228,10 +2244,10 @@ async function quickJoin() {
 
 
     const randomRoom =
-      data[
+      result.data[
         Math.floor(
           Math.random() *
-          data.length
+          result.data.length
         )
       ];
 
@@ -2265,9 +2281,7 @@ function startQuickGame() {
    RAUMCODE
 ========================================================= */
 
-function joinRoomByCode(
-  code
-) {
+function joinRoomByCode(code) {
 
   const cleanCode =
     String(code || "")
@@ -2275,9 +2289,7 @@ function joinRoomByCode(
       .toUpperCase();
 
 
-  if (
-    !cleanCode
-  ) {
+  if (!cleanCode) {
 
     showMessage(
       "Bitte einen Raumcode eingeben."
@@ -2293,10 +2305,7 @@ function joinRoomByCode(
     );
 
 
-  if (
-    input
-  ) {
-
+  if (input) {
     input.value =
       cleanCode;
   }
@@ -2324,12 +2333,10 @@ async function createRoom() {
       .toUpperCase();
 
 
-  myColor =
-    "w";
+  myColor = "w";
 
 
   showGame();
-
 
   fresh();
 
@@ -2347,9 +2354,7 @@ async function createRoom() {
   ) {
 
     roomInfo(
-      "Raum-Code: " +
-      room +
-      " · PeerJS konnte nicht geladen werden."
+      "PeerJS konnte nicht geladen werden."
     );
 
 
@@ -2410,8 +2415,7 @@ async function createRoom() {
 
             conn.send({
 
-              type:
-                "state",
+              type: "state",
 
               state:
                 getGameState()
@@ -2495,16 +2499,15 @@ function joinRoom(
       .toUpperCase();
 
 
-  if (
-    !code
-  ) {
+  if (!code) {
 
-    alert(
-      "Bitte einen Raum-Code eingeben."
+    showMessage(
+      "Bitte einen Raumcode eingeben."
     );
 
 
     input?.focus();
+
 
     return;
   }
@@ -2520,7 +2523,6 @@ function joinRoom(
 
   showGame();
 
-
   fresh();
 
 
@@ -2535,11 +2537,6 @@ function joinRoom(
     typeof Peer ===
     "undefined"
   ) {
-
-    roomInfo(
-      "PeerJS konnte nicht geladen werden."
-    );
-
 
     showMessage(
       "PeerJS ist nicht geladen."
@@ -2568,6 +2565,7 @@ function joinRoom(
 
 
         setupConnection();
+
       }
     );
 
@@ -2614,10 +2612,7 @@ function joinRoom(
 
 function setupConnection() {
 
-  if (
-    !conn
-  ) {
-
+  if (!conn) {
     return;
   }
 
@@ -2628,9 +2623,7 @@ function setupConnection() {
     );
 
 
-  if (
-    colorElement
-  ) {
+  if (colorElement) {
 
     colorElement.textContent =
       "Du: " +
@@ -2658,13 +2651,12 @@ function setupConnection() {
     "data",
     message => {
 
-      if (
-        !message
-      ) {
-
+      if (!message) {
         return;
       }
 
+
+      /* Spielstand */
 
       if (
         message.type ===
@@ -2702,6 +2694,8 @@ function setupConnection() {
       }
 
 
+      /* Zug */
+
       if (
         message.type ===
         "move"
@@ -2724,6 +2718,8 @@ function setupConnection() {
       }
 
 
+      /* Spielende */
+
       if (
         message.type ===
         "gameover"
@@ -2742,15 +2738,11 @@ function setupConnection() {
           myColor
         ) {
 
-          score(
-            "win"
-          );
+          score("win");
 
         } else {
 
-          score(
-            "loss"
-          );
+          score("loss");
         }
 
 
@@ -2763,9 +2755,12 @@ function setupConnection() {
 
         draw();
 
+
         return;
       }
 
+
+      /* Remis */
 
       if (
         message.type ===
@@ -2776,9 +2771,7 @@ function setupConnection() {
           true;
 
 
-        score(
-          "draw"
-        );
+        score("draw");
 
 
         showMessage(
@@ -2788,9 +2781,12 @@ function setupConnection() {
 
         draw();
 
+
         return;
       }
 
+
+      /* Neues Spiel */
 
       if (
         message.type ===
@@ -2820,9 +2816,7 @@ function setupConnection() {
       );
 
 
-      if (
-        !gameOver
-      ) {
+      if (!gameOver) {
 
         showMessage(
           "⚠️ Der Gegner hat die Verbindung beendet."
@@ -2862,9 +2856,7 @@ function showGame() {
     );
 
 
-  if (
-    !game
-  ) {
+  if (!game) {
 
     game =
       document.createElement(
@@ -2884,14 +2876,17 @@ function showGame() {
 
       <div class="game-inner">
 
+
         <div class="game-header">
 
           <button
+            type="button"
             class="secondary-button"
             onclick="backLobby()"
           >
             ← Zurück
           </button>
+
 
           <div>
 
@@ -2905,7 +2900,9 @@ function showGame() {
 
           </div>
 
+
           <button
+            type="button"
             class="secondary-button"
             onclick="copyRoom()"
           >
@@ -2920,6 +2917,7 @@ function showGame() {
           <span id="color">
             Du: —
           </span>
+
 
           <strong id="turn">
             Am Zug: Weiß
@@ -2938,13 +2936,16 @@ function showGame() {
         <div class="game-controls">
 
           <button
+            type="button"
             class="outline-button"
             onclick="newGame()"
           >
             NEUES SPIEL
           </button>
 
+
           <button
+            type="button"
             class="outline-button"
             onclick="backLobby()"
           >
@@ -2954,7 +2955,6 @@ function showGame() {
         </div>
 
       </div>
-
     `;
 
 
@@ -2977,9 +2977,7 @@ function showGame() {
     );
 
 
-  if (
-    app
-  ) {
+  if (app) {
 
     app.style.display =
       "none";
@@ -2991,32 +2989,12 @@ function showGame() {
   );
 
 
-  const colorElement =
-    document.getElementById(
-      "color"
-    );
-
-
-  if (
-    colorElement
-  ) {
-
-    colorElement.textContent =
-      "Du: " +
-      (
-        myColor === "w"
-          ? "Weiß"
-          : "Schwarz"
-      );
-  }
-
-
   draw();
 }
 
 
 /* =========================================================
-   GAME CSS
+   SPIEL CSS
 ========================================================= */
 
 function addGameStyles() {
@@ -3026,7 +3004,6 @@ function addGameStyles() {
       "schacharena-game-style"
     )
   ) {
-
     return;
   }
 
@@ -3059,10 +3036,12 @@ function addGameStyles() {
       padding: 24px;
     }
 
+
     .game-inner {
       width: min(100%, 900px);
       margin: 0 auto;
     }
+
 
     .game-header {
       display: flex;
@@ -3072,14 +3051,17 @@ function addGameStyles() {
       margin-bottom: 20px;
     }
 
+
     .game-header h2 {
       margin: 0;
     }
+
 
     .game-header p {
       margin: 5px 0 0;
       opacity: .7;
     }
+
 
     .game-status {
       display: flex;
@@ -3090,6 +3072,7 @@ function addGameStyles() {
       border-radius: 14px;
       background: rgba(255,255,255,.08);
     }
+
 
     .board {
       width: min(90vw, 720px);
@@ -3103,6 +3086,7 @@ function addGameStyles() {
       box-shadow: 0 25px 80px rgba(0,0,0,.45);
     }
 
+
     .sq {
       display: flex;
       align-items: center;
@@ -3112,23 +3096,28 @@ function addGameStyles() {
       position: relative;
     }
 
+
     .sq.light {
       background: #e8d7b1;
     }
 
+
     .sq.dark {
       background: #6f5137;
     }
+
 
     .sq.selected {
       box-shadow:
         inset 0 0 0 5px #36a3ff;
     }
 
+
     .sq.last {
       box-shadow:
         inset 0 0 0 4px rgba(255,215,70,.65);
     }
+
 
     .piece {
       font-size: clamp(30px, 7vw, 68px);
@@ -3136,17 +3125,20 @@ function addGameStyles() {
       transform: translateY(-2px);
     }
 
+
     .piece.white {
       color: #fff;
       text-shadow:
         0 2px 2px rgba(0,0,0,.75);
     }
 
+
     .piece.black {
       color: #171717;
       text-shadow:
         0 1px 1px rgba(255,255,255,.25);
     }
+
 
     .game-controls {
       display: flex;
@@ -3155,6 +3147,7 @@ function addGameStyles() {
       margin-top: 20px;
       flex-wrap: wrap;
     }
+
 
     @media (max-width: 600px) {
 
@@ -3184,12 +3177,10 @@ function addGameStyles() {
 
 
 /* =========================================================
-   RAUM INFO
+   RAUMINFO
 ========================================================= */
 
-function roomInfo(
-  text
-) {
+function roomInfo(text) {
 
   const element =
     document.getElementById(
@@ -3197,9 +3188,7 @@ function roomInfo(
     );
 
 
-  if (
-    element
-  ) {
+  if (element) {
 
     element.textContent =
       text;
@@ -3213,9 +3202,7 @@ function roomInfo(
 
 async function copyRoom() {
 
-  if (
-    !room
-  ) {
+  if (!room) {
 
     showMessage(
       "Kein Raumcode vorhanden."
@@ -3262,10 +3249,7 @@ function newGame() {
   ) {
 
     conn.send({
-
-      type:
-        "reset"
-
+      type: "reset"
     });
   }
 
@@ -3286,36 +3270,24 @@ async function backLobby() {
   await unregisterRoom();
 
 
-  if (
-    conn
-  ) {
+  if (conn) {
 
     try {
-
       conn.close();
-
     } catch (_) {}
   }
 
 
-  if (
-    peer
-  ) {
+  if (peer) {
 
     try {
-
       peer.destroy();
-
     } catch (_) {}
   }
 
 
-  conn =
-    null;
-
-
-  peer =
-    null;
+  conn = null;
+  peer = null;
 
 
   const game =
@@ -3324,9 +3296,7 @@ async function backLobby() {
     );
 
 
-  if (
-    game
-  ) {
+  if (game) {
 
     game.style.display =
       "none";
@@ -3339,9 +3309,7 @@ async function backLobby() {
     );
 
 
-  if (
-    app
-  ) {
+  if (app) {
 
     app.style.display =
       "";
@@ -3353,12 +3321,9 @@ async function backLobby() {
   );
 
 
-  room =
-    "";
+  room = "";
 
-
-  myColor =
-    null;
+  myColor = null;
 
 
   fresh();
@@ -3368,62 +3333,15 @@ async function backLobby() {
     0,
     0
   );
+
+
+  refreshRooms();
 }
 
 
 /* =========================================================
-   FREUNDE – DATEN
-========================================================= */
-
-function getFriends() {
-
-  try {
-
-    const stored =
-      JSON.parse(
-        localStorage.getItem(
-          "sa_friends"
-        ) || "[]"
-      );
-
-
-    if (
-      Array.isArray(
-        stored
-      )
-    ) {
-
-      return stored;
-    }
-
-  } catch (error) {
-
-    console.warn(
-      "Freunde konnten nicht gelesen werden:",
-      error
-    );
-  }
-
-
-  return [];
-}
-
-
-function saveFriends(
-  friends
-) {
-
-  localStorage.setItem(
-    "sa_friends",
-    JSON.stringify(
-      friends
-    )
-  );
-}
-
-
-/* =========================================================
-   FREUNDE ÖFFNEN
+   FREUNDE
+   ABSICHTLICH OHNE BEISPIEL-BOTS
 ========================================================= */
 
 function openFriends() {
@@ -3434,111 +3352,11 @@ function openFriends() {
     );
 
 
-  if (
-    existing
-  ) {
+  if (existing) {
 
     existing.remove();
-  }
 
-
-  const friends =
-    getFriends();
-
-
-  let content =
-    "";
-
-
-  if (
-    !friends.length
-  ) {
-
-    content = `
-
-      <div class="friends-empty">
-
-        <div class="friends-empty-icon">
-          👥
-        </div>
-
-        <h3>
-          Noch keine Freunde
-        </h3>
-
-        <p>
-          Deine Freundesliste ist momentan leer.
-          Füge einen Spieler hinzu, um ihn hier zu sehen.
-        </p>
-
-      </div>
-
-    `;
-
-  } else {
-
-    content = `
-
-      <div class="modal-friends">
-
-        ${friends
-          .map(
-            (
-              friend,
-              index
-            ) => `
-
-              <div class="modal-friend">
-
-                <div class="modal-avatar">
-                  ${escapeHtml(
-                    getInitials(
-                      friend.name
-                    )
-                  )}
-                </div>
-
-                <div>
-
-                  <b>
-                    ${escapeHtml(
-                      friend.name
-                    )}
-                  </b>
-
-                  <small>
-                    ${
-                      friend.status ||
-                      "Freund"
-                    }
-                  </small>
-
-                </div>
-
-                <button
-                  onclick="challengeFriend('${escapeJs(
-                    friend.name
-                  )}')"
-                >
-                  Spielen
-                </button>
-
-                <button
-                  class="friend-delete"
-                  onclick="removeFriend(${index})"
-                >
-                  ×
-                </button>
-
-              </div>
-
-            `
-          )
-          .join("")}
-
-      </div>
-
-    `;
+    return;
   }
 
 
@@ -3547,14 +3365,48 @@ function openFriends() {
       "Freunde",
       `
 
-        ${content}
-
-        <button
-          class="modal-primary"
-          onclick="addFriend()"
+        <div
+          class="friends-empty"
+          style="
+            text-align:center;
+            padding:25px 10px;
+          "
         >
-          + Freund hinzufügen
-        </button>
+
+          <div
+            style="
+              font-size:48px;
+              margin-bottom:12px;
+            "
+          >
+            👥
+          </div>
+
+
+          <h3>
+            Noch keine Freunde
+          </h3>
+
+
+          <p
+            style="
+              opacity:.65;
+              margin-bottom:20px;
+            "
+          >
+            Deine Freundesliste ist momentan leer.
+          </p>
+
+
+          <button
+            type="button"
+            class="modal-primary"
+            onclick="addFriend()"
+          >
+            + Freund hinzufügen
+          </button>
+
+        </div>
 
       `
     );
@@ -3571,45 +3423,6 @@ function openFriends() {
 
 
 /* =========================================================
-   INITIALEN
-========================================================= */
-
-function getInitials(
-  name
-) {
-
-  const parts =
-    String(name || "")
-      .trim()
-      .split(/\s+/);
-
-
-  if (
-    !parts.length
-  ) {
-
-    return "?";
-  }
-
-
-  if (
-    parts.length === 1
-  ) {
-
-    return parts[0]
-      .slice(0, 2)
-      .toUpperCase();
-  }
-
-
-  return (
-    parts[0][0] +
-    parts[1][0]
-  ).toUpperCase();
-}
-
-
-/* =========================================================
    FREUND HINZUFÜGEN
 ========================================================= */
 
@@ -3621,138 +3434,26 @@ function addFriend() {
     );
 
 
-  if (
-    !name
-  ) {
-
+  if (!name) {
     return;
   }
 
 
   const cleanName =
-    name
+    String(name)
       .trim()
       .slice(0, 18);
 
 
-  if (
-    !cleanName
-  ) {
-
+  if (!cleanName) {
     return;
   }
-
-
-  const friends =
-    getFriends();
-
-
-  const exists =
-    friends.some(
-      friend =>
-        String(
-          friend.name
-        )
-          .toLowerCase() ===
-        cleanName.toLowerCase()
-    );
-
-
-  if (
-    exists
-  ) {
-
-    showMessage(
-      "Dieser Spieler ist bereits in deiner Freundesliste."
-    );
-
-    return;
-  }
-
-
-  friends.push({
-
-    name:
-      cleanName,
-
-    status:
-      "Freund"
-
-  });
-
-
-  saveFriends(
-    friends
-  );
 
 
   showMessage(
+    "Freundesanfrage an " +
     cleanName +
-    " wurde hinzugefügt."
-  );
-
-
-  openFriends();
-}
-
-
-/* =========================================================
-   FREUND ENTFERNEN
-========================================================= */
-
-function removeFriend(
-  index
-) {
-
-  const friends =
-    getFriends();
-
-
-  if (
-    index < 0 ||
-    index >= friends.length
-  ) {
-
-    return;
-  }
-
-
-  const name =
-    friends[index].name;
-
-
-  const confirmed =
-    window.confirm(
-      name +
-      " wirklich entfernen?"
-    );
-
-
-  if (
-    !confirmed
-  ) {
-
-    return;
-  }
-
-
-  friends.splice(
-    index,
-    1
-  );
-
-
-  saveFriends(
-    friends
-  );
-
-
-  openFriends();
-
-
-  showMessage(
-    name +
-    " wurde entfernt."
+    " wurde gesendet."
   );
 }
 
@@ -3761,9 +3462,7 @@ function removeFriend(
    FREUND HERAUSFORDERN
 ========================================================= */
 
-function challengeFriend(
-  name
-) {
+function challengeFriend(name) {
 
   showMessage(
     "♟ Spielanfrage an " +
@@ -3774,7 +3473,7 @@ function challengeFriend(
 
 
 /* =========================================================
-   RANKING ÖFFNEN
+   RANKING POPUP
 ========================================================= */
 
 function openRanking() {
@@ -3824,15 +3523,18 @@ function openMessages() {
               ♟
             </div>
 
+
             <div>
 
               <b>
                 SchachArena
               </b>
 
+
               <p>
                 Willkommen bei SchachArena!
               </p>
+
 
               <small>
                 Neu
@@ -3842,10 +3544,9 @@ function openMessages() {
 
           </div>
 
+
           <div class="message-empty">
-
             Deine Nachrichten werden hier angezeigt.
-
           </div>
 
         </div>
@@ -3907,6 +3608,7 @@ function openSettings() {
 
 
           <button
+            type="button"
             class="modal-primary"
             onclick="saveSettings()"
           >
@@ -3937,9 +3639,7 @@ function saveSettings() {
     );
 
 
-  if (
-    input
-  ) {
+  if (input) {
 
     setName(
       input.value
@@ -3982,22 +3682,21 @@ function openProfile() {
 
             <img
               src="assets/profile-placeholder.jpg"
-              alt="${escapeHtml(
-                name
-              )}"
+              alt="${escapeHtml(name)}"
             >
 
           </div>
 
+
           <h3>
-            ${escapeHtml(
-              name
-            )}
+            ${escapeHtml(name)}
           </h3>
+
 
           <p>
             🟢 Online
           </p>
+
 
           <div class="profile-stat-grid">
 
@@ -4013,6 +3712,7 @@ function openProfile() {
 
             </div>
 
+
             <div>
 
               <strong>
@@ -4024,6 +3724,7 @@ function openProfile() {
               </small>
 
             </div>
+
 
             <div>
 
@@ -4052,242 +3753,6 @@ function openProfile() {
 
 
 /* =========================================================
-   BELOHNUNGEN ÖFFNEN
-========================================================= */
-
-function openRewards() {
-
-  createDailyTasks();
-
-
-  const oldPopup =
-    document.getElementById(
-      "rewardsPopup"
-    );
-
-
-  if (
-    oldPopup
-  ) {
-
-    oldPopup.remove();
-
-    return;
-  }
-
-
-  const winsCount =
-    Math.min(
-      dailyTasks.wins,
-      3
-    );
-
-
-  const gamesCount =
-    Math.min(
-      dailyTasks.games,
-      5
-    );
-
-
-  const winsPercent =
-    Math.min(
-      100,
-      Math.round(
-        (
-          dailyTasks.wins /
-          3
-        ) *
-        100
-      )
-    );
-
-
-  const gamesPercent =
-    Math.min(
-      100,
-      Math.round(
-        (
-          dailyTasks.games /
-          5
-        ) *
-        100
-      )
-    );
-
-
-  const popup =
-    document.createElement(
-      "div"
-    );
-
-
-  popup.id =
-    "rewardsPopup";
-
-
-  popup.className =
-    "rewards-popup-overlay";
-
-
-  popup.innerHTML = `
-
-    <div class="rewards-popup">
-
-      <button
-        class="rewards-popup-close"
-        id="closeRewardsPopup"
-        aria-label="Schließen"
-      >
-        ×
-      </button>
-
-
-      <div class="rewards-popup-icon">
-        🏆
-      </div>
-
-
-      <h2>
-        Deine Aufgaben
-      </h2>
-
-
-      <p class="rewards-subtitle">
-        Erfülle Aufgaben und verdiene Münzen.
-      </p>
-
-
-      <div class="reward-task">
-
-        <div class="task-icon">
-          ♟
-        </div>
-
-
-        <div class="task-content">
-
-          <strong>
-            Gewinne 3 Partien
-          </strong>
-
-          <span>
-            ${winsCount} / 3 geschafft
-          </span>
-
-          <div class="task-progress">
-
-            <div
-              style="width:${winsPercent}%"
-            ></div>
-
-          </div>
-
-        </div>
-
-
-        <div class="task-reward">
-          🪙 100
-        </div>
-
-      </div>
-
-
-      <div class="reward-task">
-
-        <div class="task-icon">
-          ⚔️
-        </div>
-
-
-        <div class="task-content">
-
-          <strong>
-            Spiele 5 Partien
-          </strong>
-
-          <span>
-            ${gamesCount} / 5 geschafft
-          </span>
-
-          <div class="task-progress">
-
-            <div
-              style="width:${gamesPercent}%"
-            ></div>
-
-          </div>
-
-        </div>
-
-
-        <div class="task-reward">
-          🪙 75
-        </div>
-
-      </div>
-
-
-      <div class="rewards-total">
-
-        <span>
-          Deine Münzen
-        </span>
-
-        <strong>
-          🪙 ${coins}
-        </strong>
-
-      </div>
-
-    </div>
-
-  `;
-
-
-  document.body.appendChild(
-    popup
-  );
-
-
-  const closeButton =
-    document.getElementById(
-      "closeRewardsPopup"
-    );
-
-
-  if (
-    closeButton
-  ) {
-
-    closeButton.addEventListener(
-      "click",
-      () => {
-
-        popup.remove();
-
-      }
-    );
-  }
-
-
-  popup.addEventListener(
-    "click",
-    event => {
-
-      if (
-        event.target ===
-        popup
-      ) {
-
-        popup.remove();
-      }
-    }
-  );
-}
-
-
-/* =========================================================
    MODAL
 ========================================================= */
 
@@ -4310,17 +3775,18 @@ function createModal(
 
     <div class="sa-modal-backdrop"></div>
 
+
     <div class="sa-modal-window">
 
       <div class="sa-modal-header">
 
         <h2>
-          ${escapeHtml(
-            title
-          )}
+          ${escapeHtml(title)}
         </h2>
 
+
         <button
+          type="button"
           class="sa-modal-close"
           aria-label="Schließen"
         >
@@ -4331,9 +3797,7 @@ function createModal(
 
 
       <div class="sa-modal-content">
-
         ${content}
-
       </div>
 
     </div>
@@ -4342,8 +3806,7 @@ function createModal(
 
 
   const close =
-    () =>
-      wrapper.remove();
+    () => wrapper.remove();
 
 
   wrapper
@@ -4376,14 +3839,15 @@ function createModal(
 
 function closeCurrentModal() {
 
-  document
-    .querySelectorAll(
+  const modal =
+    document.querySelector(
       ".sa-modal"
-    )
-    .forEach(
-      modal =>
-        modal.remove()
     );
+
+
+  if (modal) {
+    modal.remove();
+  }
 }
 
 
@@ -4403,49 +3867,41 @@ function updateDashboardName() {
     );
 
 
-  if (
-    welcome
-  ) {
+  if (welcome) {
 
     welcome.innerHTML =
-      escapeHtml(
-        name
-      ) +
+      escapeHtml(name) +
       ' <span class="verified">✓</span>';
   }
 
 
-  const profileNames =
-    document.querySelectorAll(
+  document
+    .querySelectorAll(
       ".profile-box h3"
+    )
+    .forEach(
+      element => {
+
+        element.innerHTML =
+          escapeHtml(name) +
+          ' <span class="verified small">✓</span>';
+
+      }
     );
 
 
-  profileNames.forEach(
-    element => {
-
-      element.innerHTML =
-        escapeHtml(
-          name
-        ) +
-        ' <span class="verified small">✓</span>';
-    }
-  );
-
-
-  const profileImages =
-    document.querySelectorAll(
+  document
+    .querySelectorAll(
       'img[alt="Nico"]'
+    )
+    .forEach(
+      image => {
+
+        image.alt =
+          name;
+
+      }
     );
-
-
-  profileImages.forEach(
-    image => {
-
-      image.alt =
-        name;
-    }
-  );
 }
 
 
@@ -4562,7 +4018,7 @@ function setupNavigation() {
 
 
 /* =========================================================
-   SPIEL-LOBBY
+   SPIELEN LOBBY
 ========================================================= */
 
 function showGameLobby() {
@@ -4574,14 +4030,20 @@ function showGameLobby() {
 
         <div class="play-options">
 
+
           <button
+            type="button"
             class="play-option"
-            onclick="startQuickGame(); closeCurrentModal();"
+            onclick="
+              startQuickGame();
+              closeCurrentModal();
+            "
           >
 
             <span>
               ⚡
             </span>
+
 
             <div>
 
@@ -4599,13 +4061,18 @@ function showGameLobby() {
 
 
           <button
+            type="button"
             class="play-option"
-            onclick="createRoom(); closeCurrentModal();"
+            onclick="
+              createRoom();
+              closeCurrentModal();
+            "
           >
 
             <span>
               ＋
             </span>
+
 
             <div>
 
@@ -4628,6 +4095,7 @@ function showGameLobby() {
               Raum beitreten
             </b>
 
+
             <div>
 
               <input
@@ -4637,7 +4105,9 @@ function showGameLobby() {
                 placeholder="Raumcode"
               >
 
+
               <button
+                type="button"
                 onclick="joinFromModal()"
               >
                 Beitreten
@@ -4660,7 +4130,7 @@ function showGameLobby() {
 
 
 /* =========================================================
-   RAUM AUS MODAL
+   MODAL RAUM BEITRETEN
 ========================================================= */
 
 function joinFromModal() {
@@ -4677,9 +4147,7 @@ function joinFromModal() {
       .toUpperCase();
 
 
-  if (
-    !code
-  ) {
+  if (!code) {
 
     showMessage(
       "Bitte Raumcode eingeben."
@@ -4687,6 +4155,7 @@ function joinFromModal() {
 
 
     input?.focus();
+
 
     return;
   }
@@ -4714,10 +4183,7 @@ function setupTopButtons() {
 
 
   buttons.forEach(
-    (
-      button,
-      index
-    ) => {
+    (button, index) => {
 
       button.addEventListener(
         "click",
@@ -4726,9 +4192,7 @@ function setupTopButtons() {
           event.preventDefault();
 
 
-          if (
-            index === 0
-          ) {
+          if (index === 0) {
 
             showGameLobby();
 
@@ -4736,6 +4200,7 @@ function setupTopButtons() {
 
             openMessages();
           }
+
         }
       );
     }
@@ -4748,9 +4213,7 @@ function setupTopButtons() {
     );
 
 
-  if (
-    profileButton
-  ) {
+  if (profileButton) {
 
     profileButton.addEventListener(
       "click",
@@ -4759,6 +4222,7 @@ function setupTopButtons() {
         event.preventDefault();
 
         openProfile();
+
       }
     );
   }
@@ -4777,9 +4241,7 @@ function setupDashboardButtons() {
     );
 
 
-  if (
-    profileButton
-  ) {
+  if (profileButton) {
 
     const profileCard =
       profileButton.closest(
@@ -4794,9 +4256,7 @@ function setupDashboardButtons() {
           ".side-title"
         )
         ?.textContent
-        .includes(
-          "PROFIL"
-        )
+        .includes("PROFIL")
     ) {
 
       profileButton.addEventListener(
@@ -4806,6 +4266,7 @@ function setupDashboardButtons() {
           event.preventDefault();
 
           openProfile();
+
         }
       );
     }
@@ -4818,14 +4279,11 @@ function setupDashboardButtons() {
     );
 
 
-  if (
-    search
-  ) {
+  if (search) {
 
     search.addEventListener(
       "input",
-      () =>
-        refreshRooms()
+      () => refreshRooms()
     );
   }
 }
@@ -4835,9 +4293,7 @@ function setupDashboardButtons() {
    TOAST
 ========================================================= */
 
-function showMessage(
-  text
-) {
+function showMessage(text) {
 
   const old =
     document.querySelector(
@@ -4845,10 +4301,7 @@ function showMessage(
     );
 
 
-  if (
-    old
-  ) {
-
+  if (old) {
     old.remove();
   }
 
@@ -4878,6 +4331,7 @@ function showMessage(
       message.classList.add(
         "show"
       );
+
     }
   );
 
@@ -4891,8 +4345,16 @@ function showMessage(
 
 
       setTimeout(
-        () =>
-          message.remove(),
+        () => {
+
+          if (
+            message.parentNode
+          ) {
+
+            message.remove();
+          }
+
+        },
         250
       );
 
@@ -4913,7 +4375,6 @@ function addAppStyles() {
       "schacharena-app-style"
     )
   ) {
-
     return;
   }
 
@@ -4940,12 +4401,14 @@ function addAppStyles() {
       padding: 20px;
     }
 
+
     .sa-modal-backdrop {
       position: absolute;
       inset: 0;
       background: rgba(0,0,0,.72);
       backdrop-filter: blur(8px);
     }
+
 
     .sa-modal-window {
       position: relative;
@@ -4959,6 +4422,7 @@ function addAppStyles() {
       box-shadow: 0 30px 100px rgba(0,0,0,.6);
     }
 
+
     .sa-modal-header {
       display: flex;
       justify-content: space-between;
@@ -4967,9 +4431,11 @@ function addAppStyles() {
       border-bottom: 1px solid rgba(255,255,255,.08);
     }
 
+
     .sa-modal-header h2 {
       margin: 0;
     }
+
 
     .sa-modal-close {
       border: 0;
@@ -4982,14 +4448,17 @@ function addAppStyles() {
       cursor: pointer;
     }
 
+
     .sa-modal-content {
       padding: 24px;
     }
+
 
     .play-options {
       display: grid;
       gap: 14px;
     }
+
 
     .play-option {
       display: flex;
@@ -5005,23 +4474,28 @@ function addAppStyles() {
       cursor: pointer;
     }
 
+
     .play-option:hover {
       background: rgba(255,255,255,.1);
     }
 
+
     .play-option > span {
       font-size: 30px;
     }
+
 
     .play-option b,
     .play-option small {
       display: block;
     }
 
+
     .play-option small {
       margin-top: 4px;
       opacity: .65;
     }
+
 
     .play-join {
       padding: 18px;
@@ -5029,15 +4503,18 @@ function addAppStyles() {
       background: rgba(255,255,255,.04);
     }
 
+
     .play-join > b {
       display: block;
       margin-bottom: 10px;
     }
 
+
     .play-join > div {
       display: flex;
       gap: 8px;
     }
+
 
     .play-join input,
     .settings-form input {
@@ -5049,6 +4526,7 @@ function addAppStyles() {
       background: rgba(0,0,0,.25);
       color: white;
     }
+
 
     .play-join button,
     .modal-primary,
@@ -5062,82 +4540,17 @@ function addAppStyles() {
       font-weight: 700;
     }
 
-    .modal-friends {
-      display: grid;
-      gap: 10px;
-    }
-
-    .modal-friend {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 13px;
-      border-radius: 13px;
-      background: rgba(255,255,255,.05);
-    }
-
-    .modal-friend > div:nth-child(2) {
-      flex: 1;
-    }
-
-    .modal-friend b,
-    .modal-friend small {
-      display: block;
-    }
-
-    .modal-friend small {
-      opacity: .6;
-      margin-top: 3px;
-    }
-
-    .modal-avatar {
-      width: 42px;
-      height: 42px;
-      min-width: 42px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: #39435d;
-      font-weight: 800;
-    }
-
-    .friend-delete {
-      background: rgba(255,255,255,.08) !important;
-      color: white !important;
-      font-size: 18px;
-      min-width: 40px;
-    }
-
-    .friends-empty {
-      text-align: center;
-      padding: 25px 10px 15px;
-    }
-
-    .friends-empty-icon {
-      font-size: 50px;
-      margin-bottom: 10px;
-    }
-
-    .friends-empty h3 {
-      margin: 5px 0 8px;
-    }
-
-    .friends-empty p {
-      margin: 0 auto;
-      max-width: 400px;
-      opacity: .6;
-      line-height: 1.5;
-    }
 
     .modal-primary {
-      margin-top: 18px;
       width: 100%;
     }
+
 
     .settings-form {
       display: grid;
       gap: 18px;
     }
+
 
     .settings-form label {
       display: grid;
@@ -5145,14 +4558,18 @@ function addAppStyles() {
       font-weight: 600;
     }
 
+
     .setting-check {
       display: flex !important;
       align-items: center;
+      gap: 8px;
     }
+
 
     .profile-modal {
       text-align: center;
     }
+
 
     .profile-modal-avatar {
       width: 100px;
@@ -5162,11 +4579,13 @@ function addAppStyles() {
       border-radius: 50%;
     }
 
+
     .profile-modal-avatar img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
+
 
     .profile-stat-grid {
       display: grid;
@@ -5175,21 +4594,25 @@ function addAppStyles() {
       margin-top: 22px;
     }
 
+
     .profile-stat-grid > div {
       padding: 15px 8px;
       border-radius: 12px;
       background: rgba(255,255,255,.05);
     }
 
+
     .profile-stat-grid strong,
     .profile-stat-grid small {
       display: block;
     }
 
+
     .profile-stat-grid small {
       opacity: .6;
       margin-top: 3px;
     }
+
 
     .message-item {
       display: flex;
@@ -5199,13 +4622,16 @@ function addAppStyles() {
       background: rgba(255,255,255,.05);
     }
 
+
     .message-item p {
       margin: 5px 0;
     }
 
+
     .message-item small {
       opacity: .55;
     }
+
 
     .message-avatar {
       width: 42px;
@@ -5216,11 +4642,13 @@ function addAppStyles() {
       background: #303b59;
     }
 
+
     .message-empty {
       margin-top: 18px;
       opacity: .55;
       text-align: center;
     }
+
 
     .toast {
       position: fixed;
@@ -5240,22 +4668,29 @@ function addAppStyles() {
       text-align: center;
     }
 
+
     .toast.show {
       opacity: 1;
       transform: translate(-50%, 0);
     }
 
+
+    /* ================================================
+       BELOHNUNGS-POPUP
+    ================================================= */
+
     .rewards-popup-overlay {
       position: fixed;
       inset: 0;
-      z-index: 20000;
+      z-index: 15000;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 18px;
+      padding: 20px;
       background: rgba(0,0,0,.72);
       backdrop-filter: blur(8px);
     }
+
 
     .rewards-popup {
       position: relative;
@@ -5270,81 +4705,92 @@ function addAppStyles() {
       box-shadow: 0 30px 100px rgba(0,0,0,.6);
     }
 
+
     .rewards-popup-close {
       position: absolute;
-      right: 15px;
       top: 15px;
-      width: 36px;
-      height: 36px;
+      right: 15px;
+      width: 38px;
+      height: 38px;
       border: 0;
       border-radius: 50%;
       background: rgba(255,255,255,.08);
       color: white;
-      font-size: 24px;
+      font-size: 25px;
       cursor: pointer;
     }
+
 
     .rewards-popup-icon {
       font-size: 45px;
       text-align: center;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
     }
 
+
     .rewards-popup h2 {
+      margin: 0;
       text-align: center;
-      margin: 5px 0;
     }
+
 
     .rewards-subtitle {
       text-align: center;
       opacity: .6;
-      margin: 5px 0 22px;
+      margin-bottom: 22px;
     }
+
 
     .reward-task {
       display: flex;
       align-items: center;
       gap: 13px;
       padding: 15px;
-      margin-top: 10px;
+      margin-bottom: 12px;
       border-radius: 15px;
       background: rgba(255,255,255,.05);
     }
 
+
     .task-icon {
-      width: 42px;
-      min-width: 42px;
-      height: 42px;
+      width: 45px;
+      height: 45px;
+      flex: 0 0 45px;
       display: grid;
       place-items: center;
       border-radius: 12px;
       background: rgba(255,255,255,.08);
-      font-size: 22px;
+      font-size: 23px;
     }
+
 
     .task-content {
       flex: 1;
       min-width: 0;
     }
 
+
     .task-content strong,
     .task-content span {
       display: block;
     }
 
+
     .task-content span {
       margin-top: 4px;
-      font-size: 13px;
       opacity: .6;
+      font-size: 14px;
     }
+
 
     .task-progress {
       height: 7px;
       margin-top: 9px;
       overflow: hidden;
-      border-radius: 99px;
+      border-radius: 10px;
       background: rgba(255,255,255,.1);
     }
+
 
     .task-progress > div {
       height: 100%;
@@ -5353,25 +4799,28 @@ function addAppStyles() {
       transition: width .3s ease;
     }
 
+
     .task-reward {
       white-space: nowrap;
-      font-weight: 800;
+      font-weight: 700;
     }
+
 
     .rewards-total {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 15px;
-      margin-top: 18px;
-      padding: 17px;
-      border-radius: 15px;
-      background: rgba(38,124,255,.12);
+      align-items: center;
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.08);
     }
+
 
     .rewards-total strong {
       font-size: 18px;
     }
+
 
     @media(max-width:600px) {
 
@@ -5379,25 +4828,36 @@ function addAppStyles() {
         padding: 10px;
       }
 
+
       .sa-modal-content {
         padding: 17px;
       }
+
 
       .play-join > div {
         flex-direction: column;
       }
 
-      .modal-friend {
-        flex-wrap: wrap;
-      }
 
       .profile-stat-grid {
         grid-template-columns: 1fr;
       }
 
-      .reward-task {
-        align-items: flex-start;
+
+      .rewards-popup-overlay {
+        padding: 10px;
       }
+
+
+      .rewards-popup {
+        padding: 28px 15px 18px;
+      }
+
+
+      .reward-task {
+        gap: 9px;
+      }
+
 
       .task-reward {
         font-size: 13px;
@@ -5423,39 +4883,31 @@ function initApp() {
   addAppStyles();
 
 
-  createDailyTasks();
+  loadCoins();
+
+  loadDailyTasks();
 
 
   updateDashboardName();
 
-
   updateRanking();
-
-
-  updateCoinDisplays();
-
 
   updateRewardsDisplays();
 
 
   setupNavigation();
 
-
   setupTopButtons();
-
 
   setupDashboardButtons();
 
 
   refreshRooms();
 
-
   loadLeaderboard();
 
 
-  /* -----------------------------------------
-     NAME INPUT
-  ----------------------------------------- */
+  /* Name-Eingabe */
 
   const nameInput =
     document.getElementById(
@@ -5463,9 +4915,7 @@ function initApp() {
     );
 
 
-  if (
-    nameInput
-  ) {
+  if (nameInput) {
 
     if (
       nameInput.value
@@ -5488,16 +4938,14 @@ function initApp() {
 
         syncPlayer();
 
-
         updateDashboardName();
+
       }
     );
   }
 
 
-  /* -----------------------------------------
-     ENTER BEI RAUMCODE
-  ----------------------------------------- */
+  /* Raumcode Enter */
 
   const roomInput =
     document.getElementById(
@@ -5505,9 +4953,7 @@ function initApp() {
     );
 
 
-  if (
-    roomInput
-  ) {
+  if (roomInput) {
 
     roomInput.addEventListener(
       "keydown",
@@ -5527,9 +4973,7 @@ function initApp() {
               .toUpperCase();
 
 
-          if (
-            code
-          ) {
+          if (code) {
 
             joinRoomByCode(
               code
@@ -5541,9 +4985,7 @@ function initApp() {
   }
 
 
-  /* -----------------------------------------
-     GLOBALE FUNKTIONEN
-  ----------------------------------------- */
+  /* Globale Funktionen */
 
   window.startQuickGame =
     startQuickGame;
@@ -5563,6 +5005,15 @@ function initApp() {
   window.joinListedRoom =
     joinListedRoom;
 
+  window.joinFromModal =
+    joinFromModal;
+
+  window.openRewards =
+    openRewards;
+
+  window.updateRewardsDisplays =
+    updateRewardsDisplays;
+
   window.openFriends =
     openFriends;
 
@@ -5578,14 +5029,8 @@ function initApp() {
   window.openProfile =
     openProfile;
 
-  window.openRewards =
-    openRewards;
-
   window.addFriend =
     addFriend;
-
-  window.removeFriend =
-    removeFriend;
 
   window.challengeFriend =
     challengeFriend;
@@ -5599,23 +5044,18 @@ function initApp() {
   window.backLobby =
     backLobby;
 
-  window.closeCurrentModal =
-    closeCurrentModal;
-
-  window.joinFromModal =
-    joinFromModal;
-
   window.saveSettings =
     saveSettings;
+
+  window.closeCurrentModal =
+    closeCurrentModal;
 
   window.showMessage =
     showMessage;
 
 
-  /* Dashboard-Raum beitreten */
-
   window.joinRoomDashboard =
-    () => {
+    function () {
 
       const input =
         document.getElementById(
@@ -5623,9 +5063,7 @@ function initApp() {
         );
 
 
-      if (
-        !input
-      ) {
+      if (!input) {
 
         showMessage(
           "Raumcode-Feld wurde nicht gefunden."
@@ -5641,31 +5079,15 @@ function initApp() {
           .toUpperCase();
 
 
-      if (
-        !code
-      ) {
+      if (!code) {
 
         input.focus();
-
-        input.classList.add(
-          "error"
-        );
-
-
-        setTimeout(
-          () =>
-            input.classList.remove(
-              "error"
-            ),
-          600
-        );
-
 
         return;
       }
 
 
-      joinRoom(
+      joinRoomByCode(
         code
       );
     };
@@ -5679,9 +5101,7 @@ function initApp() {
     quickJoin;
 
 
-  /* -----------------------------------------
-     SCHACH STARTEN
-  ----------------------------------------- */
+  /* Schachbrett vorbereiten */
 
   fresh();
 }
