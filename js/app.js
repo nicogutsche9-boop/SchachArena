@@ -61,7 +61,24 @@ function draw(){
 }
 function tap(r,c){if(gameOver||(myColor&&myColor!==turn))return;const p=board[r][c];if(!selected){if(colorOf(p)===turn)selected=[r,c]}else if(colorOf(p)===turn)selected=[r,c];else if(legal(selected[0],selected[1],r,c)){const m=[selected[0],selected[1],r,c];applyMove(...m,true);selected=null}else selected=null;draw()}
 function applyMove(r1,c1,r2,c2,send){
- const moving=board[r1][c1],captured=board[r2][c2];board[r2][c2]=moving;board[r1][c1]=".";
+ const moving=board[r1][c1]const movingColor=colorOf(moving);,captured=board[r2][c2];board[r2][c2]=moving;board[r1][c1]=".";
+ // En-passant ausführen
+if(
+  moving.toLowerCase()==="p" &&
+  c1!==c2 &&
+  captured==="." &&
+  chessState.enPassantTarget &&
+  chessState.enPassantTarget[0]===r2 &&
+  chessState.enPassantTarget[1]===c2
+){
+
+  const capturedPawnRow=
+    movingColor==="w"
+      ? r2+1
+      : r2-1;
+
+  board[capturedPawnRow][c2]=".";
+}
  // Rochade ausführen
 if(
   moving.toLowerCase()==="k" &&
@@ -126,6 +143,18 @@ if(
   chessState.blackRookHMoved=true;
 }
  if(moving==="P"&&r2===0)board[r2][c2]="Q";if(moving==="p"&&r2===7)board[r2][c2]="q";
+ // En-passant-Ziel aktualisieren
+chessState.enPassantTarget=null;
+
+if(
+  moving.toLowerCase()==="p" &&
+  Math.abs(r2-r1)===2
+){
+  chessState.enPassantTarget=[
+    (r1+r2)/2,
+    c1
+  ];
+}
  lastMove=[r1,c1,r2,c2];
  if(captured==="K"||captured==="k"){gameOver=true;draw();const winner=colorOf(captured)==="w"?"b":"w";score(winner===myColor);if(send&&conn)conn.send({type:"gameover",winner});return}
  turn=turn==="w"?"b":"w";draw();if(send&&conn)conn.send({type:"move",m:[r1,c1,r2,c2]})
