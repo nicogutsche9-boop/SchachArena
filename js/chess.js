@@ -91,7 +91,17 @@ function pseudoLegal(r1,c1,r2,c2,side=turn){
     ){
       return true;
     }
-
+// En-passant
+if(
+  d===1 &&
+  dr===dir &&
+  t==="." &&
+  chessState.enPassantTarget &&
+  chessState.enPassantTarget[0]===r2 &&
+  chessState.enPassantTarget[1]===c2
+){
+  return true;
+}
     return false;
   }
 
