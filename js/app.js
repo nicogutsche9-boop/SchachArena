@@ -62,6 +62,69 @@ function draw(){
 function tap(r,c){if(gameOver||(myColor&&myColor!==turn))return;const p=board[r][c];if(!selected){if(colorOf(p)===turn)selected=[r,c]}else if(colorOf(p)===turn)selected=[r,c];else if(legal(selected[0],selected[1],r,c)){const m=[selected[0],selected[1],r,c];applyMove(...m,true);selected=null}else selected=null;draw()}
 function applyMove(r1,c1,r2,c2,send){
  const moving=board[r1][c1],captured=board[r2][c2];board[r2][c2]=moving;board[r1][c1]=".";
+ // Rochade ausführen
+if(
+  moving.toLowerCase()==="k" &&
+  Math.abs(c2-c1)===2
+){
+
+  const row=r1;
+
+  // Kurze Rochade
+  if(c2===6){
+
+    board[row][5]=board[row][7];
+    board[row][7]=".";
+  }
+
+  // Lange Rochade
+  if(c2===2){
+
+    board[row][3]=board[row][0];
+    board[row][0]=".";
+  }
+}// König wurde bewegt
+if(moving==="K"){
+  chessState.whiteKingMoved=true;
+}
+
+if(moving==="k"){
+  chessState.blackKingMoved=true;
+}
+
+
+// Türme wurden bewegt
+if(
+  moving==="R" &&
+  r1===7 &&
+  c1===0
+){
+  chessState.whiteRookAMoved=true;
+}
+
+if(
+  moving==="R" &&
+  r1===7 &&
+  c1===7
+){
+  chessState.whiteRookHMoved=true;
+}
+
+if(
+  moving==="r" &&
+  r1===0 &&
+  c1===0
+){
+  chessState.blackRookAMoved=true;
+}
+
+if(
+  moving==="r" &&
+  r1===0 &&
+  c1===7
+){
+  chessState.blackRookHMoved=true;
+}
  if(moving==="P"&&r2===0)board[r2][c2]="Q";if(moving==="p"&&r2===7)board[r2][c2]="q";
  lastMove=[r1,c1,r2,c2];
  if(captured==="K"||captured==="k"){gameOver=true;draw();const winner=colorOf(captured)==="w"?"b":"w";score(winner===myColor);if(send&&conn)conn.send({type:"gameover",winner});return}
