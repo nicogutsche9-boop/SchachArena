@@ -67,6 +67,12 @@
         <span class="nav-icon">⚙</span>
         <span>Einstellungen</span>
       </a>
+      
+      <a href="#" id="nav-shop">
+  <span>🛒</span>
+  <span>Shop</span>
+      </a>
+
 
     </nav>
 
@@ -528,6 +534,34 @@
       </aside>
 
     </div>
+    <main>
+      <!-- ... (dein restlicher Inhalt wie Header, Startseite, etc.) ... -->
+
+
+      <!-- FÜGE DIESEN SHOP-BEREICH HIER EIN: -->
+      <section id="shop-section" class="content-view" style="display: none; padding: 20px;">
+        <h2>SchachArena Shop</h2>
+        <p>Deine Coins: <span id="player-coins">100</span> 🪙</p>
+        
+        <div class="shop-grid" style="display: flex; gap: 20px; margin-top: 20px;">
+          <div class="shop-item" style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
+            <h3>Goldenes Schachbrett</h3>
+            <p>Verleihe deinen Partien einen edlen Look.</p>
+            <button onclick="buyItem('Goldenes Brett', 50)" style="cursor: pointer; padding: 8px 12px;">Kaufen (50 🪙)</button>
+          </div>
+          <div class="shop-item" style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
+            <h3>VIP-Rahmen</h3>
+            <p>Ein cooler Rahmen für dein Profilbild.</p>
+            <button onclick="buyItem('VIP-Rahmen', 100)" style="cursor: pointer; padding: 8px 12px;">Kaufen (100 🪙)</button>
+          </div>
+        </div>
+      </section>
+
+
+      <footer>
+        © 2025 SchachArena – Entwickelt von <strong>Zugaro Games</strong>
+      </footer>
+    </main>
 
 
     <footer>
@@ -831,7 +865,24 @@ function showMessage(text) {
 
 </div>
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script // Initialisierung der Währung
+let coins = localStorage.getItem('playerCoins') ? parseInt(localStorage.getItem('playerCoins')) : 100;
+document.getElementById('player-coins').innerText = coins;
+
+function buyItem(itemName, price) {
+  if (coins >= price) {
+    coins -= price;
+    localStorage.setItem('playerCoins', coins);
+    document.getElementById('player-coins').innerText = coins;
+    alert(`Erfolgreich gekauft: ${itemName}! 🎉`);
+    
+    // Hier kannst du logik einbauen, um das Item dem User dauerhaft freizuschalten
+  } else {
+    alert("Du hast nicht genügend Coins! Gewinne mehr Partien, um Coins zu verdienen.");
+  }
+}
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script src="js/chess.js"></script>
