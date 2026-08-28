@@ -1,3 +1,16 @@
+// Informationen über Sonderzüge
+const chessState = {
+  whiteKingMoved: false,
+  blackKingMoved: false,
+
+  whiteRookAMoved: false,
+  whiteRookHMoved: false,
+
+  blackRookAMoved: false,
+  blackRookHMoved: false,
+
+  enPassantTarget: null
+};
 function colorOf(p){
   return p && p !== "." ? (p === p.toUpperCase() ? "w" : "b") : null;
 }
@@ -113,13 +126,31 @@ function pseudoLegal(r1,c1,r2,c2,side=turn){
 
 
   // König
-  if(type==="k"){
-    return Math.max(a,d)===1;
+if(type==="k"){
+
+  // Normaler Königszug
+  if(Math.max(a,d)===1){
+    return true;
+  }
+
+  // Kurze Rochade
+  if(
+    dr===0 &&
+    dc===2
+  ){
+    return canCastleKingSide(side);
+  }
+
+  // Lange Rochade
+  if(
+    dr===0 &&
+    dc===-2
+  ){
+    return canCastleQueenSide(side);
   }
 
   return false;
 }
-
 
 /*
   Prüft, ob ein bestimmtes Feld von einer Farbe
@@ -375,7 +406,26 @@ function legal(r1,c1,r2,c2){
 
   board[r2][c2]=moving;
   board[r1][c1]=".";
+// Rochade simulieren
+if(
+  moving.toLowerCase()==="k" &&
+  Math.abs(c2-c1)===2
+){
 
+  const row=r1;
+
+  // Kurze Rochade
+  if(c2===6){
+    board[row][5]=board[row][7];
+    board[row][7]=".";
+  }
+
+  // Lange Rochade
+  if(c2===2){
+    board[row][3]=board[row][0];
+    board[row][0]=".";
+  }
+}
 
   // -------------------------
   // Königssicherheit prüfen
@@ -479,4 +529,95 @@ function isStalemate(color){
     !isInCheck(color) &&
     !hasLegalMove(color)
   );
+}
+function canCastleKingSide(color){
+
+  const row=color==="w" ? 7 : 0;
+
+  const king=color==="w" ? "K" : "k";
+  const rook=color==="w" ? "R" : "r";
+
+  // König und Turm müssen vorhanden sein
+  if(board[row][4]!==king) return false;
+  if(board[row][7]!==rook) return false;
+
+  // König bzw. Turm darf noch nicht bewegt worden sein
+  if(color==="w" && chessState.whiteKingMoved) return false;
+  if(color==="b" && chessState.blackKingMoved) return false;
+
+  if(color==="w" && chessState.whiteRookHMoved) return false;
+  if(color==="b" && chessState.blackRookHMoved) return false;
+
+  // Felder zwischen König und Turm müssen frei sein
+  if(
+    board[row][5]!=="." ||
+    board[row][6]!=="."
+  ){
+    return false;
+  }
+
+  // König darf nicht im Schach stehen
+  if(isInCheck(color)){
+    return false;
+  }
+
+  const opponent=color==="w" ? "b" : "w";
+
+  // König darf kein angegriffenes Feld überqueren
+  if(isSquareAttacked(row,5,opponent)){
+    return false;
+  }
+
+  // Zielfeld des Königs darf nicht angegriffen werden
+  if(isSquareAttacked(row,6,opponent)){
+    return false;
+  }
+
+  return true;
+}
+
+
+function canCastleQueenSide(color){
+
+  const row=color==="w" ? 7 : 0;
+
+  const king=color==="w" ? "K" : "k";
+  const rook=color==="w" ? "R" : "r";
+
+  if(board[row][4]!==king) return false;
+  if(board[row][0]!==rook) return false;
+
+  if(color==="w" && chessState.whiteKingMoved) return false;
+  if(color==="b" && chessState.blackKingMoved) return false;
+
+  if(color==="w" && chessState.whiteRookAMoved) return false;
+  if(color==="b" && chessState.blackRookAMoved) return false;
+
+  // Felder zwischen König und Turm
+  if(
+    board[row][1]!=="." ||
+    board[row][2]!=="." ||
+    board[row][3]!=="."
+  ){
+    return false;
+  }
+
+  // König darf nicht im Schach stehen
+  if(isInCheck(color)){
+    return false;
+  }
+
+  const opponent=color==="w" ? "b" : "w";
+
+  // d-Feld darf nicht angegriffen sein
+  if(isSquareAttacked(row,3,opponent)){
+    return false;
+  }
+
+  // c-Feld darf nicht angegriffen sein
+  if(isSquareAttacked(row,2,opponent)){
+    return false;
+  }
+
+  return true;
 }
