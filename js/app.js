@@ -103,8 +103,8 @@ function joinRoom(){syncPlayer();room=document.getElementById("roomInput").value
 function setupConnection(){
  document.getElementById("color").textContent="Du: "+(myColor==="w"?"Weiß":"Schwarz");
  conn.on("open",()=>{roomInfo("Verbunden · Raum-Code: "+room);unregisterRoom()});
- conn.on("data",m=>{if(m.type==="state"){board=m.b;turn=m.turn;draw()}if(m.type==="move")applyMove(...m.m,false);if(m.type==="gameover"){gameOver=true;draw();score(m.winner===myColor)}if(m.type==="reset"){fresh()}})
-}
+conn.on("data",m=>{if(m.type==="state"){board=m.b;turn=m.turn;draw()}if(m.type==="move")applyMove(...m.m,false);if(m.type==="gameover"){gameOver=true;draw();score(m.winner===myColor)}if(m.type==="reset"){fresh()}})
+} 
 function showGame(){document.getElementById("lobby").classList.add("hide");document.getElementById("game").style.display="block";document.getElementById("color").textContent="Du: "+(myColor==="w"?"Weiß":"Schwarz");fresh()}
 function roomInfo(t){document.getElementById("roomInfo").textContent=t}
 function copyRoom(){navigator.clipboard?.writeText(room);alert("Raum-Code kopiert: "+room)}
