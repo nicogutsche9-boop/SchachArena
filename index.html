@@ -463,208 +463,64 @@
 
 
 
-        <!-- FREUNDE -->
-        <section class="side-card friends">
-
-          <div class="side-header">
-
-            <span class="side-title">
-              FREUNDE
-            </span>
-
-            <button
-              class="add-friend"
-              onclick="addFriend()"
-            >
-              +
-            </button>
-
-          </div>
-
-
-          <div class="friend-list">
-
-
-            <div class="friend">
-
-              <div class="friend-avatar">
-                MM
-                <i></i>
-              </div>
-
-              <div class="friend-info">
-
-                <strong>
-                  MaxMustermann
-                </strong>
-
-                <span>
-                  🏆 1280
-                </span>
-
-              </div>
-
-              <button
-                onclick="challengeFriend('MaxMustermann')"
-              >
-                SPIELEN
-              </button>
-
-            </div>
-
-
-
-            <div class="friend">
-
-              <div class="friend-avatar blue">
-                CK
-                <i></i>
-              </div>
-
-              <div class="friend-info">
-
-                <strong>
-                  ChessKing
-                </strong>
-
-                <span>
-                  🏆 1412
-                </span>
-
-              </div>
-
-              <button
-                onclick="challengeFriend('ChessKing')"
-              >
-                SPIELEN
-              </button>
-
-            </div>
-
-
-
-            <div class="friend offline">
-
-              <div class="friend-avatar">
-                SP
-              </div>
-
-              <div class="friend-info">
-
-                <strong>
-                  SchachProfi
-                </strong>
-
-                <span>
-                  ♛ 1190
-                </span>
-
-              </div>
-
-              <em>
-                Offline
-              </em>
-
-            </div>
-
-
-
-            <div class="friend">
-
-              <div class="friend-avatar purple">
-                QG
-                <i></i>
-              </div>
-
-              <div class="friend-info">
-
-                <strong>
-                  QueenGamer
-                </strong>
-
-                <span>
-                  🏆 1350
-                </span>
-
-              </div>
-
-              <button
-                onclick="challengeFriend('QueenGamer')"
-              >
-                SPIELEN
-              </button>
-
-            </div>
-
-
-
-            <div class="friend offline">
-
-              <div class="friend-avatar">
-                ST
-              </div>
-
-              <div class="friend-info">
-
-                <strong>
-                  Strategist
-                </strong>
-
-                <span>
-                  ♛ 1105
-                </span>
-
-              </div>
-
-              <em>
-                Offline
-              </em>
-
-            </div>
-
-
-          </div>
-
-
-          <button
-            class="full-button"
-            onclick="openFriends()"
-          >
-            ALLE FREUNDE ANSEHEN
-          </button>
-
-        </section>
-
-
-
-        <!-- ONLINE SPIELER -->
-        <section class="side-card online-card">
-
-          <div class="online-header">
-
-            <span>
-              ONLINE SPIELER
-            </span>
-
-            <strong>
-              <span class="online"></span>
-              156
-            </strong>
-
-          </div>
-
-
-          <div class="online-players">
-
-            <span>AK</span>
-            <span>TM</span>
-            <span>LS</span>
-            <span>JD</span>
-            <b>+151</b>
-
-          </div>
-
-        </section>
+        <!-- ==============================
+     FREUNDE
+=============================== -->
+<section class="side-card friends">
+
+  <div class="side-header">
+
+    <span class="side-title">
+      FREUNDE
+    </span>
+
+    <button
+      class="add-friend"
+      onclick="addFriend()"
+      title="Freund hinzufügen"
+    >
+      +
+    </button>
+
+  </div>
+
+  <!-- Aktueller Freundestand -->
+  <div class="friends-count">
+    <strong>0</strong>
+    <span>Freunde</span>
+  </div>
+
+  <!-- Leerer Zustand -->
+  <div class="friends-empty">
+
+    <div class="friends-empty-icon">
+      ♟
+    </div>
+
+    <h3>Noch keine Freunde</h3>
+
+    <p>
+      Füge Spieler hinzu, um sie zu deinen
+      Freunden einzuladen und gemeinsam zu spielen.
+    </p>
+
+    <button
+      class="outline-button"
+      onclick="addFriend()"
+    >
+      + FREUND HINZUFÜGEN
+    </button>
+
+  </div>
+
+  <button
+    class="full-button"
+    onclick="openFriends()"
+  >
+    ALLE FREUNDE ANSEHEN
+  </button>
+
+</section>
 
 
       </aside>
