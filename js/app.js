@@ -3534,54 +3534,148 @@ function setupDashboardButtons() {
 /* =========================================================
    TOAST
 ========================================================= */
-function openRewards(){
+function openRewards() {
 
-  const modal = document.createElement("div");
+  // Prüfen, ob bereits ein Popup geöffnet ist
+  const oldPopup = document.getElementById("rewardsPopup");
 
-  modal.className = "reward-modal";
+  if (oldPopup) {
+    oldPopup.remove();
+    return;
+  }
 
-  modal.innerHTML = `
-    <div class="reward-window">
+  const popup = document.createElement("div");
 
-      <button class="reward-close"
-        onclick="this.closest('.reward-modal').remove()">
+  popup.id = "rewardsPopup";
+  popup.className = "rewards-popup-overlay";
+
+  popup.innerHTML = `
+    <div class="rewards-popup">
+
+      <button
+        class="rewards-popup-close"
+        id="closeRewardsPopup"
+        aria-label="Schließen">
         ×
       </button>
 
-      <div class="reward-icon">
+      <div class="rewards-popup-icon">
         🏆
       </div>
 
-      <h2>Tägliche Belohnung</h2>
+      <h2>Deine Aufgaben</h2>
 
-      <p>
-        Gewinne 3 Partien und erhalte eine Belohnung.
+      <p class="rewards-subtitle">
+        Erfülle Aufgaben und verdiene Münzen.
       </p>
 
-      <div class="reward-progress">
 
-        <strong>2 / 3</strong>
+      <div class="reward-task">
 
-        <div class="reward-bar">
-          <span style="width:66%"></span>
+        <div class="task-icon">
+          ♟
+        </div>
+
+        <div class="task-content">
+          <strong>Gewinne 3 Partien</strong>
+
+          <span>
+            2 / 3 geschafft
+          </span>
+
+          <div class="task-progress">
+            <div style="width: 66%"></div>
+          </div>
+        </div>
+
+        <div class="task-reward">
+          🪙 100
         </div>
 
       </div>
 
-      <div class="reward-prize">
-        🪙 <strong>100 Münzen</strong>
+
+      <div class="reward-task">
+
+        <div class="task-icon">
+          ⚔️
+        </div>
+
+        <div class="task-content">
+          <strong>Spiele 5 Partien</strong>
+
+          <span>
+            3 / 5 geschafft
+          </span>
+
+          <div class="task-progress">
+            <div style="width: 60%"></div>
+          </div>
+        </div>
+
+        <div class="task-reward">
+          🪙 75
+        </div>
+
       </div>
 
-      <button
-        class="reward-button"
-        onclick="this.closest('.reward-modal').remove()">
-        WEITER SPIELEN
-      </button>
+
+      <div class="reward-task">
+
+        <div class="task-icon">
+          ♜
+        </div>
+
+        <div class="task-content">
+          <strong>Spiele eine Partie ohne Aufgabe</strong>
+
+          <span>
+            0 / 1 geschafft
+          </span>
+
+          <div class="task-progress">
+            <div style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="task-reward">
+          🪙 50
+        </div>
+
+      </div>
+
+
+      <div class="rewards-total">
+
+        <span>Deine Münzen</span>
+
+        <strong>🪙 ${coins || 0}</strong>
+
+      </div>
 
     </div>
   `;
 
-  document.body.appendChild(modal);
+  document.body.appendChild(popup);
+
+
+  // Schließen-Button
+  document
+    .getElementById("closeRewardsPopup")
+    .addEventListener("click", () => {
+      popup.remove();
+    });
+
+
+  // Klick auf den dunklen Hintergrund schließt das Popup
+  popup.addEventListener("click", (event) => {
+
+    if (event.target === popup) {
+      popup.remove();
+    }
+
+  });
+
 }
 function showMessage(text) {
 
