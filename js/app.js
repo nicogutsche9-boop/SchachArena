@@ -1,3 +1,23 @@
+let coins = Number(localStorage.getItem("sa_coins")) || 0;
+
+function saveCoins(){
+  localStorage.setItem("sa_coins", coins);
+}
+
+function addCoins(amount){
+  coins += amount;
+  saveCoins();
+}
+
+function spendCoins(amount){
+  if(coins < amount) return false;
+
+  coins -= amount;
+  saveCoins();
+
+  return true;
+}
+
 /* =========================================================
    SCHACHARENA – APP.JS
    Version 1.0.0
@@ -3514,7 +3534,55 @@ function setupDashboardButtons() {
 /* =========================================================
    TOAST
 ========================================================= */
+function openRewards(){
 
+  const modal = document.createElement("div");
+
+  modal.className = "reward-modal";
+
+  modal.innerHTML = `
+    <div class="reward-window">
+
+      <button class="reward-close"
+        onclick="this.closest('.reward-modal').remove()">
+        ×
+      </button>
+
+      <div class="reward-icon">
+        🏆
+      </div>
+
+      <h2>Tägliche Belohnung</h2>
+
+      <p>
+        Gewinne 3 Partien und erhalte eine Belohnung.
+      </p>
+
+      <div class="reward-progress">
+
+        <strong>2 / 3</strong>
+
+        <div class="reward-bar">
+          <span style="width:66%"></span>
+        </div>
+
+      </div>
+
+      <div class="reward-prize">
+        🪙 <strong>100 Münzen</strong>
+      </div>
+
+      <button
+        class="reward-button"
+        onclick="this.closest('.reward-modal').remove()">
+        WEITER SPIELEN
+      </button>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
 function showMessage(text) {
 
   const old =
