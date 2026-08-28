@@ -1608,20 +1608,18 @@ async function refreshRooms() {
    RAUM – LISTE BEITRETEN
 ========================================================= */
 
-function joinListedRoom(code) {
+function joinListedRoom(code){
 
   const input =
-    document.getElementById(
-      "roomInput"
-    );
-
+    document.getElementById("roomInput") ||
+    document.getElementById("roomSearch");
 
   if (input) {
-
-    input.value =
-      String(code || "")
-        .toUpperCase();
+    input.value = code;
   }
+
+  joinRoom(code);
+}
 
 
   joinRoom();
@@ -1902,146 +1900,56 @@ async function createRoom() {
    RAUM BEITRETEN
 ========================================================= */
 
-async function joinRoom() {
+ function joinRoom(codeFromDashboard = null){
 
-  await syncPlayer();
+  syncPlayer();
 
+  // Raumcode aus Dashboard oder Lobby übernehmen
+  let input = document.getElementById("roomInput");
 
-  const input =
-    document.getElementById(
-      "roomInput"
-    );
+  if (!input) {
+    input = document.getElementById("roomSearch");
+  }
 
+  const code = (
+    codeFromDashboard ||
+    input?.value ||
+    ""
+  ).trim().toUpperCase();
 
-  room =
-    (
-      input?.value ||
-      ""
-    )
-      .trim()
-      .toUpperCase();
-
-
-  if (!room) {
-
-    showMessage(
-      "Bitte einen Raum-Code eingeben."
-    );
-
+  if (!code) {
+    alert("Bitte einen Raum-Code eingeben.");
     input?.focus();
-
     return;
   }
 
-
+  room = code;
   myColor = "b";
-
 
   showGame();
 
+  peer = new Peer();
 
-  fresh();
+  peer.on("open", () => {
 
+    conn = peer.connect(
+      "schacharena-" + room
+    );
 
-  roomInfo(
-    "Verbinde mit Raum " +
-    room +
-    " …"
-  );
+    setupConnection();
 
+  });
 
-  if (
-    typeof Peer === "undefined"
-  ) {
+  peer.on("error", (error) => {
+
+    console.error("Peer-Fehler:", error);
 
     roomInfo(
-      "PeerJS konnte nicht geladen werden."
+      "❌ Raum nicht gefunden oder Verbindung fehlgeschlagen."
     );
 
-    showMessage(
-      "PeerJS ist nicht geladen."
-    );
-
-    return;
-  }
-
-
-  try {
-
-    peer =
-      new Peer();
-
-
-    peer.on(
-      "open",
-      () => {
-
-        conn =
-          peer.connect(
-            "schacharena-" +
-            room,
-            {
-              reliable: true
-            }
-          );
-
-
-        setupConnection();
-
-
-        conn.on(
-          "open",
-          () => {
-
-            roomInfo(
-              "Verbunden · Raum-Code: " +
-              room
-            );
-
-
-            unregisterRoom();
-
-
-            showMessage(
-              "Du bist dem Raum beigetreten."
-            );
-          }
-        );
-      }
-    );
-
-
-    peer.on(
-      "error",
-      error => {
-
-        console.error(
-          "PeerJS:",
-          error
-        );
-
-
-        roomInfo(
-          "Raum nicht gefunden oder Verbindung fehlgeschlagen."
-        );
-      }
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Raumbeitritt:",
-      error
-    );
-
-
-    roomInfo(
-      "Verbindung konnte nicht hergestellt werden."
-    );
-  }
+  });
 }
-
 
 /* =========================================================
    PEERJS VERBINDUNG
@@ -4389,4 +4297,39 @@ if (
 } else {
 
   initApp();
+}
+function joinRoomDashboard(){
+
+  const input =
+    document.getElementById("roomSearch");
+
+  if (!input) {
+    alert("Raumcode-Feld wurde nicht gefunden.");
+    return;
+  }
+
+  const code =
+    input.value.trim().toUpperCase();
+
+  if (!code) {
+
+    input.focus();
+
+    input.classList.add("error");
+
+    setTimeout(() => {
+      input.classList.remove("error");
+    }, 600);
+
+    return;
+  }
+
+  const lobbyInput =
+    document.getElementById("roomInput");
+
+  if (lobbyInput) {
+    lobbyInput.value = code;
+  }
+
+  joinRoom(code);
 }
