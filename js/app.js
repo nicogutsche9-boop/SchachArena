@@ -7480,3 +7480,719 @@ window.resetLocalData =
 
 window.startGame =
   startGame;
+/* =========================================================
+   SCHACHARENA – NAVIGATION & SHOP HOTFIX
+   Diesen Block ganz ans Ende der app.js setzen.
+========================================================= */
+
+(function () {
+  "use strict";
+
+  function saText(element) {
+    if (!element) return "";
+
+    return (
+      element.innerText ||
+      element.textContent ||
+      element.getAttribute("aria-label") ||
+      ""
+    )
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  }
+
+
+  function saFindNavigationItem(target) {
+
+    if (!target) return null;
+
+    let element = target;
+
+    for (let i = 0; i < 8 && element; i++) {
+
+      const text = saText(element);
+
+      if (
+        text === "übersicht" ||
+        text === "spielen" ||
+        text === "freunde" ||
+        text === "ranking" ||
+        text === "nachrichten" ||
+        text === "einstellungen" ||
+        text === "shop"
+      ) {
+        return element;
+      }
+
+      const className =
+        typeof element.className === "string"
+          ? element.className.toLowerCase()
+          : "";
+
+      if (
+        className.includes("nav-link") ||
+        className.includes("nav-item") ||
+        className.includes("sidebar-item") ||
+        className.includes("menu-item")
+      ) {
+        return element;
+      }
+
+      element = element.parentElement;
+    }
+
+    return null;
+  }
+
+
+  function saNavigationAction(name) {
+
+    switch (name) {
+
+      case "übersicht":
+
+        if (typeof closeCurrentModal === "function") {
+          closeCurrentModal();
+        }
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+
+        return true;
+
+
+      case "spielen":
+
+        if (typeof showGameLobby === "function") {
+          showGameLobby();
+          return true;
+        }
+
+        return false;
+
+
+      case "freunde":
+
+        if (typeof openFriends === "function") {
+          openFriends();
+          return true;
+        }
+
+        return false;
+
+
+      case "ranking":
+
+        if (typeof openRanking === "function") {
+          openRanking();
+          return true;
+        }
+
+        return false;
+
+
+      case "nachrichten":
+
+        if (typeof openMessages === "function") {
+          openMessages();
+          return true;
+        }
+
+        return false;
+
+
+      case "einstellungen":
+
+        if (typeof openSettings === "function") {
+          openSettings();
+          return true;
+        }
+
+        return false;
+
+
+      case "shop":
+
+        if (typeof openShop === "function") {
+          openShop();
+          return true;
+        }
+
+        return false;
+    }
+
+    return false;
+  }
+
+
+  /* ---------------------------------------------------------
+     ALTE NAVIGATION AUSHEBELN
+  --------------------------------------------------------- */
+
+  document.addEventListener(
+    "click",
+    function (event) {
+
+      const item =
+        saFindNavigationItem(event.target);
+
+      if (!item) return;
+
+
+      /*
+         Nur echte Navigationsbereiche behandeln.
+         Damit Buttons innerhalb des eigentlichen Inhalts
+         nicht versehentlich als Navigation erkannt werden.
+      */
+
+      const navigationContainer =
+        item.closest(
+          "nav, aside, .sidebar, .side-bar, .navigation, .navbar, [class*='sidebar'], [class*='navigation']"
+        );
+
+      if (!navigationContainer) {
+        return;
+      }
+
+
+      const text =
+        saText(item);
+
+
+      let name = null;
+
+
+      if (
+        text === "übersicht" ||
+        text.startsWith("übersicht ")
+      ) {
+        name = "übersicht";
+      }
+
+      else if (
+        text === "spielen" ||
+        text.startsWith("spielen ")
+      ) {
+        name = "spielen";
+      }
+
+      else if (
+        text === "freunde" ||
+        text.startsWith("freunde ")
+      ) {
+        name = "freunde";
+      }
+
+      else if (
+        text === "ranking" ||
+        text.startsWith("ranking ")
+      ) {
+        name = "ranking";
+      }
+
+      else if (
+        text === "nachrichten" ||
+        text.startsWith("nachrichten ")
+      ) {
+        name = "nachrichten";
+      }
+
+      else if (
+        text === "einstellungen" ||
+        text.startsWith("einstellungen ")
+      ) {
+        name = "einstellungen";
+      }
+
+      else if (
+        text === "shop" ||
+        text.startsWith("shop ")
+      ) {
+        name = "shop";
+      }
+
+
+      if (!name) return;
+
+
+      event.preventDefault();
+      event.stopPropagation();
+
+
+      if (typeof event.stopImmediatePropagation === "function") {
+        event.stopImmediatePropagation();
+      }
+
+
+      /*
+         Aktiven Menüpunkt markieren
+      */
+
+      const allItems =
+        navigationContainer.querySelectorAll(
+          ".nav-link, .nav-item, .sidebar-item, .menu-item, a, button, li, [role='button']"
+        );
+
+
+      allItems.forEach(function (navItem) {
+
+        navItem.classList.remove("active");
+        navItem.classList.remove("selected");
+      });
+
+
+      item.classList.add("active");
+
+
+      /*
+         Navigation ausführen
+      */
+
+      saNavigationAction(name);
+
+    },
+    true
+  );
+
+
+  /* ---------------------------------------------------------
+     SHOP UNTER EINSTELLUNGEN SICHERSTELLEN
+  --------------------------------------------------------- */
+
+  function saEnsureShop() {
+
+    const all =
+      Array.from(
+        document.querySelectorAll(
+          "nav *, aside *, .sidebar *, .side-bar *, .navigation *"
+        )
+      );
+
+
+    let settings = null;
+    let shop = null;
+
+
+    all.forEach(function (element) {
+
+      const text =
+        saText(element);
+
+      if (
+        text === "einstellungen" &&
+        !settings
+      ) {
+        settings = element;
+      }
+
+
+      if (
+        text === "shop" &&
+        !shop
+      ) {
+        shop = element;
+      }
+
+    });
+
+
+    /*
+       Shop existiert bereits:
+       nur dafür sorgen, dass er korrekt behandelt wird.
+    */
+
+    if (shop) {
+
+      shop.classList.add("sa-shop-navigation");
+
+      return shop;
+    }
+
+
+    if (!settings) {
+      return null;
+    }
+
+
+    /*
+       Das tatsächliche Navigationselement finden.
+    */
+
+    let settingsItem =
+      settings.closest(
+        ".nav-link, .nav-item, .sidebar-item, .menu-item, li, a, button"
+      );
+
+
+    if (!settingsItem) {
+      settingsItem = settings;
+    }
+
+
+    /*
+       Einstellungen klonen
+    */
+
+    const newShop =
+      settingsItem.cloneNode(true);
+
+
+    newShop.classList.remove("active");
+    newShop.classList.remove("selected");
+
+    newShop.classList.add(
+      "sa-shop-navigation"
+    );
+
+
+    newShop.removeAttribute("href");
+    newShop.removeAttribute("id");
+    newShop.removeAttribute("onclick");
+
+
+    /*
+       Text auf Shop ändern
+    */
+
+    let changed = false;
+
+
+    const descendants =
+      newShop.querySelectorAll(
+        "span, strong, b, p, label"
+      );
+
+
+    descendants.forEach(function (node) {
+
+      const text =
+        saText(node);
+
+
+      if (
+        !changed &&
+        text === "einstellungen"
+      ) {
+
+        node.textContent = "Shop";
+        changed = true;
+      }
+
+    });
+
+
+    if (!changed) {
+
+      const walker =
+        document.createTreeWalker(
+          newShop,
+          NodeFilter.SHOW_TEXT
+        );
+
+
+      let node;
+
+
+      while (
+        (node = walker.nextNode())
+      ) {
+
+        if (
+          (node.nodeValue || "")
+            .trim()
+            .toLowerCase() ===
+          "einstellungen"
+        ) {
+
+          node.nodeValue = "Shop";
+          changed = true;
+
+          break;
+        }
+      }
+    }
+
+
+    /*
+       Icon ersetzen
+    */
+
+    const icons =
+      newShop.querySelectorAll(
+        "svg, i, img, .icon"
+      );
+
+
+    if (icons.length > 0) {
+
+      const icon = icons[0];
+
+
+      if (
+        icon.tagName === "IMG"
+      ) {
+
+        icon.alt = "Shop";
+
+      } else {
+
+        icon.textContent = "🛒";
+      }
+    }
+
+
+    /*
+       Shop direkt UNTER Einstellungen
+    */
+
+    if (
+      settingsItem.parentNode
+    ) {
+
+      settingsItem.parentNode.insertBefore(
+        newShop,
+        settingsItem.nextSibling
+      );
+    }
+
+
+    return newShop;
+  }
+
+
+  /* ---------------------------------------------------------
+     MINI-MÜNZSHOP ENTFERNEN
+  --------------------------------------------------------- */
+
+  function saRemoveMiniShop() {
+
+    const elements =
+      Array.from(
+        document.querySelectorAll(
+          "body *"
+        )
+      );
+
+
+    elements.forEach(function (element) {
+
+      if (
+        !(element instanceof HTMLElement)
+      ) {
+        return;
+      }
+
+
+      /*
+         Niemals den großen Shop oder
+         die Belohnungs-Popup-Elemente löschen.
+      */
+
+      if (
+        element.closest(
+          "#shopPopup, .shop-popup-overlay"
+        )
+      ) {
+        return;
+      }
+
+
+      const text =
+        saText(element);
+
+
+      if (
+        text === "münz-shop" ||
+        text === "münzshop" ||
+        text === "🪙 münz-shop" ||
+        text === "🛒 münz-shop"
+      ) {
+
+        const parent =
+          element.closest(
+            ".mini-shop, .coin-shop, .reward-shop, .shop-card"
+          );
+
+
+        if (
+          parent &&
+          !parent.closest(
+            "#shopPopup, .shop-popup-overlay"
+          )
+        ) {
+
+          parent.remove();
+
+          return;
+        }
+
+
+        /*
+           Falls keine spezielle Klasse vorhanden ist,
+           nur das direkte Kartenelement entfernen.
+        */
+
+        const card =
+          element.closest(
+            ".card, .dashboard-card, .side-card"
+          );
+
+
+        if (
+          card &&
+          !card.closest(
+            "#shopPopup, .shop-popup-overlay"
+          )
+        ) {
+
+          card.remove();
+
+          return;
+        }
+      }
+
+    });
+
+  }
+
+
+  /* ---------------------------------------------------------
+     SHOP-DESIGN
+  --------------------------------------------------------- */
+
+  function saShopStyle() {
+
+    if (
+      document.getElementById(
+        "sa-navigation-shop-style"
+      )
+    ) {
+      return;
+    }
+
+
+    const style =
+      document.createElement("style");
+
+
+    style.id =
+      "sa-navigation-shop-style";
+
+
+    style.textContent = `
+
+      .sa-shop-navigation {
+        cursor: pointer !important;
+        user-select: none;
+      }
+
+      .sa-shop-navigation:hover {
+        cursor: pointer !important;
+      }
+
+      .shop-popup-overlay {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 99999 !important;
+      }
+
+      .shop-popup-large {
+        max-height: 88vh !important;
+        overflow: hidden !important;
+      }
+
+      .shop-items-scroll {
+        max-height: 55vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding-right: 6px !important;
+      }
+
+      .shop-item {
+        cursor: default;
+      }
+
+      .shop-buy {
+        cursor: pointer !important;
+      }
+
+      .shop-category {
+        cursor: pointer !important;
+      }
+
+      .shop-popup-close {
+        cursor: pointer !important;
+      }
+
+    `;
+
+
+    document.head.appendChild(style);
+  }
+
+
+  /* ---------------------------------------------------------
+     START
+  --------------------------------------------------------- */
+
+  function saStart() {
+
+    saShopStyle();
+
+    saEnsureShop();
+
+    saRemoveMiniShop();
+
+  }
+
+
+  if (
+    document.readyState === "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      saStart
+    );
+
+  } else {
+
+    saStart();
+  }
+
+
+  /*
+     Falls deine App später Teile des Dashboards
+     neu rendert, Shop und Mini-Shop erneut prüfen.
+  */
+
+  setTimeout(
+    saStart,
+    500
+  );
+
+  setTimeout(
+    saStart,
+    1500
+  );
+
+  setTimeout(
+    saStart,
+    3000
+  );
+
+
+  /*
+     Globale Funktionen zur Sicherheit verfügbar machen.
+  */
+
+  window.saEnsureShop =
+    saEnsureShop;
+
+  window.saRemoveMiniShop =
+    saRemoveMiniShop;
+
+})();
