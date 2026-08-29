@@ -8760,3 +8760,564 @@ window.startGame =
     saRemoveMiniShop;
 
 })();
+
+/* =========================================================
+   SCHACHARENA – FINALE NAVIGATION
+   EINFACH GANZ UNTEN IN app.js EINFÜGEN
+========================================================= */
+
+(function () {
+
+  "use strict";
+
+  document.addEventListener(
+    "click",
+    function (event) {
+
+      const target = event.target;
+
+      if (!target) {
+        return;
+      }
+
+      /*
+         Herausfinden, ob auf einen
+         Navigationspunkt geklickt wurde.
+      */
+
+      let element = target;
+
+      for (let i = 0; i < 6 && element; i++) {
+
+        if (
+          element.matches &&
+          (
+            element.matches(".nav-link") ||
+            element.matches("#nav-shop") ||
+            element.matches("[data-nav]")
+          )
+        ) {
+          break;
+        }
+
+        element = element.parentElement;
+      }
+
+      if (!element) {
+        return;
+      }
+
+
+      /*
+         Text des Menüpunktes auslesen
+      */
+
+      let text = (
+        element.innerText ||
+        element.textContent ||
+        ""
+      )
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+
+
+      /*
+         Shop anhand der ID sicher erkennen
+      */
+
+      if (
+        element.id === "nav-shop"
+      ) {
+        text = "shop";
+      }
+
+
+      /*
+         Aktiven Menüpunkt markieren
+      */
+
+      document
+        .querySelectorAll(
+          ".navigation .nav-link, .navigation #nav-shop"
+        )
+        .forEach(function (item) {
+
+          item.classList.remove("active");
+
+        });
+
+      element.classList.add("active");
+
+
+      /*
+         Navigation ausführen
+      */
+
+      switch (text) {
+
+
+        /* =====================================
+           ÜBERSICHT
+        ===================================== */
+
+        case "übersicht":
+
+          event.preventDefault();
+          event.stopImmediatePropagation();
+
+          if (
+            typeof closeCurrentModal === "function"
+          ) {
+            closeCurrentModal();
+          }
+
+          if (
+            typeof showHome === "function"
+          ) {
+            showHome();
+          }
+          else if (
+            typeof showDashboard === "function"
+          ) {
+            showDashboard();
+          }
+
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+          });
+
+          break;
+
+
+        /* =====================================
+           SPIELEN
+        ===================================== */
+
+        case "spielen":
+
+          event.preventDefault();
+          event.stopImmediatePropagation();
+
+          if (
+            typeof closeCurrentModal === "function"
+          ) {
+            closeCurrentModal();
+          }
+
+          if (
+            typeof openPlay === "function"
+          ) {
+            openPlay();
+          }
+          else if (
+            typeof showPlay === "function"
+          ) {
+            showPlay();
+          }
+          else if (
+            typeof startQuickGame === "function"
+          ) {
+            startQuickGame();
+          }
+
+          break;
+
+
+        /* =====================================
+           FREUNDE
+        ===================================== */
+
+        case "freunde":
+
+          event.preventDefault();
+          event.stopImmediatePropagation();
+
+          if (
+            typeof openFriends === "function"
+          ) {
+            openFriends();
+          }
+
+          break;
+
+
+        /* =====================================
+           RANKING
+        ===================================== */
+
+        case "ranking":
+
+          event.preventDefault();
+          event.stopImmediatePropagation();
+
+          if (
+            typeof openRanking === "function"
+          ) {
+            openRanking();
+          }
+          else if (
+            typeof openLeaderboard === "function"
+          ) {
+            openLeaderboard();
+          }
+
+          break;
+
+
+        /* =====================================
+           NACHRICHTEN
+        ===================================== */
+
+        case "nachrichten":
+
+          event.preventDefault();
+          event.stopImmediatePropagation();
+
+          if (
+            typeof openMessages === "function"
+          ) {
+            openMessages();
+          }
+
+          break;
+
+
+        /* =====================================
+           EINSTELLUNGEN
+        ===================================== */
+
+        case "einstellungen":
+
+          event.preventDefault();
+          event.stopImmediatePropagation();
+
+          if (
+            typeof openSettings === "function"
+          ) {
+            openSettings();
+          }
+
+          break;
+
+
+        /* =====================================
+           SHOP
+        ===================================== */
+
+        case "shop":
+        case "münz-shop":
+
+          event.preventDefault();
+          event.stopImmediatePropagation();
+
+          if (
+            typeof openShop === "function"
+          ) {
+            openShop();
+          }
+
+          break;
+
+      }
+
+    },
+    true
+  );
+
+})();/* =========================================================
+   SCHACHARENA – MINI-SHOP ENTFERNER
+========================================================= */
+
+(function () {
+
+  "use strict";
+
+
+  function removeOldMiniShop() {
+
+    /*
+       Alte Mini-Shop-Elemente entfernen
+    */
+
+    const selectors = [
+
+      "#miniShop",
+      "#mini-shop",
+      ".mini-shop",
+      ".mini-shop-card",
+      ".coin-shop",
+      ".coin-shop-card",
+      ".dashboard-shop",
+      ".small-shop",
+      "[data-mini-shop]"
+
+    ];
+
+
+    selectors.forEach(function (selector) {
+
+      document
+        .querySelectorAll(selector)
+        .forEach(function (element) {
+
+          element.remove();
+
+        });
+
+    });
+
+
+    /*
+       Alten Button "Münz-Shop"
+       unter Belohnung entfernen.
+    */
+
+    document
+      .querySelectorAll("button")
+      .forEach(function (button) {
+
+        const text = (
+          button.textContent ||
+          ""
+        )
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
+
+
+        if (
+          text === "🛒 münz-shop" ||
+          text === "münz-shop" ||
+          text.includes("münz-shop")
+        ) {
+
+          button.remove();
+
+        }
+
+      });
+
+
+    /*
+       Alten Friend-Modal-Rest entfernen,
+       falls er noch aus der alten index.html
+       vorhanden ist.
+    */
+
+    const oldFriendModal =
+      document.getElementById(
+        "friendModal"
+      );
+
+    if (oldFriendModal) {
+
+      oldFriendModal.remove();
+
+    }
+
+  }
+
+
+  /*
+     Beim Laden ausführen
+  */
+
+  if (
+    document.readyState === "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      removeOldMiniShop
+    );
+
+  }
+  else {
+
+    removeOldMiniShop();
+
+  }
+
+
+  /*
+     Sicherheit, falls andere
+     Funktionen den Bereich später
+     wieder erzeugen.
+  */
+
+  setTimeout(
+    removeOldMiniShop,
+    300
+  );
+
+  setTimeout(
+    removeOldMiniShop,
+    1000
+  );
+
+  setTimeout(
+    removeOldMiniShop,
+    2000
+  );
+
+})();/* =========================================================
+   SCHACHARENA – FINALER START
+========================================================= */
+
+(function () {
+
+  "use strict";
+
+
+  function finalStart() {
+
+    /*
+       Alte Modals schließen
+    */
+
+    if (
+      typeof closeCurrentModal === "function"
+    ) {
+      closeCurrentModal();
+    }
+
+
+    /*
+       Mini-Shop entfernen
+    */
+
+    document
+      .querySelectorAll(
+        "#miniShop, #mini-shop, .mini-shop, .mini-shop-card, .coin-shop, .coin-shop-card"
+      )
+      .forEach(function (element) {
+
+        element.remove();
+
+      });
+
+
+    /*
+       Shop sicher als Navigationspunkt
+       behandeln.
+    */
+
+    const shop =
+      document.getElementById(
+        "nav-shop"
+      );
+
+    if (shop) {
+
+      shop.classList.add(
+        "nav-link"
+      );
+
+      shop.style.cursor =
+        "pointer";
+
+    }
+
+
+    /*
+       Alle sichtbaren Navigationspunkte
+       klickbar machen.
+    */
+
+    document
+      .querySelectorAll(
+        ".navigation a, .navigation button"
+      )
+      .forEach(function (element) {
+
+        element.style.cursor =
+          "pointer";
+
+      });
+
+
+    /*
+       Globale Funktionen sicherstellen
+    */
+
+    if (
+      typeof openShop === "function"
+    ) {
+      window.openShop =
+        openShop;
+    }
+
+    if (
+      typeof openFriends === "function"
+    ) {
+      window.openFriends =
+        openFriends;
+    }
+
+    if (
+      typeof openRanking === "function"
+    ) {
+      window.openRanking =
+        openRanking;
+    }
+
+    if (
+      typeof openMessages === "function"
+    ) {
+      window.openMessages =
+        openMessages;
+    }
+
+    if (
+      typeof openSettings === "function"
+    ) {
+      window.openSettings =
+        openSettings;
+    }
+
+    if (
+      typeof openPlay === "function"
+    ) {
+      window.openPlay =
+        openPlay;
+    }
+
+
+    console.log(
+      "SchachArena Navigation erfolgreich aktiviert."
+    );
+
+  }
+
+
+  if (
+    document.readyState === "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      finalStart
+    );
+
+  }
+  else {
+
+    finalStart();
+
+  }
+
+
+  /*
+     Noch einmal nach kurzer Zeit,
+     damit auch dynamische Elemente
+     erfasst werden.
+  */
+
+  setTimeout(
+    finalStart,
+    500
+  );
+
+})();
