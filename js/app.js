@@ -4568,6 +4568,67 @@ function getNavLabel(link) {
 
 
 /* =========================================================
+   NAVIGATION – KORRIGIERT
+========================================================= */
+
+function getNavLabel(link) {
+
+  if (!link) {
+    return "";
+  }
+
+  /*
+     Alle Text-Spans innerhalb des Menüpunktes sammeln.
+     Badges wie "0" oder "NEU" werden ignoriert.
+  */
+
+  const spans =
+    Array.from(
+      link.querySelectorAll("span")
+    );
+
+
+  const parts =
+    spans
+      .map(
+        span =>
+          (span.textContent || "").trim()
+      )
+      .filter(Boolean)
+      .filter(
+        text =>
+          !["NEU", "0"].includes(
+            text.toUpperCase()
+          )
+      );
+
+
+  /*
+     Falls kein passender Span vorhanden ist,
+     den gesamten Text des Menüpunktes verwenden.
+  */
+
+  let text =
+    parts.join(" ").trim();
+
+
+  if (!text) {
+
+    text =
+      (link.textContent || "")
+        .replace(/NEU/gi, "")
+        .replace(/\b0\b/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+  }
+
+
+  return text.toLowerCase();
+}
+
+
+/* =========================================================
    NAVIGATION EINRICHTEN
 ========================================================= */
 
