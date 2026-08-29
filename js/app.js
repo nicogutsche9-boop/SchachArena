@@ -102,9 +102,12 @@ let dailyTasks = null;
 
 function getToday() {
 
-  return new Date()
-    .toISOString()
-    .slice(0, 10);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  return year + "-" + month + "-" + day;
 }
 
 
@@ -523,8 +526,10 @@ function updateRewardsDisplays() {
 
 
 /* =========================================================
-   TÄGLICHE HERAUSFORDERUNGEN – AKTUELLEN STAND ANZEIGEN
+   TÄGLICHE HERAUSFORDERUNGEN
 ========================================================= */
+
+
 /* =========================================================
    MÜNZ-SHOP
 ========================================================= */
@@ -532,33 +537,87 @@ function updateRewardsDisplays() {
 const SHOP_ITEMS = [
   {
     id: "board_ocean",
+    category: "Bretter",
     name: "🌊 Ozean-Brett",
-    description: "Ein blaues Schachbrett im Wasser-Stil.",
+    description: "Blaues Schachbrett im Wasser-Stil.",
     price: 150
   },
   {
     id: "board_forest",
+    category: "Bretter",
     name: "🌲 Wald-Brett",
-    description: "Ein dunkles, grünes Brett für dein Spiel.",
+    description: "Dunkles Brett mit natürlichem Look.",
     price: 200
   },
   {
-    id: "pieces_gold",
-    name: "👑 Goldene Figuren",
-    description: "Goldene Schachfiguren für deine Partien.",
+    id: "board_royal",
+    category: "Bretter",
+    name: "👑 Königs-Brett",
+    description: "Elegantes Brett für königliche Partien.",
+    price: 250
+  },
+  {
+    id: "board_neon",
+    category: "Bretter",
+    name: "💜 Neon-Brett",
+    description: "Modernes Brett mit futuristischem Stil.",
     price: 300
   },
   {
-    id: "effect_fire",
-    name: "🔥 Feuer-Effekt",
-    description: "Ein besonderer Effekt für dein Schachspiel.",
+    id: "pieces_gold",
+    category: "Figuren",
+    name: "👑 Goldene Figuren",
+    description: "Goldener Look für deine Schachfiguren.",
+    price: 300
+  },
+  {
+    id: "pieces_ice",
+    category: "Figuren",
+    name: "❄️ Eis-Figuren",
+    description: "Kühler, kristalliner Figuren-Stil.",
+    price: 350
+  },
+  {
+    id: "pieces_shadow",
+    category: "Figuren",
+    name: "🌑 Schatten-Figuren",
+    description: "Dunkler und geheimnisvoller Figuren-Stil.",
     price: 400
   },
   {
+    id: "effect_fire",
+    category: "Effekte",
+    name: "🔥 Feuer-Effekt",
+    description: "Feuriger Effekt für besondere Momente.",
+    price: 400
+  },
+  {
+    id: "effect_spark",
+    category: "Effekte",
+    name: "✨ Funken-Effekt",
+    description: "Glitzernde Funken für deine Partie.",
+    price: 450
+  },
+  {
     id: "profile_frame",
+    category: "Profil",
     name: "💎 Diamant-Rahmen",
-    description: "Ein besonderer Rahmen für dein Profil.",
+    description: "Besonderer Rahmen für dein Profil.",
     price: 500
+  },
+  {
+    id: "profile_crown",
+    category: "Profil",
+    name: "👑 Kronen-Rahmen",
+    description: "Zeige deinen königlichen Stil.",
+    price: 600
+  },
+  {
+    id: "profile_fire",
+    category: "Profil",
+    name: "🔥 Feuer-Rahmen",
+    description: "Auffälliger Rahmen mit Feuer-Look.",
+    price: 700
   }
 ];
 
@@ -616,20 +675,17 @@ function openShop() {
     );
 
   if (oldShop) {
-
     oldShop.remove();
-
     return;
   }
-
 
   const purchased =
     getPurchasedItems();
 
-
   const popup =
-    document.createElement("div");
-
+    document.createElement(
+      "div"
+    );
 
   popup.id =
     "shopPopup";
@@ -637,32 +693,38 @@ function openShop() {
   popup.className =
     "shop-popup-overlay";
 
+  const categories = [
+    "Alle",
+    ...new Set(
+      SHOP_ITEMS.map(
+        item =>
+          item.category
+      )
+    )
+  ];
 
   popup.innerHTML = `
-
-    <div class="shop-popup">
+    <div class="shop-popup shop-popup-large">
 
       <button
+        type="button"
         class="shop-popup-close"
         id="closeShopPopup"
-        aria-label="Shop schließen"
-      >
+        aria-label="Shop schließen">
         ×
       </button>
-
 
       <div class="shop-popup-icon">
         🛒
       </div>
 
-
-      <h2>Münz-Shop</h2>
-
+      <h2>
+        Münz-Shop
+      </h2>
 
       <p class="shop-subtitle">
-        Tausche deine Münzen gegen besondere Extras.
+        Sammle Münzen, schalte Extras frei und stelle deinen eigenen Stil zusammen.
       </p>
-
 
       <div class="shop-balance">
         🪙
@@ -672,36 +734,80 @@ function openShop() {
         Münzen
       </div>
 
+      <div class="shop-categories">
 
-      <div class="shop-items">
+        ${categories.map(
+          (category, index) => `
 
-        ${
-          SHOP_ITEMS.map(item => {
+          <button
+            type="button"
+            class="shop-category ${
+              index === 0
+                ? "active"
+                : ""
+            }"
+            data-category="${escapeHtml(
+              category
+            )}">
+            ${escapeHtml(
+              category
+            )}
+          </button>
+
+        `
+        ).join("")}
+
+      </div>
+
+      <div
+        class="shop-items shop-items-scroll"
+        id="shopItemsList">
+
+        ${SHOP_ITEMS.map(
+          item => {
 
             const owned =
-              purchased.includes(item.id);
+              purchased.includes(
+                item.id
+              );
+
+            const icon =
+              item.name.split(
+                " "
+              )[0];
 
             return `
-
-              <div class="shop-item">
+              <div
+                class="shop-item"
+                data-shop-category="${escapeHtml(
+                  item.category
+                )}">
 
                 <div class="shop-item-icon">
-                  ${item.name.split(" ")[0]}
+                  ${icon}
                 </div>
-
 
                 <div class="shop-item-content">
 
+                  <span class="shop-item-category">
+                    ${escapeHtml(
+                      item.category
+                    )}
+                  </span>
+
                   <strong>
-                    ${escapeHtml(item.name)}
+                    ${escapeHtml(
+                      item.name
+                    )}
                   </strong>
 
                   <small>
-                    ${escapeHtml(item.description)}
+                    ${escapeHtml(
+                      item.description
+                    )}
                   </small>
 
                 </div>
-
 
                 <div class="shop-item-action">
 
@@ -710,18 +816,20 @@ function openShop() {
 
                       ? `
                         <button
+                          type="button"
                           class="shop-owned"
-                          disabled
-                        >
+                          disabled>
                           ✓ Gekauft
                         </button>
                       `
 
                       : `
                         <button
+                          type="button"
                           class="shop-buy"
-                          onclick="buyShopItem('${item.id}')"
-                        >
+                          onclick="buyShopItem('${escapeJs(
+                            item.id
+                          )}')">
                           🪙 ${item.price}
                         </button>
                       `
@@ -730,28 +838,22 @@ function openShop() {
                 </div>
 
               </div>
-
             `;
-
-          }).join("")
-        }
+          }
+        ).join("")}
 
       </div>
-
 
       <div class="shop-footer">
         Deine Münzen erhältst du durch tägliche Aufgaben.
       </div>
 
     </div>
-
   `;
-
 
   document.body.appendChild(
     popup
   );
-
 
   document
     .getElementById(
@@ -763,14 +865,66 @@ function openShop() {
     );
 
 
+  popup
+    .querySelectorAll(
+      ".shop-category"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            popup
+              .querySelectorAll(
+                ".shop-category"
+              )
+              .forEach(
+                b =>
+                  b.classList.remove(
+                    "active"
+                  )
+              );
+
+            button.classList.add(
+              "active"
+            );
+
+            const category =
+              button.dataset.category;
+
+            popup
+              .querySelectorAll(
+                ".shop-item"
+              )
+              .forEach(
+                item => {
+
+                  item.style.display =
+                    category ===
+                      "Alle" ||
+                    item.dataset
+                      .shopCategory ===
+                      category
+                      ? "flex"
+                      : "none";
+                }
+              );
+          }
+        );
+      }
+    );
+
+
   popup.addEventListener(
     "click",
     event => {
 
       if (
-        event.target === popup
+        event.target ===
+        popup
       ) {
-
         popup.remove();
       }
 
@@ -778,8 +932,6 @@ function openShop() {
   );
 }
 
-
-/* Gegenstand kaufen */
 
 function buyShopItem(id) {
 
@@ -861,8 +1013,6 @@ function buyShopItem(id) {
   );
 
 
-  /* Shop neu zeichnen */
-
   const popup =
     document.getElementById(
       "shopPopup"
@@ -878,49 +1028,70 @@ function buyShopItem(id) {
 }
 
 
-/* Shop global verfügbar machen */
+/* =========================================================
+   BELOHNUNGEN ÖFFNEN
+========================================================= */
 
-window.openShop =
-  openShop;
-
-window.buyShopItem =
-  buyShopItem;
 function openRewards() {
 
-  // Immer zuerst den aktuell gespeicherten Tagesstand laden
-  dailyTasks = JSON.parse(
-    localStorage.getItem("sa_daily_tasks") || "null"
-  );
+  dailyTasks =
+    JSON.parse(
+      localStorage.getItem(
+        "sa_daily_tasks"
+      ) || "null"
+    );
 
-  // Prüfen, ob die Aufgaben für heute existieren
+
   createDailyTasks();
 
-  // Aktuelle Werte holen
+
   const winsDone =
-    Math.min(dailyTasks.wins || 0, 3);
+    Math.min(
+      dailyTasks.wins || 0,
+      3
+    );
+
 
   const gamesDone =
-    Math.min(dailyTasks.games || 0, 5);
+    Math.min(
+      dailyTasks.games || 0,
+      5
+    );
 
-  // Fortschritt berechnen
+
   const winsPercent =
-    Math.min(100, (winsDone / 3) * 100);
+    Math.min(
+      100,
+      (winsDone / 3) * 100
+    );
+
 
   const gamesPercent =
-    Math.min(100, (gamesDone / 5) * 100);
+    Math.min(
+      100,
+      (gamesDone / 5) * 100
+    );
 
-  // Bereits geöffnetes Popup schließen
+
   const oldPopup =
-    document.getElementById("rewardsPopup");
+    document.getElementById(
+      "rewardsPopup"
+    );
+
 
   if (oldPopup) {
+
     oldPopup.remove();
+
     return;
   }
 
-  // Popup erstellen
+
   const popup =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
+
 
   popup.id =
     "rewardsPopup";
@@ -928,7 +1099,9 @@ function openRewards() {
   popup.className =
     "rewards-popup-overlay";
 
+
   popup.innerHTML = `
+
     <div class="rewards-popup">
 
       <button
@@ -942,14 +1115,14 @@ function openRewards() {
         🏆
       </div>
 
-      <h2>Deine täglichen Aufgaben</h2>
+      <h2>
+        Deine täglichen Aufgaben
+      </h2>
 
       <p class="rewards-subtitle">
         Erfülle Aufgaben und verdiene Münzen.
       </p>
 
-
-      <!-- AUFGABE 1 -->
 
       <div class="reward-task">
 
@@ -968,9 +1141,11 @@ function openRewards() {
           </span>
 
           <div class="task-progress">
+
             <div
               style="width: ${winsPercent}%">
             </div>
+
           </div>
 
         </div>
@@ -981,8 +1156,6 @@ function openRewards() {
 
       </div>
 
-
-      <!-- AUFGABE 2 -->
 
       <div class="reward-task">
 
@@ -1001,9 +1174,11 @@ function openRewards() {
           </span>
 
           <div class="task-progress">
+
             <div
               style="width: ${gamesPercent}%">
             </div>
+
           </div>
 
         </div>
@@ -1014,8 +1189,6 @@ function openRewards() {
 
       </div>
 
-
-      <!-- MÜNZEN -->
 
       <div class="rewards-total">
 
@@ -1032,15 +1205,17 @@ function openRewards() {
     </div>
   `;
 
-  document.body.appendChild(popup);
 
+  document.body.appendChild(
+    popup
+  );
 
-  /* Schließen */
 
   const closeButton =
     document.getElementById(
       "closeRewardsPopup"
     );
+
 
   if (closeButton) {
 
@@ -1053,15 +1228,15 @@ function openRewards() {
   }
 
 
-  /* Klick auf Hintergrund */
-
   popup.addEventListener(
     "click",
     event => {
 
       if (
-        event.target === popup
+        event.target ===
+        popup
       ) {
+
         popup.remove();
       }
 
@@ -1071,7 +1246,7 @@ function openRewards() {
 
 
 /* =========================================================
-   TÄGLICHE AUFGABEN – DASHBOARD AKTUALISIEREN
+   TÄGLICHE AUFGABEN – DASHBOARD
 ========================================================= */
 
 function updateRewardsDisplay() {
@@ -1090,8 +1265,6 @@ function updateRewardsDisplay() {
       5
     );
 
-
-  /* Mögliche Elemente auf der Startseite */
 
   const winElements =
     document.querySelectorAll(
@@ -1122,8 +1295,6 @@ function updateRewardsDisplay() {
     }
   );
 
-
-  /* Fortschrittsbalken */
 
   const winProgress =
     document.querySelectorAll(
@@ -1159,8 +1330,6 @@ function updateRewardsDisplay() {
   );
 
 
-  /* Münzanzeige */
-
   const coinElements =
     document.querySelectorAll(
       "[data-coins]"
@@ -1180,186 +1349,6 @@ function updateRewardsDisplay() {
 /* =========================================================
    TÄGLICHE AUFGABEN – SPIELERFOLG
 ========================================================= */
-
-function updateDailyTasks(result) {
-
-  createDailyTasks();
-
-
-  /* Jede gespielte Partie zählt */
-
-  dailyTasks.games =
-    Number(dailyTasks.games || 0) + 1;
-
-
-  /* Sieg zählt zusätzlich */
-
-  if (
-    result === "win"
-  ) {
-
-    dailyTasks.wins =
-      Number(dailyTasks.wins || 0) + 1;
-
-  }
-
-
-  /* -----------------------------------------
-     AUFGABE 1 – 3 SIEGE
-  ----------------------------------------- */
-
-  if (
-    dailyTasks.wins >= 3 &&
-    !dailyTasks.winsRewarded
-  ) {
-
-    dailyTasks.winsRewarded =
-      true;
-
-    addCoins(100);
-
-    showMessage(
-      "🏆 Aufgabe geschafft! +100 Münzen"
-    );
-  }
-
-
-  /* -----------------------------------------
-     AUFGABE 2 – 5 PARTIEN
-  ----------------------------------------- */
-
-  if (
-    dailyTasks.games >= 5 &&
-    !dailyTasks.gamesRewarded
-  ) {
-
-    dailyTasks.gamesRewarded =
-      true;
-
-    addCoins(75);
-
-    showMessage(
-      "⚔️ Aufgabe geschafft! +75 Münzen"
-    );
-  }
-
-
-  /* Speichern */
-
-  saveDailyTasks();
-
-
-  /* Startseite sofort aktualisieren */
-
-  updateRewardsDisplay();
-
-
-  /* Falls das Belohnungs-Popup gerade offen ist,
-     ebenfalls sofort aktualisieren */
-
-  const popup =
-    document.getElementById(
-      "rewardsPopup"
-    );
-
-  if (popup) {
-
-    popup.remove();
-
-    openRewards();
-  }
-}
-
-
-/* =========================================================
-   TÄGLICHE AUFGABEN – START
-========================================================= */
-
-function createDailyTasks() {
-
-  const today =
-    getToday();
-
-
-  if (
-    !dailyTasks ||
-    dailyTasks.date !== today
-  ) {
-
-    dailyTasks = {
-
-      date: today,
-
-      wins: 0,
-
-      games: 0,
-
-      winsRewarded: false,
-
-      gamesRewarded: false
-
-    };
-
-    saveDailyTasks();
-  }
-}
-
-
-/* =========================================================
-   TÄGLICHE AUFGABEN – SPEICHERN
-========================================================= */
-
-function saveDailyTasks() {
-
-  localStorage.setItem(
-    "sa_daily_tasks",
-    JSON.stringify(dailyTasks)
-  );
-}
-
-
-/* =========================================================
-   MÜNZEN
-========================================================= */
-
-function saveCoins() {
-
-  localStorage.setItem(
-    "sa_coins",
-    String(coins)
-  );
-
-  updateRewardsDisplay();
-}
-
-
-function addCoins(amount) {
-
-  coins += Number(amount) || 0;
-
-  saveCoins();
-
-}
-
-
-function spendCoins(amount) {
-
-  amount =
-    Number(amount) || 0;
-
-  if (
-    coins < amount
-  ) {
-
-    return false;
-  }
-
-  coins -= amount;
-
-  saveCoins();
-
-  return true;
-}
 
 
 /* =========================================================
@@ -2624,8 +2613,9 @@ async function unregisterRoom() {
 async function refreshRooms() {
 
   const box =
-    document.getElementById("navigationRoomsList") ||
-    document.getElementById("roomList");
+    document.getElementById(
+      "roomList"
+    );
 
 
   if (
@@ -4518,169 +4508,138 @@ function updateDashboardName() {
 
 
 /* =========================================================
-   NAVIGATION – ROBUST & VOLLSTÄNDIG
+   NAVIGATION
 ========================================================= */
 
-function getNavLabel(link) {
-  if (!link) return "";
-
-  const spans = link.querySelectorAll("span");
-  if (spans.length) {
-    return Array.from(spans)
-      .map(span => span.textContent.trim())
-      .filter(Boolean)
-      .filter(text => text.toUpperCase() !== "NEU")
-      .join(" ")
-      .trim()
-      .toLowerCase();
-  }
-
-  return link.textContent
-    .replace(/NEU/gi, "")
-    .trim()
-    .toLowerCase();
-}
-
-function closeAllOverlays() {
-  document
-    .querySelectorAll(".sa-modal, .shop-popup-overlay, .rewards-popup-overlay")
-    .forEach(element => element.remove());
-}
-
-function showHome() {
-  closeAllOverlays();
-
-  const app = document.querySelector(".app");
-  if (app) app.style.display = "";
-
-  const game = document.getElementById("game");
-  if (game) game.style.display = "none";
-
-  document.body.classList.remove("game-active");
-  window.scrollTo(0, 0);
-
-  document.querySelectorAll(".nav-link").forEach(link => {
-    link.classList.toggle("active", getNavLabel(link) === "startseite" || getNavLabel(link) === "übersicht");
-  });
-}
-
-function openRooms() {
-  const modal = createModal(
-    "Räume",
-    `
-      <div class="rooms-navigation-modal">
-        <p style="opacity:.7;margin-top:0;">Offene Räume und private Partien.</p>
-        <div id="navigationRoomsList">
-          <div class="empty">⏳ Räume werden geladen …</div>
-        </div>
-        <button type="button" class="modal-primary" onclick="createRoom(); closeCurrentModal();">
-          ＋ Raum erstellen
-        </button>
-      </div>
-    `
-  );
-
-  document.body.appendChild(modal);
-
-  refreshRooms();
-}
-
-function addShopNavigation() {
-  const nav = document.querySelector("nav") || document.querySelector(".sidebar") || document.querySelector(".navigation");
-  if (!nav) return;
-
-  const existing = Array.from(nav.querySelectorAll(".nav-link")).find(link => getNavLabel(link) === "shop");
-  if (existing) {
-    existing.dataset.shopNav = "true";
-    return;
-  }
-
-  const settings = Array.from(nav.querySelectorAll(".nav-link")).find(link => getNavLabel(link) === "einstellungen");
-  if (!settings) return;
-
-  const shop = document.createElement("a");
-  shop.href = "#shop";
-  shop.className = "nav-link shop-nav-link";
-  shop.dataset.shopNav = "true";
-  shop.innerHTML = `
-    <span class="nav-icon" aria-hidden="true">🛒</span>
-    <span>Shop</span>
-    <span class="nav-badge">NEU</span>
-  `;
-
-  settings.insertAdjacentElement("afterend", shop);
-}
-
 function setupNavigation() {
-  addShopNavigation();
 
-  const links = document.querySelectorAll(".nav-link");
+  const links =
+    document.querySelectorAll(
+      ".nav-link"
+    );
 
-  links.forEach(link => {
-    if (link.dataset.navigationReady === "true") return;
-    link.dataset.navigationReady = "true";
 
-    link.addEventListener("click", event => {
-      event.preventDefault();
+  links.forEach(
+    link => {
 
-      const text = getNavLabel(link);
+      link.addEventListener(
+        "click",
+        event => {
 
-      document.querySelectorAll(".nav-link").forEach(item => item.classList.remove("active"));
-      link.classList.add("active");
+          event.preventDefault();
 
-      if (text === "startseite" || text === "übersicht") {
-        showHome();
-        link.classList.add("active");
-        return;
-      }
 
-      if (text === "spielen") {
-        showGameLobby();
-        return;
-      }
+          const text =
+            link
+              .querySelector(
+                "span:last-child"
+              )
+              ?.textContent
+              .trim()
+              .toLowerCase();
 
-      if (text === "räume") {
-        openRooms();
-        return;
-      }
 
-      if (text === "freunde") {
-        openFriends();
-        return;
-      }
+          links.forEach(
+            item =>
+              item.classList.remove(
+                "active"
+              )
+          );
 
-      if (text === "ranking") {
-        openRanking();
-        return;
-      }
 
-      if (text === "nachrichten") {
-        openMessages();
-        return;
-      }
+          link.classList.add(
+            "active"
+          );
 
-      if (text === "tägliche aufgaben" || text === "tägliche aufgabe") {
-        openRewards();
-        return;
-      }
 
-      if (text === "profil") {
-        openProfile();
-        return;
-      }
+          if (
+            text === "spielen"
+          ) {
 
-      if (text === "einstellungen") {
-        openSettings();
-        return;
-      }
+            showGameLobby();
 
-      if (text === "shop") {
-        openShop();
-        return;
-      }
-    });
-  });
+            return;
+          }
+
+
+          if (
+            text === "shop" ||
+            text === "münz-shop"
+          ) {
+
+            openShop();
+
+            return;
+          }
+
+
+          if (
+            text === "belohnungen" ||
+            text === "aufgaben"
+          ) {
+
+            openRewards();
+
+            return;
+          }
+
+
+          if (
+            text === "freunde"
+          ) {
+
+            openFriends();
+
+            return;
+          }
+
+
+          if (
+            text === "ranking"
+          ) {
+
+            openRanking();
+
+            return;
+          }
+
+
+          if (
+            text === "nachrichten"
+          ) {
+
+            openMessages();
+
+            return;
+          }
+
+
+          if (
+            text === "einstellungen"
+          ) {
+
+            openSettings();
+
+            return;
+          }
+
+
+          if (
+            text === "übersicht"
+          ) {
+
+            window.scrollTo(
+              0,
+              0
+            );
+          }
+
+        }
+      );
+    }
+  );
 }
+
 
 /* =========================================================
    SPIELEN LOBBY
@@ -5027,962 +4986,2425 @@ function showMessage(text) {
     2600
   );
 }
-
-
 /* =========================================================
-   APP CSS
+   BELOHNUNGEN AKTUELL HALTEN
 ========================================================= */
 
-function addAppStyles() {
+function updateRewardsDisplays() {
 
-  if (
-    document.getElementById(
-      "schacharena-app-style"
-    )
-  ) {
-    return;
-  }
+  createDailyTasks();
 
+  const winsCount =
+    Math.min(
+      dailyTasks.wins,
+      3
+    );
 
-  const style =
-    document.createElement(
-      "style"
+  const gamesCount =
+    Math.min(
+      dailyTasks.games,
+      5
+    );
+
+  const winsPercent =
+    Math.min(
+      100,
+      Math.round(
+        (
+          dailyTasks.wins /
+          3
+        ) *
+        100
+      )
+    );
+
+  const gamesPercent =
+    Math.min(
+      100,
+      Math.round(
+        (
+          dailyTasks.games /
+          5
+        ) *
+        100
+      )
     );
 
 
-  style.id =
-    "schacharena-app-style";
-
-
-  style.textContent = `
-
-    .sa-modal {
-      position: fixed;
-      inset: 0;
-      z-index: 10000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+  /* -----------------------------------------
+     AUFGABE: 3 SIEGE
+  ----------------------------------------- */
+
+  document
+    .querySelectorAll(
+      "[data-reward-wins]"
+    )
+    .forEach(
+      element => {
+
+        element.textContent =
+          winsCount +
+          " / 3";
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-reward-wins-progress]"
+    )
+    .forEach(
+      element => {
+
+        element.style.width =
+          winsPercent +
+          "%";
+      }
+    );
+
+
+  /* -----------------------------------------
+     AUFGABE: 5 PARTIEN
+  ----------------------------------------- */
+
+  document
+    .querySelectorAll(
+      "[data-reward-games]"
+    )
+    .forEach(
+      element => {
+
+        element.textContent =
+          gamesCount +
+          " / 5";
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-reward-games-progress]"
+    )
+    .forEach(
+      element => {
+
+        element.style.width =
+          gamesPercent +
+          "%";
+      }
+    );
+
+
+  /* -----------------------------------------
+     ALLGEMEINE REWARDS-ANZEIGE
+  ----------------------------------------- */
+
+  document
+    .querySelectorAll(
+      "[data-rewards-completed]"
+    )
+    .forEach(
+      element => {
+
+        let completed = 0;
+
+        if (
+          dailyTasks.wins >= 3
+        ) {
+          completed++;
+        }
+
+        if (
+          dailyTasks.games >= 5
+        ) {
+          completed++;
+        }
+
+        element.textContent =
+          completed;
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-rewards-total]"
+    )
+    .forEach(
+      element => {
 
+        element.textContent =
+          "2";
+      }
+    );
 
-    .sa-modal-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,.72);
-      backdrop-filter: blur(8px);
-    }
 
+  updateCoinDisplays();
+}
 
-    .sa-modal-window {
-      position: relative;
-      width: min(100%, 620px);
-      max-height: 90vh;
-      overflow: auto;
-      background: #151923;
-      color: #fff;
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 22px;
-      box-shadow: 0 30px 100px rgba(0,0,0,.6);
-    }
-
-
-    .sa-modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 22px 24px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-    }
-
-
-    .sa-modal-header h2 {
-      margin: 0;
-    }
-
-
-    .sa-modal-close {
-      border: 0;
-      background: rgba(255,255,255,.08);
-      color: #fff;
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      font-size: 25px;
-      cursor: pointer;
-    }
-
-
-    .sa-modal-content {
-      padding: 24px;
-    }
-
-
-    .play-options {
-      display: grid;
-      gap: 14px;
-    }
-
-
-    .play-option {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      width: 100%;
-      padding: 18px;
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 16px;
-      background: rgba(255,255,255,.05);
-      color: white;
-      text-align: left;
-      cursor: pointer;
-    }
-
-
-    .play-option:hover {
-      background: rgba(255,255,255,.1);
-    }
-
-
-    .play-option > span {
-      font-size: 30px;
-    }
-
-
-    .play-option b,
-    .play-option small {
-      display: block;
-    }
-
-
-    .play-option small {
-      margin-top: 4px;
-      opacity: .65;
-    }
-
-
-    .play-join {
-      padding: 18px;
-      border-radius: 16px;
-      background: rgba(255,255,255,.04);
-    }
-
-
-    .play-join > b {
-      display: block;
-      margin-bottom: 10px;
-    }
-
-
-    .play-join > div {
-      display: flex;
-      gap: 8px;
-    }
-
-
-    .play-join input,
-    .settings-form input {
-      min-width: 0;
-      flex: 1;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.15);
-      background: rgba(0,0,0,.25);
-      color: white;
-    }
-
-
-    .play-join button,
-    .modal-primary,
-    .modal-friend button {
-      border: 0;
-      border-radius: 10px;
-      padding: 11px 16px;
-      cursor: pointer;
-      background: #267cff;
-      color: white;
-      font-weight: 700;
-    }
-
-
-    .modal-primary {
-      width: 100%;
-    }
-
-
-    .settings-form {
-      display: grid;
-      gap: 18px;
-    }
-
-
-    .settings-form label {
-      display: grid;
-      gap: 8px;
-      font-weight: 600;
-    }
-
-
-    .setting-check {
-      display: flex !important;
-      align-items: center;
-      gap: 8px;
-    }
-
-
-    .profile-modal {
-      text-align: center;
-    }
-
-
-    .profile-modal-avatar {
-      width: 100px;
-      height: 100px;
-      margin: 0 auto 15px;
-      overflow: hidden;
-      border-radius: 50%;
-    }
-
-
-    .profile-modal-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-
-    .profile-stat-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 22px;
-    }
-
-
-    .profile-stat-grid > div {
-      padding: 15px 8px;
-      border-radius: 12px;
-      background: rgba(255,255,255,.05);
-    }
-
-
-    .profile-stat-grid strong,
-    .profile-stat-grid small {
-      display: block;
-    }
-
-
-    .profile-stat-grid small {
-      opacity: .6;
-      margin-top: 3px;
-    }
-
-
-    .message-item {
-      display: flex;
-      gap: 12px;
-      padding: 15px;
-      border-radius: 13px;
-      background: rgba(255,255,255,.05);
-    }
-
-
-    .message-item p {
-      margin: 5px 0;
-    }
-
-
-    .message-item small {
-      opacity: .55;
-    }
-
-
-    .message-avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: #303b59;
-    }
-
-
-    .message-empty {
-      margin-top: 18px;
-      opacity: .55;
-      text-align: center;
-    }
-
-
-    .toast {
-      position: fixed;
-      z-index: 20000;
-      left: 50%;
-      bottom: 30px;
-      transform: translate(-50%, 20px);
-      padding: 13px 18px;
-      border-radius: 12px;
-      background: #171a23;
-      color: white;
-      border: 1px solid rgba(255,255,255,.12);
-      box-shadow: 0 15px 40px rgba(0,0,0,.4);
-      opacity: 0;
-      transition: .25s ease;
-      pointer-events: none;
-      text-align: center;
-    }
-
-
-    .toast.show {
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
-
-
-    /* ================================================
-       BELOHNUNGS-POPUP
-    ================================================= */
-
-    .rewards-popup-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 15000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      background: rgba(0,0,0,.72);
-      backdrop-filter: blur(8px);
-    }
-
-
-    .rewards-popup {
-      position: relative;
-      width: min(100%, 560px);
-      max-height: 90vh;
-      overflow: auto;
-      padding: 30px 24px 24px;
-      border-radius: 22px;
-      background: #151923;
-      color: white;
-      border: 1px solid rgba(255,255,255,.12);
-      box-shadow: 0 30px 100px rgba(0,0,0,.6);
-    }
-
-
-    .rewards-popup-close {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      width: 38px;
-      height: 38px;
-      border: 0;
-      border-radius: 50%;
-      background: rgba(255,255,255,.08);
-      color: white;
-      font-size: 25px;
-      cursor: pointer;
-    }
-
-
-    .rewards-popup-icon {
-      font-size: 45px;
-      text-align: center;
-      margin-bottom: 8px;
-    }
-
-
-    .rewards-popup h2 {
-      margin: 0;
-      text-align: center;
-    }
-
-
-    .rewards-subtitle {
-      text-align: center;
-      opacity: .6;
-      margin-bottom: 22px;
-    }
-
-
-    .reward-task {
-      display: flex;
-      align-items: center;
-      gap: 13px;
-      padding: 15px;
-      margin-bottom: 12px;
-      border-radius: 15px;
-      background: rgba(255,255,255,.05);
-    }
-
-
-    .task-icon {
-      width: 45px;
-      height: 45px;
-      flex: 0 0 45px;
-      display: grid;
-      place-items: center;
-      border-radius: 12px;
-      background: rgba(255,255,255,.08);
-      font-size: 23px;
-    }
-
-
-    .task-content {
-      flex: 1;
-      min-width: 0;
-    }
-
-
-    .task-content strong,
-    .task-content span {
-      display: block;
-    }
-
-
-    .task-content span {
-      margin-top: 4px;
-      opacity: .6;
-      font-size: 14px;
-    }
-
-
-    .task-progress {
-      height: 7px;
-      margin-top: 9px;
-      overflow: hidden;
-      border-radius: 10px;
-      background: rgba(255,255,255,.1);
-    }
-
-
-    .task-progress > div {
-      height: 100%;
-      border-radius: inherit;
-      background: #267cff;
-      transition: width .3s ease;
-    }
-
-
-    .task-reward {
-      white-space: nowrap;
-      font-weight: 700;
-    }
-
-
-    .rewards-total {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 20px;
-      padding: 16px;
-      border-radius: 14px;
-      background: rgba(255,255,255,.08);
-    }
-
-
-    .rewards-total strong {
-      font-size: 18px;
-    }
 
 /* =========================================================
-   SHOP NAVIGATION & DASHBOARD LOOK
+   RANKING
 ========================================================= */
 
-.shop-nav-link {
-  position: relative;
-  border: 1px solid transparent;
+function updateRanking() {
+
+  const ratingElement =
+    document.querySelector(
+      "[data-rating]"
+    );
+
+  const winsElement =
+    document.querySelector(
+      "[data-wins]"
+    );
+
+  const lossesElement =
+    document.querySelector(
+      "[data-losses]"
+    );
+
+  const drawsElement =
+    document.querySelector(
+      "[data-draws]"
+    );
+
+
+  if (
+    ratingElement
+  ) {
+
+    ratingElement.textContent =
+      rating;
+  }
+
+
+  if (
+    winsElement
+  ) {
+
+    winsElement.textContent =
+      wins;
+  }
+
+
+  if (
+    lossesElement
+  ) {
+
+    lossesElement.textContent =
+      losses;
+  }
+
+
+  if (
+    drawsElement
+  ) {
+
+    drawsElement.textContent =
+      draws;
+  }
 }
 
-.shop-nav-link:hover {
-  border-color: rgba(170, 70, 255, .35);
-  background: rgba(170, 70, 255, .08);
-}
-
-.shop-nav-link.active {
-  border-color: #b52cff;
-  background: rgba(181, 44, 255, .12);
-  box-shadow: 0 0 22px rgba(181, 44, 255, .14);
-}
-
-.shop-nav-link .nav-badge {
-  margin-left: auto;
-  padding: 3px 7px;
-  border-radius: 999px;
-  background: #9d24ff;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.rooms-navigation-modal .modal-primary {
-  width: 100%;
-  margin-top: 18px;
-}
 
 /* =========================================================
-   MÜNZ-SHOP
+   RATING SPEICHERN
 ========================================================= */
 
-.shop-popup-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 15000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: rgba(0,0,0,.72);
-  backdrop-filter: blur(8px);
-}
+function saveRating() {
 
-.shop-popup {
-  position: relative;
-  width: min(100%, 680px);
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 28px;
-  border-radius: 24px;
-  background: #151923;
-  color: white;
-  border: 1px solid rgba(255,255,255,.12);
-  box-shadow: 0 30px 100px rgba(0,0,0,.6);
-}
+  localStorage.setItem(
+    "sa_rating",
+    String(rating)
+  );
 
-.shop-popup-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 38px;
-  height: 38px;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255,255,255,.08);
-  color: white;
-  font-size: 25px;
-  cursor: pointer;
-}
+  localStorage.setItem(
+    "sa_wins",
+    String(wins)
+  );
 
-.shop-popup-icon {
-  text-align: center;
-  font-size: 46px;
-  margin-bottom: 8px;
-}
+  localStorage.setItem(
+    "sa_losses",
+    String(losses)
+  );
 
-.shop-popup h2 {
-  margin: 0;
-  text-align: center;
-}
-
-.shop-subtitle {
-  text-align: center;
-  opacity: .65;
-  margin: 8px 0 20px;
-}
-
-.shop-balance {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  padding: 13px;
-  margin-bottom: 18px;
-  border-radius: 14px;
-  background: rgba(255,215,70,.08);
-}
-
-.shop-balance strong {
-  font-size: 20px;
-}
-
-.shop-items {
-  display: grid;
-  gap: 10px;
-}
-
-.shop-item {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  padding: 15px;
-  border-radius: 15px;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.07);
-}
-
-.shop-item-icon {
-  width: 46px;
-  height: 46px;
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: rgba(255,255,255,.08);
-  font-size: 25px;
-}
-
-.shop-item-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.shop-item-content strong,
-.shop-item-content small {
-  display: block;
-}
-
-.shop-item-content small {
-  margin-top: 4px;
-  opacity: .58;
-  line-height: 1.35;
-}
-
-.shop-item-action button {
-  border: 0;
-  border-radius: 10px;
-  padding: 10px 13px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.shop-buy {
-  background: #267cff;
-  color: white;
-}
-
-.shop-buy:hover {
-  filter: brightness(1.12);
-}
-
-.shop-owned {
-  background: rgba(70,200,120,.15);
-  color: #72e09b;
-  cursor: default !important;
-}
-
-.shop-footer {
-  margin-top: 18px;
-  text-align: center;
-  font-size: 13px;
-  opacity: .5;
-}
-
-@media(max-width:600px) {
-
-  .shop-popup {
-    padding: 20px 15px;
-  }
-
-  .shop-item {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .shop-item-content {
-    width: calc(100% - 60px);
-  }
-
-  .shop-item-action {
-    width: 100%;
-    margin-left: 59px;
-  }
-
-  .shop-item-action button {
-    width: 100%;
-  }
-
-}
-    @media(max-width:600px) {
-
-      .sa-modal {
-        padding: 10px;
-      }
-
-
-      .sa-modal-content {
-        padding: 17px;
-      }
-
-
-      .play-join > div {
-        flex-direction: column;
-      }
-
-
-      .profile-stat-grid {
-        grid-template-columns: 1fr;
-      }
-
-
-      .rewards-popup-overlay {
-        padding: 10px;
-      }
-
-
-      .rewards-popup {
-        padding: 28px 15px 18px;
-      }
-
-
-      .reward-task {
-        gap: 9px;
-      }
-
-
-      .task-reward {
-        font-size: 13px;
-      }
-
-    }
-
-  `;
-
-
-  document.head.appendChild(
-    style
+  localStorage.setItem(
+    "sa_draws",
+    String(draws)
   );
 }
 
 
 /* =========================================================
-   INIT
+   RATING AKTUALISIEREN
 ========================================================= */
 
-function initApp() {
+function updateRating(result) {
 
-  addAppStyles();
+  if (
+    result === "win"
+  ) {
+
+    wins++;
+
+    rating += 20;
+  }
 
 
-  loadCoins();
+  if (
+    result === "loss"
+  ) {
 
-  loadDailyTasks();
+    losses++;
+
+    rating =
+      Math.max(
+        0,
+        rating - 15
+      );
+  }
+
+
+  if (
+    result === "draw"
+  ) {
+
+    draws++;
+
+    rating += 5;
+  }
+
+
+  saveRating();
+
+  updateRanking();
+
+  updateDashboardName();
+
+  syncPlayer();
+}
+
+
+/* =========================================================
+   DASHBOARD NAME
+========================================================= */
+
+function updateDashboardName() {
+
+  const name =
+    getName();
+
+  document
+    .querySelectorAll(
+      "[data-username]"
+    )
+    .forEach(
+      element => {
+
+        element.textContent =
+          name;
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      ".username"
+    )
+    .forEach(
+      element => {
+
+        element.textContent =
+          name;
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-player-name]"
+    )
+    .forEach(
+      element => {
+
+        element.textContent =
+          name;
+      }
+    );
+
+
+  const input =
+    document.getElementById(
+      "nameInput"
+    );
+
+  if (
+    input &&
+    !input.value
+  ) {
+
+    input.value =
+      name;
+  }
+}
+
+
+/* =========================================================
+   HTML SICHER DARSTELLEN
+========================================================= */
+
+function escapeHtml(value) {
+
+  return String(
+    value || ""
+  )
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+}
+
+
+/* =========================================================
+   NACHRICHTEN
+========================================================= */
+
+function showMessage(
+  message,
+  title = "SchachArena"
+) {
+
+  const existing =
+    document.getElementById(
+      "sa-message-modal"
+    );
+
+  if (
+    existing
+  ) {
+
+    existing.remove();
+  }
+
+
+  const modal =
+    document.createElement(
+      "div"
+    );
+
+  modal.id =
+    "sa-message-modal";
+
+  modal.className =
+    "sa-modal";
+
+
+  modal.innerHTML = `
+
+    <div class="sa-modal-content">
+
+      <div class="sa-modal-header">
+
+        <h3>
+          ${escapeHtml(title)}
+        </h3>
+
+        <button
+          type="button"
+          onclick="closeCurrentModal()"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div class="sa-modal-body">
+
+        <p>
+          ${escapeHtml(message)}
+        </p>
+
+      </div>
+
+      <div class="sa-modal-actions">
+
+        <button
+          class="primary"
+          type="button"
+          onclick="closeCurrentModal()"
+        >
+          OK
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    modal
+  );
+}
+
+
+/* =========================================================
+   MODAL SCHLIESSEN
+========================================================= */
+
+function closeCurrentModal() {
+
+  document
+    .querySelectorAll(
+      ".sa-modal"
+    )
+    .forEach(
+      modal => {
+
+        modal.remove();
+      }
+    );
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function setupNavigation() {
+
+  const navigationButtons =
+    document.querySelectorAll(
+      "[data-nav]"
+    );
+
+
+  navigationButtons.forEach(
+    button => {
+
+      if (
+        button.dataset.navBound ===
+        "true"
+      ) {
+
+        return;
+      }
+
+
+      button.dataset.navBound =
+        "true";
+
+
+      button.addEventListener(
+        "click",
+        event => {
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+
+          const target =
+            button.dataset.nav;
+
+
+          switch (
+            target
+          ) {
+
+            case "home":
+            case "dashboard":
+              showDashboard();
+              break;
+
+
+            case "play":
+              showPlay();
+              break;
+
+
+            case "rooms":
+              showRooms();
+              break;
+
+
+            case "ranking":
+              openRanking();
+              break;
+
+
+            case "friends":
+              openFriends();
+              break;
+
+
+            case "messages":
+              openMessages();
+              break;
+
+
+            case "settings":
+              openSettings();
+              break;
+
+
+            case "profile":
+              openProfile();
+              break;
+
+
+            case "rewards":
+              openRewards();
+              break;
+
+
+            case "shop":
+              openShop();
+              break;
+
+
+            default:
+
+              console.warn(
+                "Unbekannter Navigationspunkt:",
+                target
+              );
+
+          }
+
+        }
+      );
+
+    }
+  );
+}
+
+
+/* =========================================================
+   DASHBOARD ANZEIGEN
+========================================================= */
+
+function showDashboard() {
+
+  closeCurrentModal();
+
+  document.body.classList.remove(
+    "page-overlay-open"
+  );
+
+
+  const pages =
+    document.querySelectorAll(
+      "[data-page]"
+    );
+
+
+  pages.forEach(
+    page => {
+
+      page.style.display =
+        "none";
+    }
+  );
+
+
+  const dashboard =
+    document.querySelector(
+      '[data-page="dashboard"]'
+    );
+
+
+  if (
+    dashboard
+  ) {
+
+    dashboard.style.display =
+      "";
+  }
+
+
+  const app =
+    document.querySelector(
+      ".app"
+    );
+
+  if (
+    app
+  ) {
+
+    app.style.display =
+      "";
+  }
 
 
   updateDashboardName();
 
   updateRanking();
 
+  updateCoinDisplays();
+
   updateRewardsDisplays();
-
-
-  addShopNavigation();
-  setupNavigation();
-
-  setupTopButtons();
-
-  setupDashboardButtons();
-
-
-  refreshRooms();
-
-  loadLeaderboard();
-
-
-  /* Name-Eingabe */
-
-  const nameInput =
-    document.getElementById(
-      "nameInput"
-    );
-
-
-  if (nameInput) {
-
-    if (
-      nameInput.value
-    ) {
-
-      setName(
-        nameInput.value
-      );
-    }
-
-
-    nameInput.addEventListener(
-      "change",
-      () => {
-
-        setName(
-          nameInput.value
-        );
-
-
-        syncPlayer();
-
-        updateDashboardName();
-
-      }
-    );
-  }
-
-
-  /* Raumcode Enter */
-
-  const roomInput =
-    document.getElementById(
-      "roomSearch"
-    );
-
-
-  if (roomInput) {
-
-    roomInput.addEventListener(
-      "keydown",
-      event => {
-
-        if (
-          event.key ===
-          "Enter"
-        ) {
-
-          event.preventDefault();
-
-
-          const code =
-            roomInput.value
-              .trim()
-              .toUpperCase();
-
-
-          if (code) {
-
-            joinRoomByCode(
-              code
-            );
-          }
-        }
-      }
-    );
-  }
-
-
-  /* Globale Funktionen */
-
-  window.startQuickGame =
-    startQuickGame;
-
-  window.quickJoin =
-    quickJoin;
-
-  window.createRoom =
-    createRoom;
-
-  window.joinRoom =
-    joinRoom;
-
-  window.joinRoomByCode =
-    joinRoomByCode;
-
-  window.joinListedRoom =
-    joinListedRoom;
-
-  window.joinFromModal =
-    joinFromModal;
-
-  window.openRewards =
-    openRewards;
-
-  window.updateRewardsDisplays =
-    updateRewardsDisplays;
-
-  window.openFriends =
-    openFriends;
-
-  window.openRanking =
-    openRanking;
-
-  window.openMessages =
-    openMessages;
-
-  window.openSettings =
-    openSettings;
-
-  window.openProfile =
-    openProfile;
-
-  window.addFriend =
-    addFriend;
-
-  window.challengeFriend =
-    challengeFriend;
-
-  window.copyRoom =
-    copyRoom;
-
-  window.newGame =
-    newGame;
-
-  window.backLobby =
-    backLobby;
-
-  window.saveSettings =
-    saveSettings;
-
-  window.closeCurrentModal =
-    closeCurrentModal;
-
-  window.showMessage =
-    showMessage;
-
-
-  window.joinRoomDashboard =
-    function () {
-
-      const input =
-        document.getElementById(
-          "roomSearch"
-        );
-
-
-      if (!input) {
-
-        showMessage(
-          "Raumcode-Feld wurde nicht gefunden."
-        );
-
-        return;
-      }
-
-
-      const code =
-        input.value
-          .trim()
-          .toUpperCase();
-
-
-      if (!code) {
-
-        input.focus();
-
-        return;
-      }
-
-
-      joinRoomByCode(
-        code
-      );
-    };
-
-
-  window.createRoomDashboard =
-    createRoom;
-
-
-  window.findOpponent =
-    quickJoin;
-
-
-  /* Schachbrett vorbereiten */
-
-  fresh();
 }
 
 
 /* =========================================================
-   APP STARTEN
+   SPIELSEITE
+========================================================= */
+
+function showPlay() {
+
+  const playPage =
+    document.querySelector(
+      '[data-page="play"]'
+    );
+
+
+  if (
+    playPage
+  ) {
+
+    document
+      .querySelectorAll(
+        "[data-page]"
+      )
+      .forEach(
+        page => {
+
+          page.style.display =
+            "none";
+        }
+      );
+
+    playPage.style.display =
+      "";
+  }
+}
+
+
+/* =========================================================
+   RÄUME
+========================================================= */
+
+function showRooms() {
+
+  const roomsPage =
+    document.querySelector(
+      '[data-page="rooms"]'
+    );
+
+
+  if (
+    roomsPage
+  ) {
+
+    document
+      .querySelectorAll(
+        "[data-page]"
+      )
+      .forEach(
+        page => {
+
+          page.style.display =
+            "none";
+        }
+      );
+
+    roomsPage.style.display =
+      "";
+  }
+
+
+  refreshRooms();
+}
+
+
+/* =========================================================
+   FREUNDE
+========================================================= */
+
+function openFriends() {
+
+  closeCurrentModal();
+
+
+  const friends =
+    getFriends();
+
+
+  const modal =
+    document.createElement(
+      "div"
+    );
+
+  modal.className =
+    "sa-modal";
+
+  modal.id =
+    "sa-friends-modal";
+
+
+  modal.innerHTML = `
+
+    <div class="sa-modal-content">
+
+      <div class="sa-modal-header">
+
+        <div>
+
+          <h2>
+            Freunde
+          </h2>
+
+          <p>
+            Deine Freundesliste
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          onclick="closeCurrentModal()"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div class="sa-modal-body">
+
+        ${
+          friends.length
+            ? friends
+                .map(
+                  friend => `
+
+                    <div class="modal-friend">
+
+                      <div>
+
+                        <strong>
+                          ${escapeHtml(
+                            friend.username
+                          )}
+                        </strong>
+
+                        <small>
+                          ${
+                            friend.status ||
+                            "Online"
+                          }
+                        </small>
+
+                      </div>
+
+                      <div>
+
+                        <button
+                          class="primary"
+                          onclick="challengeFriend('${escapeHtml(
+                            friend.username
+                          )}')"
+                        >
+                          Herausfordern
+                        </button>
+
+                        <button
+                          onclick="removeFriend('${escapeHtml(
+                            friend.username
+                          )}')"
+                        >
+                          Entfernen
+                        </button>
+
+                      </div>
+
+                    </div>
+
+                  `
+                )
+                .join("")
+            : `
+                <div class="empty">
+                  Noch keine Freunde vorhanden.
+                </div>
+              `
+        }
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    modal
+  );
+}
+
+
+/* =========================================================
+   FREUNDE AUS LOCALSTORAGE
+========================================================= */
+
+function getFriends() {
+
+  try {
+
+    const stored =
+      JSON.parse(
+        localStorage.getItem(
+          "sa_friends"
+        ) || "[]"
+      );
+
+
+    if (
+      Array.isArray(
+        stored
+      )
+    ) {
+
+      return stored;
+    }
+
+  } catch (
+    error
+  ) {
+
+    console.error(
+      "Freunde konnten nicht geladen werden:",
+      error
+    );
+  }
+
+
+  return [];
+}
+
+
+/* =========================================================
+   FREUNDE SPEICHERN
+========================================================= */
+
+function saveFriends(
+  friends
+) {
+
+  localStorage.setItem(
+    "sa_friends",
+    JSON.stringify(
+      friends
+    )
+  );
+}
+
+
+/* =========================================================
+   FREUND HINZUFÜGEN
+========================================================= */
+
+function addFriend(
+  username
+) {
+
+  username =
+    String(
+      username || ""
+    )
+      .trim();
+
+
+  if (
+    !username
+  ) {
+
+    return;
+  }
+
+
+  const friends =
+    getFriends();
+
+
+  const exists =
+    friends.some(
+      friend =>
+        String(
+          friend.username
+        )
+          .toLowerCase() ===
+        username.toLowerCase()
+    );
+
+
+  if (
+    exists
+  ) {
+
+    showMessage(
+      "Dieser Spieler ist bereits in deiner Freundesliste."
+    );
+
+    return;
+  }
+
+
+  friends.push({
+    username:
+      username,
+
+    status:
+      "Offline"
+  });
+
+
+  saveFriends(
+    friends
+  );
+
+
+  showMessage(
+    username +
+    " wurde zu deinen Freunden hinzugefügt."
+  );
+}
+
+
+/* =========================================================
+   FREUND ENTFERNEN
+========================================================= */
+
+function removeFriend(
+  username
+) {
+
+  const friends =
+    getFriends();
+
+
+  const filtered =
+    friends.filter(
+      friend =>
+        String(
+          friend.username
+        )
+          .toLowerCase() !==
+        String(
+          username
+        )
+          .toLowerCase()
+    );
+
+
+  saveFriends(
+    filtered
+  );
+
+
+  openFriends();
+}
+
+
+/* =========================================================
+   FREUND HERAUSFORDERN
+========================================================= */
+
+function challengeFriend(
+  username
+) {
+
+  closeCurrentModal();
+
+
+  showMessage(
+    username +
+    " wurde zu einer Partie herausgefordert."
+  );
+}
+
+
+/* =========================================================
+   RANKING ÖFFNEN
+========================================================= */
+
+function openRanking() {
+
+  closeCurrentModal();
+
+
+  const modal =
+    document.createElement(
+      "div"
+    );
+
+  modal.className =
+    "sa-modal";
+
+
+  modal.innerHTML = `
+
+    <div class="sa-modal-content">
+
+      <div class="sa-modal-header">
+
+        <div>
+
+          <h2>
+            🏆 Rangliste
+          </h2>
+
+          <p>
+            Deine aktuelle Platzierung
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          onclick="closeCurrentModal()"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div class="sa-modal-body">
+
+        <div class="profile-stat-grid">
+
+          <div class="stat-card">
+
+            <span>
+              Rating
+            </span>
+
+            <strong>
+              ${rating}
+            </strong>
+
+          </div>
+
+          <div class="stat-card">
+
+            <span>
+              Rang
+            </span>
+
+            <strong>
+              ${rank()}
+            </strong>
+
+          </div>
+
+          <div class="stat-card">
+
+            <span>
+              Siege
+            </span>
+
+            <strong>
+              ${wins}
+            </strong>
+
+          </div>
+
+          <div class="stat-card">
+
+            <span>
+              Niederlagen
+            </span>
+
+            <strong>
+              ${losses}
+            </strong>
+
+          </div>
+
+        </div>
+
+        <div
+          id="leaderboard-modal-list"
+          class="leaderboard"
+        >
+
+          <div class="empty">
+            Rangliste wird geladen ...
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    modal
+  );
+
+
+  loadLeaderboard(
+    "leaderboard-modal-list"
+  );
+}
+
+
+/* =========================================================
+   NACHRICHTEN ÖFFNEN
+========================================================= */
+
+function openMessages() {
+
+  closeCurrentModal();
+
+
+  const modal =
+    document.createElement(
+      "div"
+    );
+
+  modal.className =
+    "sa-modal";
+
+
+  modal.innerHTML = `
+
+    <div class="sa-modal-content">
+
+      <div class="sa-modal-header">
+
+        <div>
+
+          <h2>
+            💬 Nachrichten
+          </h2>
+
+          <p>
+            Deine Nachrichten
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          onclick="closeCurrentModal()"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div class="sa-modal-body">
+
+        <div class="empty">
+
+          Noch keine Nachrichten vorhanden.
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    modal
+  );
+}
+/* =========================================================
+   FREUNDE
+========================================================= */
+
+function openFriends() {
+
+  closeCurrentModal();
+
+  const friends =
+    getFriends();
+
+  const modal =
+    document.createElement("div");
+
+  modal.className =
+    "sa-modal";
+
+  modal.id =
+    "sa-friends-modal";
+
+  modal.innerHTML = `
+
+    <div class="sa-modal-content">
+
+      <div class="sa-modal-header">
+
+        <div>
+
+          <h2>
+            👥 Freunde
+          </h2>
+
+          <p>
+            Deine Freunde und Schachpartner
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          onclick="closeCurrentModal()"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div class="sa-modal-body">
+
+        <div class="friends-add">
+
+          <input
+            id="friendNameInput"
+            type="text"
+            maxlength="24"
+            placeholder="Spielername eingeben"
+          />
+
+          <button
+            class="primary"
+            type="button"
+            onclick="addFriend()"
+          >
+            Freund hinzufügen
+          </button>
+
+        </div>
+
+        <div class="friends-list">
+
+          ${
+            friends.length === 0
+              ? `
+                <div class="empty-state">
+                  <div>
+                    👥
+                  </div>
+
+                  <strong>
+                    Noch keine Freunde
+                  </strong>
+
+                  <p>
+                    Füge deinen ersten Freund hinzu.
+                  </p>
+                </div>
+              `
+              : friends
+                .map(
+                  (friend, index) => `
+
+                    <div class="friend-item">
+
+                      <div class="friend-avatar">
+                        ♟
+                      </div>
+
+                      <div class="friend-info">
+
+                        <strong>
+                          ${escapeHtml(
+                            friend.name
+                          )}
+                        </strong>
+
+                        <span>
+                          ${
+                            friend.online
+                              ? "🟢 Online"
+                              : "⚪ Offline"
+                          }
+                        </span>
+
+                      </div>
+
+                      <button
+                        type="button"
+                        onclick="removeFriend(${index})"
+                      >
+                        Entfernen
+                      </button>
+
+                    </div>
+
+                  `
+                )
+                .join("")
+          }
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+  document.body.appendChild(
+    modal
+  );
+}
+
+
+/* =========================================================
+   FREUNDE LADEN
+========================================================= */
+
+function getFriends() {
+
+  try {
+
+    const stored =
+      JSON.parse(
+        localStorage.getItem(
+          "sa_friends"
+        ) || "[]"
+      );
+
+    if (
+      Array.isArray(
+        stored
+      )
+    ) {
+
+      return stored;
+    }
+
+  } catch (
+    error
+  ) {
+
+    console.error(
+      "Freunde konnten nicht geladen werden:",
+      error
+    );
+
+  }
+
+  return [];
+}
+
+
+/* =========================================================
+   FREUND HINZUFÜGEN
+========================================================= */
+
+function addFriend() {
+
+  const input =
+    document.getElementById(
+      "friendNameInput"
+    );
+
+  if (!input) {
+    return;
+  }
+
+  const name =
+    input.value.trim();
+
+  if (!name) {
+
+    showMessage(
+      "Bitte gib einen Spielernamen ein."
+    );
+
+    return;
+  }
+
+  const ownName =
+    getName();
+
+  if (
+    name.toLowerCase() ===
+    ownName.toLowerCase()
+  ) {
+
+    showMessage(
+      "Du kannst dich nicht selbst hinzufügen."
+    );
+
+    return;
+  }
+
+
+  const friends =
+    getFriends();
+
+
+  const alreadyExists =
+    friends.some(
+      friend =>
+        friend.name.toLowerCase() ===
+        name.toLowerCase()
+    );
+
+
+  if (
+    alreadyExists
+  ) {
+
+    showMessage(
+      "Dieser Spieler ist bereits in deiner Freundesliste."
+    );
+
+    return;
+  }
+
+
+  friends.push({
+    name: name,
+    online: false
+  });
+
+
+  localStorage.setItem(
+    "sa_friends",
+    JSON.stringify(
+      friends
+    )
+  );
+
+
+  showMessage(
+    name +
+    " wurde zu deinen Freunden hinzugefügt."
+  );
+
+
+  openFriends();
+}
+
+
+/* =========================================================
+   FREUND ENTFERNEN
+========================================================= */
+
+function removeFriend(
+  index
+) {
+
+  const friends =
+    getFriends();
+
+
+  if (
+    index < 0 ||
+    index >= friends.length
+  ) {
+
+    return;
+  }
+
+
+  const removed =
+    friends[index];
+
+
+  friends.splice(
+    index,
+    1
+  );
+
+
+  localStorage.setItem(
+    "sa_friends",
+    JSON.stringify(
+      friends
+    )
+  );
+
+
+  showMessage(
+    removed.name +
+    " wurde entfernt."
+  );
+
+
+  openFriends();
+}
+
+
+/* =========================================================
+   SPIELEN
+========================================================= */
+
+function openPlay() {
+
+  closeCurrentModal();
+
+  const modal =
+    document.createElement("div");
+
+  modal.className =
+    "sa-modal";
+
+  modal.id =
+    "sa-play-modal";
+
+  modal.innerHTML = `
+
+    <div class="sa-modal-content">
+
+      <div class="sa-modal-header">
+
+        <div>
+
+          <h2>
+            ♟️ Spielen
+          </h2>
+
+          <p>
+            Wähle deine Partie.
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          onclick="closeCurrentModal()"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div class="play-options">
+
+        <button
+          class="play-option"
+          type="button"
+          onclick="startGame('computer')"
+        >
+
+          <span>
+            🤖
+          </span>
+
+          <strong>
+            Gegen Computer
+          </strong>
+
+          <small>
+            Spiele gegen einen Bot
+          </small>
+
+        </button>
+
+
+        <button
+          class="play-option"
+          type="button"
+          onclick="startGame('friend')"
+        >
+
+          <span>
+            👥
+          </span>
+
+          <strong>
+            Gegen Freund
+          </strong>
+
+          <small>
+            Spiele gegen einen Freund
+          </small>
+
+        </button>
+
+
+        <button
+          class="play-option"
+          type="button"
+          onclick="startGame('online')"
+        >
+
+          <span>
+            🌐
+          </span>
+
+          <strong>
+            Online spielen
+          </strong>
+
+          <small>
+            Finde einen Gegner
+          </small>
+
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+  document.body.appendChild(
+    modal
+  );
+}
+
+
+/* =========================================================
+   SPIEL STARTEN
+========================================================= */
+
+function startGame(
+  mode
+) {
+
+  closeCurrentModal();
+
+
+  if (
+    typeof window.startChessGame ===
+    "function"
+  ) {
+
+    window.startChessGame(
+      mode
+    );
+
+    return;
+  }
+
+
+  if (
+    typeof window.startGame ===
+    "function" &&
+    window.startGame !==
+    startGame
+  ) {
+
+    window.startGame(
+      mode
+    );
+
+    return;
+  }
+
+
+  showMessage(
+    mode === "computer"
+      ? "Computer-Spiel wird gestartet."
+      : mode === "friend"
+        ? "Freundschaftsspiel wird vorbereitet."
+        : "Online-Spiel wird vorbereitet."
+  );
+}
+
+
+/* =========================================================
+   RANGLISTE
+========================================================= */
+
+function openLeaderboard() {
+
+  closeCurrentModal();
+
+
+  const players = [
+
+    {
+      name: getName(),
+      rating: rating,
+      me: true
+    },
+
+    {
+      name: "SchachProfi",
+      rating: 1820
+    },
+
+    {
+      name: "KnightMaster",
+      rating: 1745
+    },
+
+    {
+      name: "ChessKing",
+      rating: 1680
+    },
+
+    {
+      name: "RookStar",
+      rating: 1595
+    },
+
+    {
+      name: "BishopBoss",
+      rating: 1510
+    }
+
+  ];
+
+
+  players.sort(
+    (
+      a,
+      b
+    ) =>
+      b.rating -
+      a.rating
+  );
+
+
+  const modal =
+    document.createElement("div");
+
+  modal.className =
+    "sa-modal";
+
+
+  modal.innerHTML = `
+
+    <div class="sa-modal-content">
+
+      <div class="sa-modal-header">
+
+        <div>
+
+          <h2>
+            🏆 Rangliste
+          </h2>
+
+          <p>
+            Die besten Spieler
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          onclick="closeCurrentModal()"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="leaderboard-list">
+
+        ${
+          players
+            .map(
+              (
+                player,
+                index
+              ) => `
+
+                <div
+                  class="leaderboard-item
+                    ${player.me ? "current-player" : ""}"
+                >
+
+                  <div class="leaderboard-rank">
+                    ${
+                      index === 0
+                        ? "🥇"
+                        : index === 1
+                          ? "🥈"
+                          : index === 2
+                            ? "🥉"
+                            : "#" +
+                              (index + 1)
+                    }
+                  </div>
+
+                  <div class="leaderboard-player">
+
+                    <strong>
+                      ${escapeHtml(
+                        player.name
+                      )}
+                    </strong>
+
+                    ${
+                      player.me
+                        ? "<small>Du</small>"
+                        : ""
+                    }
+
+                  </div>
+
+                  <strong>
+                    ${player.rating}
+                  </strong>
+
+                </div>
+
+              `
+            )
+            .join("")
+        }
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    modal
+  );
+}
+
+
+/* =========================================================
+   HILFE
+========================================================= */
+
+function openHelp() {
+
+  closeCurrentModal();
+
+
+  const modal =
+    document.createElement("div");
+
+  modal.className =
+    "sa-modal";
+
+
+  modal.innerHTML = `
+
+    <div class="sa-modal-content">
+
+      <div class="sa-modal-header">
+
+        <div>
+
+          <h2>
+            ❓ Hilfe
+          </h2>
+
+          <p>
+            Alles Wichtige auf einen Blick.
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          onclick="closeCurrentModal()"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="help-list">
+
+        <div class="help-item">
+
+          <strong>
+            🪙 Münzen
+          </strong>
+
+          <p>
+            Münzen erhältst du durch tägliche
+            Herausforderungen und kannst sie
+            anschließend im Shop ausgeben.
+          </p>
+
+        </div>
+
+
+        <div class="help-item">
+
+          <strong>
+            🎁 Belohnungen
+          </strong>
+
+          <p>
+            Erfülle deine täglichen Aufgaben,
+            um zusätzliche Münzen zu erhalten.
+          </p>
+
+        </div>
+
+
+        <div class="help-item">
+
+          <strong>
+            🛍️ Shop
+          </strong>
+
+          <p>
+            Im Shop findest du verschiedene
+            Skins, Avatare, Effekte und Titel.
+          </p>
+
+        </div>
+
+
+        <div class="help-item">
+
+          <strong>
+            👥 Freunde
+          </strong>
+
+          <p>
+            Füge Spieler hinzu und behalte
+            deine Freundesliste im Blick.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    modal
+  );
+}
+
+
+/* =========================================================
+   MODAL SCHLIESSEN
+========================================================= */
+
+function closeCurrentModal() {
+
+  document
+    .querySelectorAll(
+      ".sa-modal"
+    )
+    .forEach(
+      modal => {
+
+        modal.remove();
+
+      }
+    );
+}
+
+
+/* =========================================================
+   ESC ZUM SCHLIESSEN
+========================================================= */
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key ===
+      "Escape"
+    ) {
+
+      closeCurrentModal();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   KLICK AUF MODAL-HINTERGRUND
+========================================================= */
+
+document.addEventListener(
+  "click",
+  event => {
+
+    if (
+      event.target.classList &&
+      event.target.classList.contains(
+        "sa-modal"
+      )
+    ) {
+
+      event.target.remove();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function setupNavigation() {
+
+  const navigationMap = {
+
+    home:
+      () => {
+        closeCurrentModal();
+
+        if (
+          typeof showHome ===
+          "function"
+        ) {
+          showHome();
+        }
+      },
+
+    play:
+      openPlay,
+
+    rewards:
+      openRewards,
+
+    friends:
+      openFriends,
+
+    leaderboard:
+      openLeaderboard,
+
+    profile:
+      openProfile,
+
+    settings:
+      openSettings,
+
+    shop:
+      openShop,
+
+    help:
+      openHelp
+
+  };
+
+
+  document
+    .querySelectorAll(
+      "[data-nav]"
+    )
+    .forEach(
+      button => {
+
+        const nav =
+          button.getAttribute(
+            "data-nav"
+          );
+
+
+        if (
+          !navigationMap[nav]
+        ) {
+
+          return;
+        }
+
+
+        button.onclick =
+          event => {
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+            navigationMap[nav]();
+
+          };
+
+      }
+    );
+}
+
+
+/* =========================================================
+   FALLBACK-NAVIGATION ÜBER TEXTE
+   Falls die vorhandenen Buttons noch keine
+   data-nav Attribute besitzen.
+========================================================= */
+
+function setupTextNavigation() {
+
+  const buttons =
+    document.querySelectorAll(
+      "button, a"
+    );
+
+
+  buttons.forEach(
+    button => {
+
+      if (
+        button.dataset.nav
+      ) {
+
+        return;
+      }
+
+
+      const text =
+        (
+          button.innerText ||
+          button.textContent ||
+          ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+      if (
+        text === "shop" ||
+        text.includes("🛍️ shop")
+      ) {
+
+        button.onclick =
+          event => {
+
+            event.preventDefault();
+
+            openShop();
+
+          };
+
+      }
+
+
+      else if (
+        text.includes(
+          "einstellungen"
+        ) ||
+        text.includes(
+          "settings"
+        )
+      ) {
+
+        button.onclick =
+          event => {
+
+            event.preventDefault();
+
+            openSettings();
+
+          };
+
+      }
+
+
+      else if (
+        text.includes(
+          "freunde"
+        )
+      ) {
+
+        button.onclick =
+          event => {
+
+            event.preventDefault();
+
+            openFriends();
+
+          };
+
+      }
+
+
+      else if (
+        text.includes(
+          "belohn"
+        )
+      ) {
+
+        button.onclick =
+          event => {
+
+            event.preventDefault();
+
+            openRewards();
+
+          };
+
+      }
+
+
+      else if (
+        text.includes(
+          "rangliste"
+        ) ||
+        text.includes(
+          "leaderboard"
+        )
+      ) {
+
+        button.onclick =
+          event => {
+
+            event.preventDefault();
+
+            openLeaderboard();
+
+          };
+
+      }
+
+
+      else if (
+        text === "profil" ||
+        text.includes(
+          "mein profil"
+        )
+      ) {
+
+        button.onclick =
+          event => {
+
+            event.preventDefault();
+
+            openProfile();
+
+          };
+
+      }
+
+
+      else if (
+        text === "spielen" ||
+        text.includes(
+          "spielen"
+        )
+      ) {
+
+        button.onclick =
+          event => {
+
+            event.preventDefault();
+
+            openPlay();
+
+          };
+
+      }
+
+
+      else if (
+        text.includes(
+          "hilfe"
+        )
+      ) {
+
+        button.onclick =
+          event => {
+
+            event.preventDefault();
+
+            openHelp();
+
+          };
+
+      }
+
+    }
+  );
+}
+
+
+/* =========================================================
+   DASHBOARD AKTUALISIEREN
+========================================================= */
+
+function updateDashboardName() {
+
+  const name =
+    getName();
+
+
+  document
+    .querySelectorAll(
+      "[data-player-name]"
+    )
+    .forEach(
+      element => {
+
+        element.textContent =
+          name;
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      ".player-name"
+    )
+    .forEach(
+      element => {
+
+        element.textContent =
+          name;
+
+      }
+    );
+}
+
+
+/* =========================================================
+   INITIALISIERUNG
+========================================================= */
+
+function initializeApp() {
+
+  loadCoins();
+
+  loadStats();
+
+  createDailyTasks();
+
+  applyTheme();
+
+  updateCoinDisplays();
+
+  updateRewardsDisplays();
+
+  updateDashboardName();
+
+  setupNavigation();
+
+  setupTextNavigation();
+
+  setupShopNavigation();
+
+}
+
+
+/* =========================================================
+   START
 ========================================================= */
 
 if (
@@ -5992,10 +7414,69 @@ if (
 
   document.addEventListener(
     "DOMContentLoaded",
-    initApp
+    initializeApp
   );
 
 } else {
 
-  initApp();
+  initializeApp();
+
 }
+
+
+/* =========================================================
+   GLOBALE FUNKTIONEN
+   Damit onclick="" aus dem HTML
+   zuverlässig funktioniert.
+========================================================= */
+
+window.openShop =
+  openShop;
+
+window.openSettings =
+  openSettings;
+
+window.openRewards =
+  openRewards;
+
+window.openFriends =
+  openFriends;
+
+window.openProfile =
+  openProfile;
+
+window.openLeaderboard =
+  openLeaderboard;
+
+window.openPlay =
+  openPlay;
+
+window.openHelp =
+  openHelp;
+
+window.closeCurrentModal =
+  closeCurrentModal;
+
+window.buyShopItem =
+  buyShopItem;
+
+window.claimDailyReward =
+  claimDailyReward;
+
+window.addFriend =
+  addFriend;
+
+window.removeFriend =
+  removeFriend;
+
+window.saveSettingsName =
+  saveSettingsName;
+
+window.toggleTheme =
+  toggleTheme;
+
+window.resetLocalData =
+  resetLocalData;
+
+window.startGame =
+  startGame;
