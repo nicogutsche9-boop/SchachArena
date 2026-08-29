@@ -67,12 +67,16 @@
         <span class="nav-icon">⚙</span>
         <span>Einstellungen</span>
       </a>
-      
-      <a href="#" id="nav-shop">
-  <span>🛒</span>
-  <span>Shop</span>
-      </a>
 
+      <!-- SHOP -->
+      <a
+        href="#"
+        id="nav-shop"
+        class="nav-link"
+      >
+        <span class="nav-icon">🛒</span>
+        <span>Shop</span>
+      </a>
 
     </nav>
 
@@ -98,7 +102,9 @@
   =============================== -->
   <main class="main">
 
-    <!-- TOPBAR -->
+    <!-- ==============================
+         TOPBAR
+    =============================== -->
     <header class="topbar">
 
       <div class="welcome">
@@ -131,17 +137,27 @@
 
       <div class="top-actions">
 
-        <button class="top-button">
+        <button
+          class="top-button"
+          type="button"
+        >
           ♟
           <span>3</span>
         </button>
 
-        <button class="top-button" id="messageButton">
-  ✉
-  <span id="messageCountTop">0</span>
-</button>
+        <button
+          class="top-button"
+          id="messageButton"
+          type="button"
+        >
+          ✉
+          <span id="messageCountTop">0</span>
+        </button>
 
-        <button class="profile-small">
+        <button
+          class="profile-small"
+          type="button"
+        >
           <img
             src="assets/profile-placeholder.jpg"
             alt="Nico"
@@ -155,7 +171,9 @@
     </header>
 
 
-    <!-- DASHBOARD -->
+    <!-- ==============================
+         DASHBOARD
+    =============================== -->
     <div class="dashboard">
 
 
@@ -165,7 +183,9 @@
       <section class="content">
 
 
-        <!-- HERO -->
+        <!-- ==============================
+             HERO
+        =============================== -->
         <section class="hero">
 
           <div class="hero-background"></div>
@@ -189,6 +209,7 @@
 
             <button
               class="quick-play"
+              type="button"
               onclick="startQuickGame()"
             >
 
@@ -204,7 +225,6 @@
           </div>
 
         </section>
-
 
 
         <!-- ==============================
@@ -228,6 +248,7 @@
             </p>
 
             <button
+              type="button"
               onclick="openFriends()"
               class="outline-button"
             >
@@ -235,7 +256,6 @@
             </button>
 
           </article>
-
 
 
           <article class="action-card blue">
@@ -263,6 +283,7 @@
               >
 
               <button
+                type="button"
                 onclick="joinRoomDashboard()"
               >
                 BEITRETEN
@@ -271,7 +292,6 @@
             </div>
 
           </article>
-
 
 
           <article class="action-card green">
@@ -289,6 +309,7 @@
             </p>
 
             <button
+              type="button"
               onclick="createRoomDashboard()"
               class="outline-button"
             >
@@ -301,14 +322,15 @@
         </section>
 
 
-
         <!-- ==============================
              INFORMATIONSKARTEN
         =============================== -->
         <section class="info-grid">
 
 
-          <!-- DAILY CHALLENGE -->
+          <!-- ==============================
+               DAILY CHALLENGE
+          =============================== -->
           <article class="info-card">
 
             <div class="card-title">
@@ -341,18 +363,24 @@
 
             </div>
 
-            <button class="reward-button" onclick="openRewards()">
-  BELOHNUNG ANSEHEN
-  <span>🪙</span>
-</button>
-<button onclick="openShop()">
-  🛒 Münz-Shop
-</button>
+
+            <!-- NUR BELOHNUNG –
+                 DER KLEINE MÜNZSHOP WURDE ENTFERNT -->
+            <button
+              type="button"
+              class="reward-button"
+              onclick="openRewards()"
+            >
+              BELOHNUNG ANSEHEN
+              <span>🪙</span>
+            </button>
+
           </article>
 
 
-
-          <!-- LETZTE PARTIE -->
+          <!-- ==============================
+               LETZTE PARTIE
+          =============================== -->
           <article class="info-card">
 
             <div class="card-title">
@@ -383,20 +411,27 @@
 
             </div>
 
-            <button class="secondary-button">
+            <button
+              type="button"
+              class="secondary-button"
+            >
               PARTIE ANSEHEN
             </button>
 
           </article>
 
 
-
-          <!-- NEWS -->
+          <!-- ==============================
+               NEWS
+          =============================== -->
           <article class="info-card news">
 
             <div class="card-title">
+
               NEUIGKEITEN
+
               <span class="blue-dot"></span>
+
             </div>
 
             <h3>
@@ -421,14 +456,15 @@
       </section>
 
 
-
       <!-- ==============================
            RECHTE SEITENLEISTE
       =============================== -->
       <aside class="right-sidebar">
 
 
-        <!-- PROFIL -->
+        <!-- ==============================
+             PROFIL
+        =============================== -->
         <section class="side-card">
 
           <div class="side-title">
@@ -438,11 +474,14 @@
           <div class="profile-box">
 
             <div class="avatar">
+
               <img
                 src="assets/profile-placeholder.jpg"
                 alt="Nico"
               >
+
               <i></i>
+
             </div>
 
             <div>
@@ -463,116 +502,107 @@
 
           </div>
 
-          <button class="full-button">
+          <button
+            type="button"
+            class="full-button"
+          >
             PROFIL ANSEHEN
           </button>
 
         </section>
 
 
-
         <!-- ==============================
-     FREUNDE
-=============================== -->
-<section class="side-card friends">
+             FREUNDE
+        =============================== -->
+        <section class="side-card friends">
 
-  <div class="side-header">
+          <div class="side-header">
 
-    <span class="side-title">
-      FREUNDE
-    </span>
+            <span class="side-title">
+              FREUNDE
+            </span>
 
-    <button
-      class="add-friend"
-      onclick="addFriend()"
-      title="Freund hinzufügen"
-    >
-      +
-    </button>
+            <button
+              type="button"
+              class="add-friend"
+              onclick="addFriend()"
+              title="Freund hinzufügen"
+            >
+              +
+            </button>
 
-  </div>
+          </div>
 
-  <!-- Aktueller Freundestand -->
-  <div class="friends-count">
-    <strong>0</strong>
-    <span>Freunde</span>
-  </div>
 
-  <!-- Leerer Zustand -->
-  <div class="friends-empty">
+          <!-- Aktueller Freundestand -->
+          <div class="friends-count">
 
-    <div class="friends-empty-icon">
-      ♟
-    </div>
+            <strong>0</strong>
 
-    <h3>Noch keine Freunde</h3>
+            <span>
+              Freunde
+            </span>
 
-    <p>
-      Füge Spieler hinzu, um sie zu deinen
-      Freunden einzuladen und gemeinsam zu spielen.
-    </p>
+          </div>
 
-    <button
-      class="outline-button"
-      onclick="addFriend()"
-    >
-      + FREUND HINZUFÜGEN
-    </button>
 
-  </div>
+          <!-- Leerer Zustand -->
+          <div class="friends-empty">
 
-  <button
-    class="full-button"
-    onclick="openFriends()"
-  >
-    ALLE FREUNDE ANSEHEN
-  </button>
+            <div class="friends-empty-icon">
+              ♟
+            </div>
 
-</section>
+            <h3>
+              Noch keine Freunde
+            </h3>
+
+            <p>
+              Füge Spieler hinzu, um sie zu deinen
+              Freunden einzuladen und gemeinsam zu spielen.
+            </p>
+
+            <button
+              type="button"
+              class="outline-button"
+              onclick="addFriend()"
+            >
+              + FREUND HINZUFÜGEN
+            </button>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="full-button"
+            onclick="openFriends()"
+          >
+            ALLE FREUNDE ANSEHEN
+          </button>
+
+        </section>
 
 
       </aside>
 
     </div>
-    <main>
-      <!-- ... (dein restlicher Inhalt wie Header, Startseite, etc.) ... -->
 
 
-      <!-- FÜGE DIESEN SHOP-BEREICH HIER EIN: -->
-      <section id="shop-section" class="content-view" style="display: none; padding: 20px;">
-        <h2>SchachArena Shop</h2>
-        <p>Deine Coins: <span id="player-coins">100</span> 🪙</p>
-        
-        <div class="shop-grid" style="display: flex; gap: 20px; margin-top: 20px;">
-          <div class="shop-item" style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
-            <h3>Goldenes Schachbrett</h3>
-            <p>Verleihe deinen Partien einen edlen Look.</p>
-            <button onclick="buyItem('Goldenes Brett', 50)" style="cursor: pointer; padding: 8px 12px;">Kaufen (50 🪙)</button>
-          </div>
-          <div class="shop-item" style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
-            <h3>VIP-Rahmen</h3>
-            <p>Ein cooler Rahmen für dein Profilbild.</p>
-            <button onclick="buyItem('VIP-Rahmen', 100)" style="cursor: pointer; padding: 8px 12px;">Kaufen (100 🪙)</button>
-          </div>
-        </div>
-      </section>
-
-
-      <footer>
-        © 2025 SchachArena – Entwickelt von <strong>Zugaro Games</strong>
-      </footer>
-    </main>
-
-
+    <!-- ==============================
+         FOOTER
+    =============================== -->
     <footer>
+
       © 2025 SchachArena –
       Entwickelt von <strong>Zugaro Games</strong>
+
     </footer>
 
   </main>
 
 </div>
-
 
 
 <!-- ==================================
@@ -584,62 +614,165 @@
 <script>
 
 function startQuickGame() {
-  if (typeof window.quickJoin === "function") {
+
+  if (
+    typeof window.quickJoin ===
+    "function"
+  ) {
+
     window.quickJoin();
+
     return;
   }
 
-  showMessage("Gegnersuche wird gerade vorbereitet …");
+
+  if (
+    typeof showMessage ===
+    "function"
+  ) {
+
+    showMessage(
+      "Gegnersuche wird gerade vorbereitet …"
+    );
+
+  }
+
 }
 
 
 function createRoomDashboard() {
 
-  if (typeof window.createRoom === "function") {
+  if (
+    typeof window.createRoom ===
+    "function"
+  ) {
+
     window.createRoom();
+
     return;
   }
 
-  showMessage("Raumerstellung wird geöffnet …");
+
+  if (
+    typeof showMessage ===
+    "function"
+  ) {
+
+    showMessage(
+      "Raumerstellung wird geöffnet …"
+    );
+
+  }
+
 }
 
 
 function joinRoomDashboard() {
 
   const input =
-    document.getElementById("roomSearch");
+    document.getElementById(
+      "roomSearch"
+    );
+
+
+  if (!input) {
+    return;
+  }
+
 
   const code =
     input.value.trim();
+
 
   if (!code) {
 
     input.focus();
 
-    input.classList.add("error");
+    input.classList.add(
+      "error"
+    );
 
-    setTimeout(() => {
-      input.classList.remove("error");
-    }, 600);
+
+    setTimeout(
+      () => {
+
+        input.classList.remove(
+          "error"
+        );
+
+      },
+      600
+    );
+
 
     return;
   }
 
 
-  if (typeof window.joinRoom === "function") {
+  if (
+    typeof window.joinRoom ===
+    "function"
+  ) {
+
     window.joinRoom(code);
+
     return;
   }
 
-  showMessage("Raumcode: " + code);
+
+  if (
+    typeof showMessage ===
+    "function"
+  ) {
+
+    showMessage(
+      "Raumcode: " + code
+    );
+
+  }
+
 }
 
 
 function openFriends() {
 
-  showMessage(
-    "Der Freundesbereich wird geöffnet …"
-  );
+  /*
+     Falls die eigentliche App-Funktion
+     bereits vorhanden ist, verwenden.
+  */
+
+  if (
+    typeof window.showFriends ===
+    "function"
+  ) {
+
+    window.showFriends();
+
+    return;
+  }
+
+
+  if (
+    typeof window.openFriendsView ===
+    "function"
+  ) {
+
+    window.openFriendsView();
+
+    return;
+  }
+
+
+  if (
+    typeof showMessage ===
+    "function"
+  ) {
+
+    showMessage(
+      "Der Freundesbereich wird geöffnet …"
+    );
+
+  }
 
 }
 
@@ -647,25 +780,46 @@ function openFriends() {
 function addFriend() {
 
   const modal =
-    document.getElementById("friendModal");
+    document.getElementById(
+      "friendModal"
+    );
+
 
   const input =
-    document.getElementById("friendNameInput");
+    document.getElementById(
+      "friendNameInput"
+    );
+
 
   const result =
-    document.getElementById("friendSearchResult");
+    document.getElementById(
+      "friendSearchResult"
+    );
 
-  if (!modal) return;
 
-  modal.classList.add("show");
-
-  if (input) {
-    input.value = "";
-    input.focus();
+  if (!modal) {
+    return;
   }
 
+
+  modal.classList.add(
+    "show"
+  );
+
+
+  if (input) {
+
+    input.value = "";
+
+    input.focus();
+
+  }
+
+
   if (result) {
+
     result.innerHTML = "";
+
   }
 
 }
@@ -674,11 +828,19 @@ function addFriend() {
 function closeFriendModal() {
 
   const modal =
-    document.getElementById("friendModal");
+    document.getElementById(
+      "friendModal"
+    );
 
-  if (!modal) return;
 
-  modal.classList.remove("show");
+  if (!modal) {
+    return;
+  }
+
+
+  modal.classList.remove(
+    "show"
+  );
 
 }
 
@@ -686,48 +848,70 @@ function closeFriendModal() {
 function sendFriendRequest() {
 
   const input =
-    document.getElementById("friendNameInput");
+    document.getElementById(
+      "friendNameInput"
+    );
+
 
   const result =
-    document.getElementById("friendSearchResult");
+    document.getElementById(
+      "friendSearchResult"
+    );
 
-  if (!input) return;
+
+  if (!input) {
+    return;
+  }
+
 
   const name =
     input.value.trim();
 
+
   if (!name) {
 
-    input.classList.add("error");
+    input.classList.add(
+      "error"
+    );
 
-    setTimeout(() => {
-      input.classList.remove("error");
-    }, 600);
+
+    setTimeout(
+      () => {
+
+        input.classList.remove(
+          "error"
+        );
+
+      },
+      600
+    );
+
 
     input.focus();
 
     return;
   }
 
-  if (name.toLowerCase() === getName().toLowerCase()) {
+
+  if (
+    typeof getName ===
+    "function" &&
+    name.toLowerCase() ===
+      getName().toLowerCase()
+  ) {
 
     if (result) {
+
       result.innerHTML =
         '<span class="friend-error">' +
         'Du kannst dich nicht selbst hinzufügen.' +
         '</span>';
+
     }
 
     return;
   }
 
-  /*
-    Vorerst speichern wir die Anfrage noch nicht
-    in Supabase.
-
-    Das machen wir im nächsten Schritt,
-    sobald die Oberfläche funktioniert.
-  */
 
   if (result) {
 
@@ -735,50 +919,86 @@ function sendFriendRequest() {
       '<div class="friend-request-success">' +
         '<strong>✓ Anfrage vorbereitet</strong>' +
         '<span>Freundschaftsanfrage an ' +
-        escapeHtml(name) +
+        (
+          typeof escapeHtml ===
+          "function"
+            ? escapeHtml(name)
+            : name
+        ) +
         ' wurde vorbereitet.</span>' +
       '</div>';
 
   }
 
-  showMessage(
-    "Freundschaftsanfrage vorbereitet."
-  );
+
+  if (
+    typeof showMessage ===
+    "function"
+  ) {
+
+    showMessage(
+      "Freundschaftsanfrage vorbereitet."
+    );
+
+  }
 
 }
 
 
-document.addEventListener("click", function(event) {
+document.addEventListener(
+  "click",
+  function(event) {
 
-  const modal =
-    document.getElementById("friendModal");
+    const modal =
+      document.getElementById(
+        "friendModal"
+      );
 
-  if (
-    modal &&
-    event.target === modal
-  ) {
-    closeFriendModal();
+
+    if (
+      modal &&
+      event.target === modal
+    ) {
+
+      closeFriendModal();
+
+    }
+
   }
+);
 
-});
 
+document.addEventListener(
+  "keydown",
+  function(event) {
 
-document.addEventListener("keydown", function(event) {
+    if (
+      event.key ===
+      "Escape"
+    ) {
 
-  if (event.key === "Escape") {
-    closeFriendModal();
+      closeFriendModal();
+
+    }
+
   }
-
-});
+);
 
 
 function challengeFriend(name) {
 
-  showMessage(
-    "Spielanfrage an " +
-    name +
-    " wird vorbereitet …"
-  );
+  if (
+    typeof showMessage ===
+    "function"
+  ) {
+
+    showMessage(
+      "Spielanfrage an " +
+      name +
+      " wird vorbereitet …"
+    );
+
+  }
 
 }
 
@@ -786,28 +1006,51 @@ function challengeFriend(name) {
 function showMessage(text) {
 
   const message =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
-  message.className = "toast";
 
-  message.textContent = text;
+  message.className =
+    "toast";
 
-  document.body.appendChild(message);
 
-  setTimeout(() => {
-    message.remove();
-  }, 2200);
+  message.textContent =
+    text;
+
+
+  document.body.appendChild(
+    message
+  );
+
+
+  setTimeout(
+    () => {
+
+      message.remove();
+
+    },
+    2200
+  );
 
 }
+
+</script>
+
+
 <!-- ==============================
      FREUND HINZUFÜGEN MODAL
 =============================== -->
 
-<div id="friendModal" class="modal-overlay">
+<div
+  id="friendModal"
+  class="modal-overlay"
+>
 
   <div class="friend-modal">
 
     <button
+      type="button"
       class="modal-close"
       onclick="closeFriendModal()"
       aria-label="Schließen"
@@ -815,20 +1058,27 @@ function showMessage(text) {
       ×
     </button>
 
+
     <div class="modal-icon">
       ♟
     </div>
 
-    <h2>Freund hinzufügen</h2>
+
+    <h2>
+      Freund hinzufügen
+    </h2>
+
 
     <p class="modal-description">
       Suche nach einem Spieler und sende ihm
       eine Freundschaftsanfrage.
     </p>
 
+
     <label for="friendNameInput">
       SPIELERNAME
     </label>
+
 
     <input
       id="friendNameInput"
@@ -838,21 +1088,26 @@ function showMessage(text) {
       autocomplete="off"
     >
 
+
     <div
       id="friendSearchResult"
       class="friend-search-result"
     ></div>
 
+
     <div class="modal-actions">
 
       <button
+        type="button"
         class="secondary-button"
         onclick="closeFriendModal()"
       >
         ABBRECHEN
       </button>
 
+
       <button
+        type="button"
         class="full-button"
         onclick="sendFriendRequest()"
       >
@@ -864,29 +1119,25 @@ function showMessage(text) {
   </div>
 
 </div>
-</script>
-<script // Initialisierung der Währung
-let coins = localStorage.getItem('playerCoins') ? parseInt(localStorage.getItem('playerCoins')) : 100;
-document.getElementById('player-coins').innerText = coins;
 
-function buyItem(itemName, price) {
-  if (coins >= price) {
-    coins -= price;
-    localStorage.setItem('playerCoins', coins);
-    document.getElementById('player-coins').innerText = coins;
-    alert(`Erfolgreich gekauft: ${itemName}! 🎉`);
-    
-    // Hier kannst du logik einbauen, um das Item dem User dauerhaft freizuschalten
-  } else {
-    alert("Du hast nicht genügend Coins! Gewinne mehr Partien, um Coins zu verdienen.");
-  }
-}
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ==================================
+     EXTERNE BIBLIOTHEKEN
+=================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
+
+<!-- ==================================
+     PROJEKT-JAVASCRIPT
+=================================== -->
+
 <script src="js/chess.js"></script>
+
 <script src="js/app.js"></script>
-  
+
+
 </body>
 </html>
