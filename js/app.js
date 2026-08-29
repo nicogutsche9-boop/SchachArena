@@ -4506,9 +4506,69 @@ function updateDashboardName() {
     );
 }
 
+/* =========================================================
+   NAVIGATION – KORRIGIERT
+========================================================= */
+
+function getNavLabel(link) {
+
+  if (!link) {
+    return "";
+  }
+
+  /*
+     Alle Text-Spans innerhalb des Menüpunktes sammeln.
+     Badges wie "0" oder "NEU" werden ignoriert.
+  */
+
+  const spans =
+    Array.from(
+      link.querySelectorAll("span")
+    );
+
+
+  const parts =
+    spans
+      .map(
+        span =>
+          (span.textContent || "").trim()
+      )
+      .filter(Boolean)
+      .filter(
+        text =>
+          !["NEU", "0"].includes(
+            text.toUpperCase()
+          )
+      );
+
+
+  /*
+     Falls kein passender Span vorhanden ist,
+     den gesamten Text des Menüpunktes verwenden.
+  */
+
+  let text =
+    parts.join(" ").trim();
+
+
+  if (!text) {
+
+    text =
+      (link.textContent || "")
+        .replace(/NEU/gi, "")
+        .replace(/\b0\b/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+  }
+
+
+  return text.toLowerCase();
+}
+
 
 /* =========================================================
-   NAVIGATION
+   NAVIGATION EINRICHTEN
 ========================================================= */
 
 function setupNavigation() {
@@ -4522,28 +4582,48 @@ function setupNavigation() {
   links.forEach(
     link => {
 
+      /*
+         Verhindert doppelte EventListener.
+      */
+
+      if (
+        link.dataset.navigationReady ===
+        "true"
+      ) {
+
+        return;
+      }
+
+
+      link.dataset.navigationReady =
+        "true";
+
+
       link.addEventListener(
         "click",
         event => {
 
           event.preventDefault();
 
+          event.stopPropagation();
+
 
           const text =
-            link
-              .querySelector(
-                "span:last-child"
-              )
-              ?.textContent
-              .trim()
-              .toLowerCase();
+            getNavLabel(link);
 
+
+          /*
+             Aktiven Menüpunkt setzen
+          */
 
           links.forEach(
-            item =>
+            item => {
+
               item.classList.remove(
                 "active"
-              )
+              );
+
+            }
           );
 
 
@@ -4552,94 +4632,517 @@ function setupNavigation() {
           );
 
 
-          if (
-            text === "spielen"
-          ) {
-
-            showGameLobby();
-
-            return;
-          }
-
+          /* =========================
+             ÜBERSICHT
+          ========================= */
 
           if (
-            text === "shop" ||
-            text === "münz-shop"
+            text === "übersicht" ||
+            text === "startseite"
           ) {
 
-            openShop();
+            /*
+               Alle geöffneten Fenster schließen.
+            */
 
-            return;
-          }
+            if (
+              typeof closeCurrentModal ===
+              "function"
+            ) {
 
+              closeCurrentModal();
 
-          if (
-            text === "belohnungen" ||
-            text === "aufgaben"
-          ) {
-
-            openRewards();
-
-            return;
-          }
+            }
 
 
-          if (
-            text === "freunde"
-          ) {
-
-            openFriends();
-
-            return;
-          }
-
-
-          if (
-            text === "ranking"
-          ) {
-
-            openRanking();
-
-            return;
-          }
+            document
+              .querySelectorAll(
+                ".shop-popup-overlay, .rewards-popup-overlay"
+              )
+              .forEach(
+                element =>
+                  element.remove()
+              );
 
 
-          if (
-            text === "nachrichten"
-          ) {
-
-            openMessages();
-
-            return;
-          }
+            const app =
+              document.querySelector(
+                ".app"
+              );
 
 
-          if (
-            text === "einstellungen"
-          ) {
+            if (app) {
 
-            openSettings();
+              app.style.display =
+                "";
 
-            return;
-          }
+            }
 
 
-          if (
-            text === "übersicht"
-          ) {
+            const game =
+              document.getElementById(
+                "game"
+              );
+
+
+            if (game) {
+
+              game.style.display =
+                "none";
+
+            }
+
+
+            document.body.classList.remove(
+              "game-active"
+            );
+
 
             window.scrollTo(
               0,
               0
             );
+
+
+            return;
+          }
+
+
+          /* =========================
+             SPIELEN
+          ========================= */
+
+          if (
+            text === "spielen"
+          ) {
+
+            if (
+              typeof showGameLobby ===
+              "function"
+            ) {
+
+              showGameLobby();
+
+            }
+
+            return;
+          }
+
+
+          /* =========================
+             FREUNDE
+          ========================= */
+
+          if (
+            text === "freunde"
+          ) {
+
+            if (
+              typeof openFriends ===
+              "function"
+            ) {
+
+              openFriends();
+
+            }
+
+            return;
+          }
+
+
+          /* =========================
+             RANKING
+          ========================= */
+
+          if (
+            text === "ranking" ||
+            text === "rangliste"
+          ) {
+
+            if (
+              typeof openRanking ===
+              "function"
+            ) {
+
+              openRanking();
+
+            }
+
+            return;
+          }
+
+
+          /* =========================
+             NACHRICHTEN
+          ========================= */
+
+          if (
+            text === "nachrichten"
+          ) {
+
+            if (
+              typeof openMessages ===
+              "function"
+            ) {
+
+              openMessages();
+
+            }
+
+            return;
+          }
+
+
+          /* =========================
+             EINSTELLUNGEN
+          ========================= */
+
+          if (
+            text === "einstellungen" ||
+            text === "settings"
+          ) {
+
+            if (
+              typeof openSettings ===
+              "function"
+            ) {
+
+              openSettings();
+
+            }
+
+            return;
+          }
+
+
+          /* =========================
+             SHOP
+          ========================= */
+
+          if (
+            text === "shop" ||
+            text === "münz-shop" ||
+            text === "münz shop"
+          ) {
+
+            if (
+              typeof openShop ===
+              "function"
+            ) {
+
+              openShop();
+
+            }
+
+            return;
+          }
+
+
+          /* =========================
+             BELOHNUNGEN
+          ========================= */
+
+          if (
+            text.includes(
+              "belohn"
+            ) ||
+            text.includes(
+              "aufgabe"
+            )
+          ) {
+
+            if (
+              typeof openRewards ===
+              "function"
+            ) {
+
+              openRewards();
+
+            }
+
+            return;
           }
 
         }
       );
+
     }
   );
+
 }
 
+
+/* =========================================================
+   SHOP-NAVIGATION SICHERSTELLEN
+========================================================= */
+
+function setupShopNavigation() {
+
+  const nav =
+    document.querySelector(
+      "nav"
+    ) ||
+    document.querySelector(
+      ".sidebar"
+    ) ||
+    document.querySelector(
+      ".navigation"
+    );
+
+
+  if (!nav) {
+
+    return;
+
+  }
+
+
+  const links =
+    Array.from(
+      nav.querySelectorAll(
+        ".nav-link"
+      )
+    );
+
+
+  /*
+     Prüfen, ob Shop bereits existiert.
+  */
+
+  const existingShop =
+    links.find(
+      link =>
+        getNavLabel(link) ===
+        "shop"
+    );
+
+
+  if (
+    existingShop
+  ) {
+
+    existingShop.classList.add(
+      "shop-nav-link"
+    );
+
+    existingShop.dataset.shopNav =
+      "true";
+
+    return;
+
+  }
+
+
+  /*
+     Einstellungen suchen.
+  */
+
+  const settings =
+    links.find(
+      link =>
+        getNavLabel(link) ===
+        "einstellungen"
+    );
+
+
+  if (
+    !settings
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+     Shop-Menüpunkt erstellen.
+  */
+
+  const shop =
+    document.createElement(
+      "a"
+    );
+
+
+  shop.href =
+    "#shop";
+
+
+  shop.className =
+    "nav-link shop-nav-link";
+
+
+  shop.dataset.shopNav =
+    "true";
+
+
+  shop.innerHTML = `
+    <span
+      class="nav-icon"
+      aria-hidden="true">
+      🛒
+    </span>
+
+    <span>
+      Shop
+    </span>
+  `;
+
+
+  /*
+     Direkt UNTER Einstellungen einfügen.
+  */
+
+  settings.insertAdjacentElement(
+    "afterend",
+    shop
+  );
+
+
+  /*
+     Navigation nach dem Einfügen
+     erneut initialisieren.
+  */
+
+  setupNavigation();
+
+}
+
+
+/* =========================================================
+   MINI-MÜNZSHOP AUF DER ÜBERSICHT ENTFERNEN
+========================================================= */
+
+function removeMiniCoinShop() {
+
+  const candidates =
+    document.querySelectorAll(
+      ".mini-shop, .coin-shop, .reward-shop, .dashboard-shop, .shop-card"
+    );
+
+
+  candidates.forEach(
+    element => {
+
+      /*
+         Den großen Popup-Shop niemals löschen.
+      */
+
+      if (
+        element.closest(
+          "#shopPopup, .shop-popup-overlay"
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      const text =
+        (
+          element.textContent ||
+          ""
+        )
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
+
+
+      if (
+        text.includes("münz-shop") ||
+        text.includes("münz shop")
+      ) {
+
+        element.remove();
+
+      }
+
+    }
+  );
+
+
+  /*
+     Zusätzlich nach einer Karte suchen,
+     die eindeutig den kleinen Münzshop enthält.
+  */
+
+  document
+    .querySelectorAll(
+      ".card, .dashboard-card, .side-card"
+    )
+    .forEach(
+      card => {
+
+        if (
+          card.closest(
+            "#shopPopup, .shop-popup-overlay"
+          )
+        ) {
+
+          return;
+
+        }
+
+
+        const text =
+          (
+            card.textContent ||
+            ""
+          )
+            .replace(/\s+/g, " ")
+            .trim()
+            .toLowerCase();
+
+
+        if (
+          text.includes("münz-shop")
+        ) {
+
+          card.remove();
+
+        }
+
+      }
+    );
+}
+
+
+/* =========================================================
+   NAVIGATION + SHOP STARTEN
+========================================================= */
+
+function initializeNavigationFix() {
+
+  setupNavigation();
+
+  setupShopNavigation();
+
+  removeMiniCoinShop();
+
+}
+
+
+/*
+   Wenn das Dokument bereits geladen ist,
+   sofort starten.
+*/
+
+if (
+  document.readyState ===
+  "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeNavigationFix
+  );
+
+} else {
+
+  initializeNavigationFix();
+
+}
 
 /* =========================================================
    SPIELEN LOBBY
